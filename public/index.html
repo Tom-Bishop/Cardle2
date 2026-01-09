@@ -54,51 +54,66 @@
         /* Header */
         .header {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: space-between;
-            gap: 32px;
+            justify-content: center;
+            gap: 24px;
             margin-bottom: 48px;
-            padding-bottom: 24px;
+            padding-bottom: 32px;
             border-bottom: 1px solid var(--color-border);
+            position: relative;
         }
 
         .title-section {
-            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
             text-align: center;
         }
 
         .game-title {
-            font-size: 3.5rem;
+            font-size: 3.8rem;
             letter-spacing: 0.15em;
             font-weight: 900;
             color: var(--color-accent);
-            margin-bottom: 8px;
-            text-shadow: 0 0 20px rgba(0, 217, 255, 0.3);
+            margin: 0;
+        }
+
+        #streakBadge {
+            font-size: 1.4rem;
+            color: var(--color-warning);
+            font-weight: 700;
+            white-space: nowrap;
         }
 
         .game-mode-indicator {
-            font-size: 0.95rem;
+            position: absolute;
+            font-size: 0.9rem;
             color: var(--color-text-muted);
             font-weight: 600;
             letter-spacing: 0.5px;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
         .header-left,
         .header-right {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             flex-wrap: wrap;
             justify-content: center;
             align-items: center;
         }
 
         .header-left {
-            justify-content: flex-start;
+            justify-content: center;
         }
 
         .header-right {
-            justify-content: flex-end;
-            gap: 16px;
+            justify-content: center;
+            gap: 10px;
         }
 
         /* Timer */
@@ -612,31 +627,27 @@
             }
 
             .header {
-                flex-direction: column;
                 gap: 16px;
-                padding-bottom: 16px;
+                padding-bottom: 24px;
                 margin-bottom: 32px;
             }
 
             .title-section {
-                order: 2;
-            }
-
-            .header-left {
-                order: 1;
-                justify-content: center;
-            }
-
-            .header-right {
-                order: 3;
-                justify-content: center;
-                flex-wrap: wrap;
                 gap: 12px;
             }
 
             .game-title {
-                font-size: 2.2rem;
+                font-size: 2.4rem;
                 letter-spacing: 0.1em;
+            }
+
+            #streakBadge {
+                font-size: 1.2rem;
+            }
+
+            .header-left,
+            .header-right {
+                gap: 8px;
             }
 
             .btn {
@@ -678,19 +689,29 @@
                 margin: 0;
             }
 
+            .header {
+                gap: 12px;
+                padding-bottom: 20px;
+                margin-bottom: 28px;
+            }
+
+            .title-section {
+                gap: 10px;
+            }
+
             .game-title {
-                font-size: 1.9rem;
+                font-size: 2rem;
                 letter-spacing: 0.08em;
+            }
+
+            #streakBadge {
+                font-size: 1.1rem;
             }
 
             .header-left,
             .header-right {
+                gap: 6px;
                 flex-direction: row;
-                gap: 8px;
-            }
-
-            .header-right {
-                display: none;
             }
 
             .btn {
@@ -756,6 +777,11 @@
 
         <!-- Header -->
         <header class="header">
+            <div class="game-mode-indicator" id="gameModeIndicator">Daily Challenge</div>
+            <div class="title-section">
+                <h1 class="game-title">CARDLE</h1>
+                <div id="streakBadge">🔥 0</div>
+            </div>
             <div class="header-left">
                 <button class="btn btn--outline btn--sm" id="helpBtn">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -766,10 +792,6 @@
                     How to Play
                 </button>
             </div>
-            <div class="title-section">
-                <h1 class="game-title">CARDLE</h1>
-                <div class="game-mode-indicator" id="gameModeIndicator">Daily Challenge</div>
-            </div>
             <div class="header-right">
                 <button class="btn btn--outline btn--sm" id="leaderboardBtn">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -777,8 +799,6 @@
                     </svg>
                     Leaderboard
                 </button>
-                <div id="lastDailyInfo" style="align-self:center; font-size:0.85rem; color:var(--color-text-muted); margin-left:8px;">Last Daily: --</div>
-                <div id="streakBadge" style="align-self:center; font-size:0.95rem; color:var(--color-warning); margin-left:8px;">🔥 0</div>
                 <button class="btn btn--outline btn--sm" id="accountBtn" title="Account">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M20 21v-2a4 4 0 0 0-3-3.87"></path>
