@@ -861,7 +861,6 @@
                 // ignore
             }
         }
-        }
 
         // Auth modal handlers
         function showAuthModal() {
@@ -895,7 +894,11 @@
                 });
                 const body = await res.json().catch(() => null);
                 if (!res.ok || !body || !body.ok) {
-                    const err = body && body.error ? body.error : 'Request failed';
+                    let err = body && body.error ? body.error : 'Request failed';
+                    // Friendly error messages
+                    if (err === 'username_taken') err = 'Username already taken. Try another or login.';
+                    if (err === 'not_found') err = 'Username not found. Register first.';
+                    if (err === 'bad_credentials') err = 'Wrong password.';
                     if (msg) msg.textContent = err;
                     return;
                 }
