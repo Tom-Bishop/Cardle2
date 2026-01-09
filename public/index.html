@@ -1498,6 +1498,37 @@
             }
 
             getFeedback(guess, answer) {
+                // Define parent companies: maps make -> parent company name
+                const parentCompanies = {
+                    // Stellantis
+                    'Jeep': 'Stellantis', 'Dodge': 'Stellantis', 'Ram': 'Stellantis',
+                    'Fiat': 'Stellantis', 'Alfa Romeo': 'Stellantis', 'Ferrari': 'Stellantis',
+                    'Lamborghini': 'Stellantis', 'Maserati': 'Stellantis',
+                    'Peugeot': 'Stellantis', 'Citroën': 'Stellantis',
+                    // Toyota Group
+                    'Toyota': 'Toyota', 'Lexus': 'Toyota',
+                    // Honda Group
+                    'Honda': 'Honda', 'Acura': 'Honda',
+                    // Nissan Group
+                    'Nissan': 'Nissan', 'Infiniti': 'Nissan',
+                    // Hyundai Group
+                    'Hyundai': 'Hyundai', 'Genesis': 'Hyundai', 'Kia': 'Hyundai',
+                    // Volkswagen Group
+                    'Volkswagen': 'VW Group', 'Audi': 'VW Group', 'Porsche': 'VW Group', 'Skoda': 'VW Group', 'SEAT': 'VW Group',
+                    // BMW Group
+                    'BMW': 'BMW Group', 'Mini': 'BMW Group',
+                    // Ford Motor
+                    'Ford': 'Ford', 'Lincoln': 'Ford',
+                    // General Motors
+                    'Cadillac': 'GM', 'Chevrolet': 'GM', 'GMC': 'GM',
+                    // Geely-Volvo
+                    'Volvo': 'Volvo',
+                    // Renault Group
+                    'Renault': 'Renault', 'Dacia': 'Renault',
+                    // Mercedes & others (standalone for now)
+                    'Mercedes-Benz': 'Mercedes-Benz', 'Tesla': 'Tesla'
+                };
+
                 // Define regions for partial matches on origin
                 const regions = {
                     'JPN': 'Asia', 'KOR': 'Asia', 'CHN': 'Asia', 'IND': 'Asia',
@@ -1507,9 +1538,11 @@
                 };
 
                 const getRegion = (country) => regions[country] || 'Other';
+                const getParent = (make) => parentCompanies[make] || null;
 
                 return {
-                    make: guess.make === answer.make ? 'correct' : 'incorrect',
+                    make: guess.make === answer.make ? 'correct' : 
+                          (getParent(guess.make) && getParent(answer.make) && getParent(guess.make) === getParent(answer.make) ? 'partial' : 'incorrect'),
                     model: guess.model === answer.model ? 'correct' : 'incorrect',
                     body: guess.body === answer.body ? 'correct' : 'incorrect',
                     origin: guess.origin === answer.origin ? 'correct' : 
