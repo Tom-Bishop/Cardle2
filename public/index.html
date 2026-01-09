@@ -503,6 +503,76 @@
         .guess-cell.revealing {
             animation: cellReveal 0.6s ease-in-out;
         }
+
+        /* Leaderboard Modal */
+        .leaderboard-container {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .leaderboard-table thead {
+            background-color: var(--color-gray-200);
+            position: sticky;
+            top: 0;
+        }
+
+        .leaderboard-table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--color-text);
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        .leaderboard-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--color-border);
+            color: var(--color-text);
+        }
+
+        .leaderboard-table tr:hover {
+            background-color: var(--color-gray-200);
+        }
+
+        .leaderboard-rank {
+            font-weight: 600;
+            color: var(--color-primary);
+            width: 50px;
+        }
+
+        .leaderboard-username {
+            font-weight: 500;
+        }
+
+        .leaderboard-xp {
+            text-align: right;
+            font-weight: 600;
+            color: var(--color-primary);
+        }
+
+        .leaderboard-user-entry {
+            background-color: rgba(51, 184, 198, 0.1);
+            font-weight: 600;
+        }
+
+        .leaderboard-loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--color-text-muted);
+        }
+
+        .leaderboard-refresh-info {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -527,6 +597,12 @@
                 <div class="game-mode-indicator" id="gameModeIndicator">Daily Challenge</div>
             </div>
             <div class="header-right">
+                <button class="btn btn--outline btn--sm" id="leaderboardBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 9h12M6 9l1.5-4.5h9L18 9M6 9v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9M10 14v3M14 14v3"></path>
+                    </svg>
+                    Leaderboard
+                </button>
                 <button class="btn btn--outline btn--sm" id="modeToggleBtn">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
@@ -662,7 +738,61 @@
         </div>
     </div>
 
+    <!-- Leaderboard Modal -->
+    <div class="modal" id="leaderboardModal">
+        <div class="modal-content">
+            <div class="modal-title">🏆 Leaderboard</div>
+            <div class="modal-body">
+                <div class="leaderboard-container" id="leaderboardContainer">
+                    <div class="leaderboard-loading">Loading leaderboard...</div>
+                </div>
+                <div class="leaderboard-refresh-info">Updates every 10 seconds</div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn--primary" onclick="closeModal('leaderboardModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+
+        // Leaderboard and XP Management Functions
+        function getUsername() {
+            let u = localStorage.getItem("cardleUsername");
+            if (!u) {
+                u = (prompt("Choose a leaderboard username (max 24 chars):") || "").trim().slice(0, 24);
+                if (!u) u = `player_${Math.floor(Math.random() * 10000)}`;
+                localStorage.setItem("cardleUsername", u);
+            }
+            return u;
+        }
+
+        async function submitXp(xpDelta) {
+            try {
+                const payload = { username: getUsername(), xpDelta };
+                const res = await fetch("/api/submit", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                });
+                if (!res.ok) throw new Error(await res.text());
+                return res.json();
+            } catch (error) {
+                console.warn("Failed to submit XP:", error);
+            }
+        }
+
+        async function fetchLeaderboard() {
+            try {
+                const res = await fetch("/api/leaderboard");
+                if (!res.ok) throw new Error(await res.text());
+                return res.json();
+            } catch (error) {
+                console.warn("Failed to fetch leaderboard:", error);
+                return [];
+            }
+        }
+
         // Enhanced Cardle Game Logic with Timer and Dual Game Modes
         class Cardle {
             constructor() {
@@ -971,6 +1101,7 @@
                 const modeToggleBtn = document.getElementById('modeToggleBtn');
                 const helpBtn = document.getElementById('helpBtn');
                 const statsBtn = document.getElementById('statsBtn');
+                const leaderboardBtn = document.getElementById('leaderboardBtn');
 
                 // Input and autocomplete
                 carInput.addEventListener('input', (e) => this.handleInput(e));
@@ -983,6 +1114,7 @@
                 // Modal buttons
                 helpBtn.addEventListener('click', () => this.showModal('helpModal'));
                 statsBtn.addEventListener('click', () => this.showStats());
+                leaderboardBtn.addEventListener('click', () => this.showLeaderboard());
 
                 // Click outside modal to close
                 document.addEventListener('click', (e) => {
@@ -1194,6 +1326,11 @@
                 
                 this.saveGameStats();
                 
+                // Submit XP to leaderboard if won
+                if (won) {
+                    submitXp(10).catch(console.warn);
+                }
+                
                 setTimeout(() => {
                     if (won) {
                         this.showWinModal();
@@ -1362,14 +1499,83 @@
                 this.showModal('statsModal');
             }
 
+            async showLeaderboard() {
+                this.showModal('leaderboardModal');
+                await this.updateLeaderboardDisplay();
+                
+                // Refresh leaderboard every 10 seconds
+                if (this.leaderboardRefreshInterval) {
+                    clearInterval(this.leaderboardRefreshInterval);
+                }
+                this.leaderboardRefreshInterval = setInterval(() => this.updateLeaderboardDisplay(), 10000);
+            }
+
+            async updateLeaderboardDisplay() {
+                const container = document.getElementById('leaderboardContainer');
+                const leaderboardData = await fetchLeaderboard();
+                
+                if (!leaderboardData || leaderboardData.length === 0) {
+                    container.innerHTML = '<div class="leaderboard-loading">No leaderboard data available</div>';
+                    return;
+                }
+                
+                // Sort by XP descending
+                const sorted = [...leaderboardData].sort((a, b) => (b.xp || 0) - (a.xp || 0));
+                const currentUsername = getUsername();
+                
+                let html = `
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th class="leaderboard-rank">Rank</th>
+                                <th class="leaderboard-username">Player</th>
+                                <th class="leaderboard-xp">XP</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                sorted.forEach((entry, index) => {
+                    const isCurrentUser = entry.username === currentUsername;
+                    const rowClass = isCurrentUser ? 'leaderboard-user-entry' : '';
+                    const xp = entry.xp || 0;
+                    
+                    html += `
+                        <tr class="${rowClass}">
+                            <td class="leaderboard-rank">#${index + 1}</td>
+                            <td class="leaderboard-username">${entry.username}</td>
+                            <td class="leaderboard-xp">${xp.toLocaleString()}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                        </tbody>
+                    </table>
+                `;
+                
+                container.innerHTML = html;
+            }
+
+            closeLeaderboard() {
+                if (this.leaderboardRefreshInterval) {
+                    clearInterval(this.leaderboardRefreshInterval);
+                }
+                this.closeModal('leaderboardModal');
+            }
+
             showModal(modalId) {
                 const modal = document.getElementById(modalId);
                 modal.classList.add('show');
             }
 
             closeModal(modalId) {
-                const modal = document.getElementById(modalId);
-                modal.classList.remove('show');
+                if (modalId === 'leaderboardModal') {
+                    this.closeLeaderboard();
+                } else {
+                    const modal = document.getElementById(modalId);
+                    modal.classList.remove('show');
+                }
             }
         }
 
