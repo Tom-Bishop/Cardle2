@@ -96,6 +96,7 @@
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
+            display: none;
         }
 
         .header-left,
@@ -1376,23 +1377,42 @@
                 this.renderGameBoard();
                 this.updateModeIndicator();
 
-                // If daily mode and already played today, disable play and show info
-                if (this.currentGameMode === 'daily' && this.hasPlayedToday()) {
-                    // disable input and submit
-                    const input = document.getElementById('carInput');
-                    const submitBtn = document.getElementById('submitGuessBtn');
-                    if (input) input.disabled = true;
-                    if (submitBtn) submitBtn.disabled = true;
+                // Check server-side if daily mode and already played today
+                if (this.currentGameMode === 'daily') {
+                    this.checkDailyPlayStatus();
+                }
+            }
 
-                    // show a small stats modal informing the user
-                    const statsContent = document.getElementById('statsContent');
-                    const r = this.getDailyResult();
-                    const playedText = r ? `You already played today. Result: ${r.won ? 'Win' : 'Loss'} — Guesses: ${r.guesses} — Time: ${this.formatTime(r.timeSeconds)}` : 'You already played today.';
-                    if (statsContent) {
-                        statsContent.innerHTML = `<div class="help-section"><h3>Daily Played</h3><p>${playedText}</p><p>Switch to Random Mode to play again.</p></div>`;
-                        this.showModal('statsModal');
+            async checkDailyPlayStatus() {
+                try {
+                    const username = getUsername();
+                    const res = await fetch(`/api/me?username=${encodeURIComponent(username)}`);
+                    if (!res.ok) return;
+                    const body = await res.json();
+                    if (!body || !body.me) return;
+                    const me = body.me;
+                    
+                    const today = new Date().toISOString().split('T')[0];
+                    if (me.last_daily_play === today) {
+                        // Already played today — disable game
+                        const input = document.getElementById('carInput');
+                        const submitBtn = document.getElementById('submitGuessBtn');
+                        if (input) input.disabled = true;
+                        if (submitBtn) submitBtn.disabled = true;
+                        
+                        // Show message
+                        const statsContent = document.getElementById('statsContent');
+                        const wins = me.daily_won || 0;
+                        const dailyPlayed = me.daily_played || 0;
+                        const dailyResult = wins > 0 ? 'Win' : 'Loss';
+                        if (statsContent) {
+                            statsContent.innerHTML = `<div class="help-section"><h3>Daily Challenge Complete</h3><p>You've already played today's Daily Challenge.</p><p>Today's Record: <strong>${dailyResult}</strong> (${wins}/${dailyPlayed})</p><p>Come back tomorrow for a new challenge, or try Random Mode!</p></div>`;
+                            this.showModal('statsModal');
+                        }
+                        this.gameOver = true;
                     }
-                    this.gameOver = true;
+                } catch (err) {
+                    console.warn('Failed to check daily play status:', err);
                 }
             }
 
