@@ -2066,6 +2066,7 @@
                                 <th class="leaderboard-rank">Rank</th>
                                 <th class="leaderboard-username">Player</th>
                                 <th>Wins</th>
+                                <th>WinRate</th>
                                 <th>Avg Guesses</th>
                                 <th>Avg Time</th>
                             </tr>
@@ -2084,6 +2085,8 @@
                     const isCurrentUser = entry.username === currentUsername;
                     const rowClass = isCurrentUser ? 'leaderboard-user-entry' : '';
                     const wins = entry.wins || 0;
+                    const played = entry.games_played || entry.played || 0;
+                    const winRate = played > 0 ? Math.round((wins / played) * 100) + '%' : '--%';
                     const avgGuessesVal = (entry.avg_guesses ?? entry.avgGuesses ?? null);
                     const avgTimeVal = (entry.avg_time_seconds ?? entry.avgTimeSeconds ?? null);
                     const avgG = avgGuessesVal != null ? Number(avgGuessesVal).toFixed(2) : '--';
@@ -2094,6 +2097,7 @@
                             <td class="leaderboard-rank">#${index + 1}</td>
                             <td class="leaderboard-username">${entry.username}</td>
                             <td>${wins}</td>
+                            <td>${winRate}</td>
                             <td>${avgG}</td>
                             <td>${avgT}</td>
                         </tr>
