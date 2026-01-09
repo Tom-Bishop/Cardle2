@@ -793,9 +793,10 @@
         function getUsername() {
             let u = getCookie('cardleUsername');
             if (!u) {
-                u = (prompt('Choose a leaderboard username (max 24 chars):') || '').trim().slice(0, 24);
-                if (!u) u = `player_${Math.floor(Math.random() * 10000)}`;
-                setCookie('cardleUsername', u, 365);
+                // Show auth modal for new users to register/login
+                showAuthModal();
+                // Use placeholder until they authenticate
+                u = `guest_${Math.floor(Math.random() * 10000)}`;
             }
             return u;
         }
