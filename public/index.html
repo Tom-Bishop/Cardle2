@@ -288,9 +288,11 @@
         }
 
         .guess-cell.partial {
-            background-color: var(--color-warning);
-            color: var(--color-white);
-            border-color: var(--color-warning);
+            /* Make partial (amber) state more visible: stronger background and border */
+            background-color: #f59e0b; /* amber */
+            color: #102026; /* dark text for contrast on amber */
+            border-color: #b85c00; /* slightly darker amber border */
+            box-shadow: inset 0 -4px rgba(0,0,0,0.08);
         }
 
         .guess-cell.incorrect {
