@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardle - Guess the Car!</title>
+    <style>
+        :root {
+            /* Primitive Color Tokens */
+            --color-white: rgba(255, 255, 255, 1);
+            --color-black: rgba(0, 0, 0, 1);
+            --color-cream-50: rgba(252, 252, 249, 1);
+            --color-cream-100: rgba(255, 255, 253, 1);
+            --color-gray-200: rgba(245, 245, 245, 1);
+            --color-gray-300: rgba(167, 169, 169, 1);
+            --color-gray-400: rgba(119, 124, 124, 1);
+            --color-slate-500: rgba(98, 108, 113, 1);
+            --color-brown-600: rgba(94, 82, 64, 1);
+            --color-charcoal-700: rgba(31, 33, 33, 1);
+            --color-charcoal-800: rgba(38, 40, 40, 1);
+            --color-slate-900: rgba(19, 52, 59, 1);
+            --color-teal-300: rgba(50, 184, 198, 1);
+            --color-teal-400: rgba(45, 166, 178, 1);
+            --color-teal-500: rgba(33, 128, 141, 1);
+            --color-teal-600: rgba(29, 116, 128, 1);
+            --color-teal-700: rgba(26, 104, 115, 1);
+            --color-teal-800: rgba(41, 150, 161, 1);
+            --color-red-400: rgba(255, 84, 89, 1);
+            --color-red-500: rgba(192, 21, 47, 1);
+            --color-orange-400: rgba(230, 129, 97, 1);
+            --color-orange-500: rgba(168, 75, 47, 1);
+            --color-green-500: rgba(34, 197, 94, 1);
+            --color-yellow-500: rgba(245, 158, 11, 1);
+
+            /* Semantic Color Tokens */
+            --color-background: var(--color-cream-50);
+            --color-surface: var(--color-cream-100);
+            --color-text: var(--color-slate-900);
+            --color-text-muted: var(--color-slate-500);
+            --color-border: var(--color-gray-300);
+            --color-primary: var(--color-teal-500);
+            --color-success: var(--color-green-500);
+            --color-warning: var(--color-yellow-500);
+            --color-error: var(--color-red-500);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: var(--color-background);
+            color: var(--color-text);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .title-section {
+            text-align: center;
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--color-text);
+            letter-spacing: -0.02em;
+            margin: 0;
+        }
+
+        .game-mode-indicator {
+            font-size: 0.875rem;
+            color: var(--color-text-muted);
+            font-weight: 500;
+            margin-top: 4px;
+        }
+
+        .header-left,
+        .header-right {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Timer */
+        .timer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--color-surface);
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--color-border);
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            z-index: 1000;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn--outline {
+            background-color: transparent;
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+        }
+
+        .btn--outline:hover {
+            background-color: var(--color-gray-200);
+            border-color: var(--color-gray-400);
+        }
+
+        .btn--primary {
+            background-color: var(--color-primary);
+            color: var(--color-white);
+        }
+
+        .btn--primary:hover {
+            background-color: var(--color-teal-600);
+        }
+
+        .btn--primary:disabled {
+            background-color: var(--color-gray-300);
+            cursor: not-allowed;
+        }
+
+        .btn--sm {
+            padding: 6px 10px;
+            font-size: 0.8125rem;
+        }
+
+        /* Game subtitle */
+        .game-subtitle {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .game-subtitle p {
+            font-size: 1rem;
+            color: var(--color-text-muted);
+        }
+
+        /* Input section */
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-container {
+            position: relative;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--color-border);
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: var(--color-surface);
+            color: var(--color-text);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: var(--color-surface);
+            border: 2px solid var(--color-border);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .autocomplete-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .autocomplete-item:hover,
+        .autocomplete-item.highlighted {
+            background-color: var(--color-gray-200);
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .submit-section {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        /* Game board */
+        .game-board {
+            margin-bottom: 30px;
+        }
+
+        .board-headers {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+            padding: 0 4px;
+        }
+
+        .header-cell {
+            text-align: center;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            padding: 8px 4px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
+
+        .header-cell:hover {
+            background-color: var(--color-gray-200);
+        }
+
+        .game-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .guess-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        .guess-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--color-text);
+            border: 2px solid var(--color-border);
+            border-radius: 6px;
+            text-align: center;
+            padding: 4px;
+            min-height: 60px;
+            background-color: var(--color-surface);
+            transition: all 0.3s ease;
+        }
+
+        .guess-cell.correct {
+            background-color: var(--color-success);
+            color: var(--color-white);
+            border-color: var(--color-success);
+        }
+
+        .guess-cell.partial {
+            background-color: var(--color-warning);
+            color: var(--color-white);
+            border-color: var(--color-warning);
+        }
+
+        .guess-cell.incorrect {
+            background-color: var(--color-gray-400);
+            color: var(--color-white);
+            border-color: var(--color-gray-400);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: var(--color-surface);
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--color-text);
+        }
+
+        .modal-body {
+            margin-bottom: 25px;
+            color: var(--color-text-muted);
+            line-height: 1.6;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .time-display {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--color-primary);
+            margin: 10px 0;
+        }
+
+        .answer-display {
+            background-color: var(--color-gray-200);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .answer-display h4 {
+            margin-bottom: 8px;
+            color: var(--color-text);
+        }
+
+        .answer-details {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            font-size: 0.875rem;
+        }
+
+        .answer-item {
+            text-align: center;
+        }
+
+        .answer-label {
+            font-weight: 600;
+            color: var(--color-text-muted);
+            font-size: 0.75rem;
+            margin-bottom: 4px;
+        }
+
+        .answer-value {
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        /* Help modal specific styles */
+        .help-section {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .help-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .help-section h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--color-text);
+        }
+
+        .help-section p {
+            color: var(--color-text-muted);
+            margin-bottom: 8px;
+        }
+
+        .help-examples {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .help-example {
+            padding: 4px 8px;
+            background-color: var(--color-gray-200);
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--color-text);
+        }
+
+        /* Responsive design */
+        @media (max-width: 640px) {
+            .app {
+                padding: 15px;
+            }
+
+            .game-title {
+                font-size: 2rem;
+            }
+
+            .header {
+                justify-content: center;
+            }
+
+            .header-left,
+            .header-right {
+                order: 3;
+            }
+
+            .title-section {
+                order: 1;
+                flex: 1;
+            }
+
+            .timer {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin: 10px auto;
+            }
+
+            .guess-cell {
+                font-size: 0.625rem;
+                min-height: 50px;
+            }
+
+            .modal-content {
+                padding: 20px;
+            }
+
+            .answer-details {
+                grid-template-columns: 1fr;
+                gap: 4px;
+            }
+        }
+
+        /* Animation for cell reveals */
+        @keyframes cellReveal {
+            0% {
+                transform: scaleY(1);
+            }
+            50% {
+                transform: scaleY(0);
+            }
+            100% {
+                transform: scaleY(1);
+            }
+        }
+
+        .guess-cell.revealing {
+            animation: cellReveal 0.6s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Timer -->
+        <div class="timer" id="gameTimer">00:00</div>
+
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <button class="btn btn--outline btn--sm" id="helpBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <circle cx="12" cy="17" r="0.5"></circle>
+                    </svg>
+                    How to Play
+                </button>
+            </div>
+            <div class="title-section">
+                <h1 class="game-title">CARDLE</h1>
+                <div class="game-mode-indicator" id="gameModeIndicator">Daily Challenge</div>
+            </div>
+            <div class="header-right">
+                <button class="btn btn--outline btn--sm" id="modeToggleBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    Random Mode
+                </button>
+                <button class="btn btn--outline btn--sm" id="statsBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                    Stats
+                </button>
+            </div>
+        </header>
+
+        <!-- Game Subtitle -->
+        <div class="game-subtitle">
+            <p>Guess the car in 5 tries. Each guess provides feedback across 5 categories.</p>
+        </div>
+
+        <!-- Game Input -->
+        <div class="input-section">
+            <div class="input-container">
+                <input type="text" id="carInput" class="form-control" placeholder="Enter car make and model..." autocomplete="off">
+                <div class="autocomplete-dropdown hidden" id="autocompleteDropdown">
+                    <!-- Autocomplete items will be populated here -->
+                </div>
+            </div>
+            <div class="submit-section">
+                <button class="btn btn--primary" id="submitGuessBtn" disabled>Submit Guess</button>
+            </div>
+        </div>
+
+        <!-- Game Board -->
+        <div class="game-board">
+            <div class="board-headers">
+                <div class="header-cell" data-help="make">Make</div>
+                <div class="header-cell" data-help="model">Model</div>
+                <div class="header-cell" data-help="body">Body</div>
+                <div class="header-cell" data-help="origin">Origin</div>
+                <div class="header-cell" data-help="power">Power</div>
+            </div>
+            <div class="game-grid" id="gameGrid">
+                <!-- Game rows will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    
+    <!-- Help Modal -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content">
+            <div class="modal-title">How to Play Cardle</div>
+            <div class="modal-body">
+                <div class="help-section">
+                    <h3>Objective</h3>
+                    <p>Guess the mystery car in 5 attempts using clues from 5 categories.</p>
+                </div>
+                <div class="help-section">
+                    <h3>Categories</h3>
+                    <p><strong>Make:</strong> Car manufacturer (Toyota, BMW, Ford, etc.)</p>
+                    <p><strong>Model:</strong> Specific car model (Corolla, X5, Mustang, etc.)</p>
+                    <p><strong>Body:</strong> Vehicle type (SUV, Sedan, Hatchback, Coupe, Pickup, Wagon, Convertible)</p>
+                    <p><strong>Origin:</strong> Country codes (JPN=Japan, GER=Germany, USA=United States, etc.)</p>
+                    <p><strong>Power:</strong> Engine type (ICE=Internal Combustion, HYB=Hybrid, EV=Electric)</p>
+                </div>
+                <div class="help-section">
+                    <h3>Color Coding</h3>
+                    <p><span style="color: #22c55e; font-weight: bold;">🟢 Green:</span> Correct match</p>
+                    <p><span style="color: #f59e0b; font-weight: bold;">🟡 Yellow:</span> Partial match (for applicable categories)</p>
+                    <p><span style="color: #6b7280; font-weight: bold;">⚫ Gray:</span> No match</p>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn--primary" onclick="closeModal('helpModal')">Got it!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Modal -->
+    <div class="modal" id="statsModal">
+        <div class="modal-content">
+            <div class="modal-title">Statistics</div>
+            <div class="modal-body" id="statsContent">
+                <!-- Stats will be populated here -->
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn--primary" onclick="closeModal('statsModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div class="modal" id="winModal">
+        <div class="modal-content">
+            <div class="modal-title">🎉 Congratulations!</div>
+            <div class="modal-body">
+                <p>You guessed the car correctly!</p>
+                <div class="time-display" id="winTime">Time: 00:00</div>
+                <div id="winMessage">
+                    <!-- Win message will be populated here -->
+                </div>
+            </div>
+            <div class="modal-actions" id="winActions">
+                <!-- Win actions will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Loss Modal -->
+    <div class="modal" id="lossModal">
+        <div class="modal-content">
+            <div class="modal-title">Better Luck Next Time!</div>
+            <div class="modal-body">
+                <p>You've used all your guesses.</p>
+                <div class="time-display" id="lossTime">Time: 00:00</div>
+                <div class="answer-display">
+                    <h4>The correct answer was:</h4>
+                    <div class="answer-details" id="correctAnswer">
+                        <!-- Correct answer will be populated here -->
+                    </div>
+                </div>
+                <div id="lossMessage">
+                    <!-- Loss message will be populated here -->
+                </div>
+            </div>
+            <div class="modal-actions" id="lossActions">
+                <!-- Loss actions will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Enhanced Cardle Game Logic with Timer and Dual Game Modes
+        class Cardle {
+            constructor() {
+                // Car database
+                this.carDatabase = [
+                    {"make": "Toyota", "model": "Corolla", "body": "Sedan", "origin": "JPN", "power": "ICE"},
+                    {"make": "Toyota", "model": "RAV4", "body": "SUV", "origin": "JPN", "power": "HYB"},
+                    {"make": "Toyota", "model": "Camry", "body": "Sedan", "origin": "JPN", "power": "HYB"},
+                    {"make": "Toyota", "model": "Prius", "body": "Hatchback", "origin": "JPN", "power": "HYB"},
+                    {"make": "Toyota", "model": "Highlander", "body": "SUV", "origin": "JPN", "power": "HYB"},
+                    {"make": "Toyota", "model": "C-HR", "body": "SUV", "origin": "JPN", "power": "HYB"},
+                    {"make": "Toyota", "model": "Yaris", "body": "Hatchback", "origin": "JPN", "power": "ICE"},
+                    {"make": "Toyota", "model": "Hilux", "body": "Pickup", "origin": "JPN", "power": "ICE"},
+                    {"make": "Toyota", "model": "Land Cruiser", "body": "SUV", "origin": "JPN", "power": "ICE"},
+                    {"make": "Honda", "model": "Civic", "body": "Sedan", "origin": "JPN", "power": "ICE"},
+                    {"make": "Honda", "model": "CR-V", "body": "SUV", "origin": "JPN", "power": "HYB"},
+                    {"make": "Honda", "model": "Accord", "body": "Sedan", "origin": "JPN", "power": "HYB"},
+                    {"make": "Honda", "model": "HR-V", "body": "SUV", "origin": "JPN", "power": "ICE"},
+                    {"make": "Honda", "model": "Pilot", "body": "SUV", "origin": "JPN", "power": "ICE"},
+                    {"make": "Honda", "model": "Fit", "body": "Hatchback", "origin": "JPN", "power": "ICE"},
+                    {"make": "Nissan", "model": "Sentra", "body": "Sedan", "origin": "JPN", "power": "ICE"},
+                    {"make": "Nissan", "model": "Rogue", "body": "SUV", "origin": "JPN", "power": "ICE"},
+                    {"make": "Nissan", "model": "Altima", "body": "Sedan", "origin": "JPN", "power": "ICE"},
+                    {"make": "Nissan", "model": "Pathfinder", "body": "SUV", "origin": "JPN", "power": "ICE"},
+                    {"make": "Nissan", "model": "Qashqai", "body": "SUV", "origin": "JPN", "power": "ICE"},
+                    {"make": "Nissan", "model": "Juke", "body": "SUV", "origin": "JPN", "power": "ICE"},
+                    {"make": "Nissan", "model": "Leaf", "body": "Hatchback", "origin": "JPN", "power": "EV"},
+                    {"make": "Nissan", "model": "GT-R", "body": "Coupe", "origin": "JPN", "power": "ICE"},
+                    {"make": "Mazda", "model": "Mazda3", "body": "Hatchback", "origin": "JPN", "power": "ICE"},
+                    {"make": "Mazda", "model": "CX-5", "body": "SUV", "origin": "JPN", "power": "ICE"},
+                    {"make": "Mazda", "model": "MX-5", "body": "Convertible", "origin": "JPN", "power": "ICE"},
+                    {"make": "Mazda", "model": "CX-9", "body": "SUV", "origin": "JPN", "power": "ICE"},
+                    {"make": "Mazda", "model": "CX-30", "body": "SUV", "origin": "JPN", "power": "ICE"},
+                    {"make": "Subaru", "model": "Outback", "body": "Wagon", "origin": "JPN", "power": "ICE"},
+                    {"make": "Subaru", "model": "Forester", "body": "SUV", "origin": "JPN", "power": "ICE"},
+                    {"make": "Subaru", "model": "Crosstrek", "body": "SUV", "origin": "JPN", "power": "ICE"},
+                    {"make": "Subaru", "model": "Impreza", "body": "Hatchback", "origin": "JPN", "power": "ICE"},
+                    {"make": "Subaru", "model": "WRX", "body": "Sedan", "origin": "JPN", "power": "ICE"},
+                    {"make": "Subaru", "model": "BRZ", "body": "Coupe", "origin": "JPN", "power": "ICE"},
+                    {"make": "Ford", "model": "F-150", "body": "Pickup", "origin": "USA", "power": "ICE"},
+                    {"make": "Ford", "model": "Explorer", "body": "SUV", "origin": "USA", "power": "ICE"},
+                    {"make": "Ford", "model": "Escape", "body": "SUV", "origin": "USA", "power": "HYB"},
+                    {"make": "Ford", "model": "Mustang", "body": "Coupe", "origin": "USA", "power": "ICE"},
+                    {"make": "Ford", "model": "Edge", "body": "SUV", "origin": "USA", "power": "ICE"},
+                    {"make": "Ford", "model": "Focus", "body": "Hatchback", "origin": "USA", "power": "ICE"},
+                    {"make": "Ford", "model": "Fiesta", "body": "Hatchback", "origin": "USA", "power": "ICE"},
+                    {"make": "Ford", "model": "Bronco", "body": "SUV", "origin": "USA", "power": "ICE"},
+                    {"make": "Ford", "model": "Ranger", "body": "Pickup", "origin": "USA", "power": "ICE"},
+                    {"make": "Chevrolet", "model": "Silverado", "body": "Pickup", "origin": "USA", "power": "ICE"},
+                    {"make": "Chevrolet", "model": "Equinox", "body": "SUV", "origin": "USA", "power": "ICE"},
+                    {"make": "Chevrolet", "model": "Malibu", "body": "Sedan", "origin": "USA", "power": "ICE"},
+                    {"make": "Chevrolet", "model": "Traverse", "body": "SUV", "origin": "USA", "power": "ICE"},
+                    {"make": "Chevrolet", "model": "Camaro", "body": "Coupe", "origin": "USA", "power": "ICE"},
+                    {"make": "Chevrolet", "model": "Tahoe", "body": "SUV", "origin": "USA", "power": "ICE"},
+                    {"make": "Chevrolet", "model": "Suburban", "body": "SUV", "origin": "USA", "power": "ICE"},
+                    {"make": "Chevrolet", "model": "Corvette", "body": "Coupe", "origin": "USA", "power": "ICE"},
+                    {"make": "Chevrolet", "model": "Blazer", "body": "SUV", "origin": "USA", "power": "ICE"},
+                    {"make": "GMC", "model": "Sierra", "body": "Pickup", "origin": "USA", "power": "ICE"},
+                    {"make": "GMC", "model": "Acadia", "body": "SUV", "origin": "USA", "power": "ICE"},
+                    {"make": "GMC", "model": "Terrain", "body": "SUV", "origin": "USA", "power": "ICE"},
+                    {"make": "GMC", "model": "Yukon", "body": "SUV", "origin": "USA", "power": "ICE"},
+                    {"make": "Tesla", "model": "Model 3", "body": "Sedan", "origin": "USA", "power": "EV"},
+                    {"make": "Tesla", "model": "Model Y", "body": "SUV", "origin": "USA", "power": "EV"},
+                    {"make": "Tesla", "model": "Model S", "body": "Sedan", "origin": "USA", "power": "EV"},
+                    {"make": "Tesla", "model": "Model X", "body": "SUV", "origin": "USA", "power": "EV"},
+                    {"make": "Jeep", "model": "Wrangler", "body": "SUV", "origin": "USA", "power": "ICE"},
+                    {"make": "Jeep", "model": "Grand Cherokee", "body": "SUV", "origin": "USA", "power": "ICE"},
+                    {"make": "Jeep", "model": "Cherokee", "body": "SUV", "origin": "USA", "power": "ICE"},
+                    {"make": "Jeep", "model": "Compass", "body": "SUV", "origin": "USA", "power": "ICE"},
+                    {"make": "Jeep", "model": "Renegade", "body": "SUV", "origin": "USA", "power": "ICE"},
+                    {"make": "Jeep", "model": "Gladiator", "body": "Pickup", "origin": "USA", "power": "ICE"},
+                    {"make": "Ram", "model": "1500", "body": "Pickup", "origin": "USA", "power": "ICE"},
+                    {"make": "Ram", "model": "2500", "body": "Pickup", "origin": "USA", "power": "ICE"},
+                    {"make": "Dodge", "model": "Charger", "body": "Sedan", "origin": "USA", "power": "ICE"},
+                    {"make": "Dodge", "model": "Challenger", "body": "Coupe", "origin": "USA", "power": "ICE"},
+                    {"make": "Dodge", "model": "Durango", "body": "SUV", "origin": "USA", "power": "ICE"},
+                    {"make": "BMW", "model": "3 Series", "body": "Sedan", "origin": "GER", "power": "ICE"},
+                    {"make": "BMW", "model": "X3", "body": "SUV", "origin": "GER", "power": "ICE"},
+                    {"make": "BMW", "model": "X5", "body": "SUV", "origin": "GER", "power": "ICE"},
+                    {"make": "BMW", "model": "5 Series", "body": "Sedan", "origin": "GER", "power": "ICE"},
+                    {"make": "BMW", "model": "X1", "body": "SUV", "origin": "GER", "power": "ICE"},
+                    {"make": "BMW", "model": "4 Series", "body": "Coupe", "origin": "GER", "power": "ICE"},
+                    {"make": "BMW", "model": "i4", "body": "Sedan", "origin": "GER", "power": "EV"},
+                    {"make": "BMW", "model": "iX", "body": "SUV", "origin": "GER", "power": "EV"},
+                    {"make": "BMW", "model": "X7", "body": "SUV", "origin": "GER", "power": "ICE"},
+                    {"make": "Mercedes-Benz", "model": "C-Class", "body": "Sedan", "origin": "GER", "power": "ICE"},
+                    {"make": "Mercedes-Benz", "model": "GLC", "body": "SUV", "origin": "GER", "power": "ICE"},
+                    {"make": "Mercedes-Benz", "model": "E-Class", "body": "Sedan", "origin": "GER", "power": "ICE"},
+                    {"make": "Mercedes-Benz", "model": "GLE", "body": "SUV", "origin": "GER", "power": "ICE"},
+                    {"make": "Mercedes-Benz", "model": "A-Class", "body": "Hatchback", "origin": "GER", "power": "ICE"},
+                    {"make": "Mercedes-Benz", "model": "S-Class", "body": "Sedan", "origin": "GER", "power": "ICE"},
+                    {"make": "Mercedes-Benz", "model": "EQS", "body": "Sedan", "origin": "GER", "power": "EV"},
+                    {"make": "Mercedes-Benz", "model": "G-Class", "body": "SUV", "origin": "GER", "power": "ICE"},
+                    {"make": "Audi", "model": "A4", "body": "Sedan", "origin": "GER", "power": "ICE"},
+                    {"make": "Audi", "model": "Q5", "body": "SUV", "origin": "GER", "power": "ICE"},
+                    {"make": "Audi", "model": "A3", "body": "Hatchback", "origin": "GER", "power": "ICE"},
+                    {"make": "Audi", "model": "Q3", "body": "SUV", "origin": "GER", "power": "ICE"},
+                    {"make": "Audi", "model": "A6", "body": "Sedan", "origin": "GER", "power": "ICE"},
+                    {"make": "Audi", "model": "Q7", "body": "SUV", "origin": "GER", "power": "ICE"},
+                    {"make": "Audi", "model": "e-tron", "body": "SUV", "origin": "GER", "power": "EV"},
+                    {"make": "Audi", "model": "TT", "body": "Coupe", "origin": "GER", "power": "ICE"},
+                    {"make": "Volkswagen", "model": "Golf", "body": "Hatchback", "origin": "GER", "power": "ICE"},
+                    {"make": "Volkswagen", "model": "Tiguan", "body": "SUV", "origin": "GER", "power": "ICE"},
+                    {"make": "Volkswagen", "model": "Passat", "body": "Sedan", "origin": "GER", "power": "ICE"},
+                    {"make": "Volkswagen", "model": "Jetta", "body": "Sedan", "origin": "GER", "power": "ICE"},
+                    {"make": "Volkswagen", "model": "Atlas", "body": "SUV", "origin": "GER", "power": "ICE"},
+                    {"make": "Volkswagen", "model": "Polo", "body": "Hatchback", "origin": "GER", "power": "ICE"},
+                    {"make": "Volkswagen", "model": "T-Roc", "body": "SUV", "origin": "GER", "power": "ICE"},
+                    {"make": "Volkswagen", "model": "ID.4", "body": "SUV", "origin": "GER", "power": "EV"},
+                    {"make": "Porsche", "model": "911", "body": "Coupe", "origin": "GER", "power": "ICE"},
+                    {"make": "Porsche", "model": "Cayenne", "body": "SUV", "origin": "GER", "power": "ICE"},
+                    {"make": "Porsche", "model": "Macan", "body": "SUV", "origin": "GER", "power": "ICE"},
+                    {"make": "Porsche", "model": "Panamera", "body": "Sedan", "origin": "GER", "power": "ICE"},
+                    {"make": "Porsche", "model": "Taycan", "body": "Sedan", "origin": "GER", "power": "EV"},
+                    {"make": "Hyundai", "model": "Elantra", "body": "Sedan", "origin": "KOR", "power": "ICE"},
+                    {"make": "Hyundai", "model": "Tucson", "body": "SUV", "origin": "KOR", "power": "ICE"},
+                    {"make": "Hyundai", "model": "Santa Fe", "body": "SUV", "origin": "KOR", "power": "ICE"},
+                    {"make": "Hyundai", "model": "Sonata", "body": "Sedan", "origin": "KOR", "power": "ICE"},
+                    {"make": "Hyundai", "model": "Kona", "body": "SUV", "origin": "KOR", "power": "ICE"},
+                    {"make": "Hyundai", "model": "Palisade", "body": "SUV", "origin": "KOR", "power": "ICE"},
+                    {"make": "Hyundai", "model": "Ioniq", "body": "Hatchback", "origin": "KOR", "power": "EV"},
+                    {"make": "Hyundai", "model": "Venue", "body": "SUV", "origin": "KOR", "power": "ICE"},
+                    {"make": "Kia", "model": "Forte", "body": "Sedan", "origin": "KOR", "power": "ICE"},
+                    {"make": "Kia", "model": "Sportage", "body": "SUV", "origin": "KOR", "power": "ICE"},
+                    {"make": "Kia", "model": "Sorento", "body": "SUV", "origin": "KOR", "power": "ICE"},
+                    {"make": "Kia", "model": "Optima", "body": "Sedan", "origin": "KOR", "power": "ICE"},
+                    {"make": "Kia", "model": "Soul", "body": "Hatchback", "origin": "KOR", "power": "ICE"},
+                    {"make": "Kia", "model": "Telluride", "body": "SUV", "origin": "KOR", "power": "ICE"},
+                    {"make": "Kia", "model": "Rio", "body": "Hatchback", "origin": "KOR", "power": "ICE"},
+                    {"make": "Kia", "model": "Niro", "body": "SUV", "origin": "KOR", "power": "HYB"},
+                    {"make": "Kia", "model": "EV6", "body": "SUV", "origin": "KOR", "power": "EV"},
+                    {"make": "Lexus", "model": "RX", "body": "SUV", "origin": "JPN", "power": "HYB"},
+                    {"make": "Lexus", "model": "ES", "body": "Sedan", "origin": "JPN", "power": "HYB"},
+                    {"make": "Lexus", "model": "NX", "body": "SUV", "origin": "JPN", "power": "HYB"},
+                    {"make": "Lexus", "model": "GX", "body": "SUV", "origin": "JPN", "power": "ICE"},
+                    {"make": "Lexus", "model": "IS", "body": "Sedan", "origin": "JPN", "power": "ICE"},
+                    {"make": "Genesis", "model": "G90", "body": "Sedan", "origin": "KOR", "power": "ICE"},
+                    {"make": "Genesis", "model": "GV70", "body": "SUV", "origin": "KOR", "power": "ICE"},
+                    {"make": "Genesis", "model": "G80", "body": "Sedan", "origin": "KOR", "power": "ICE"},
+                    {"make": "Infiniti", "model": "Q50", "body": "Sedan", "origin": "JPN", "power": "ICE"},
+                    {"make": "Infiniti", "model": "QX60", "body": "SUV", "origin": "JPN", "power": "ICE"},
+                    {"make": "Infiniti", "model": "QX80", "body": "SUV", "origin": "JPN", "power": "ICE"},
+                    {"make": "Acura", "model": "MDX", "body": "SUV", "origin": "JPN", "power": "ICE"},
+                    {"make": "Acura", "model": "RDX", "body": "SUV", "origin": "JPN", "power": "ICE"},
+                    {"make": "Acura", "model": "TLX", "body": "Sedan", "origin": "JPN", "power": "ICE"},
+                    {"make": "Cadillac", "model": "Escalade", "body": "SUV", "origin": "USA", "power": "ICE"},
+                    {"make": "Cadillac", "model": "XT5", "body": "SUV", "origin": "USA", "power": "ICE"},
+                    {"make": "Cadillac", "model": "CT5", "body": "Sedan", "origin": "USA", "power": "ICE"},
+                    {"make": "Lincoln", "model": "Navigator", "body": "SUV", "origin": "USA", "power": "ICE"},
+                    {"make": "Lincoln", "model": "Aviator", "body": "SUV", "origin": "USA", "power": "ICE"},
+                    {"make": "Peugeot", "model": "208", "body": "Hatchback", "origin": "FRA", "power": "ICE"},
+                    {"make": "Peugeot", "model": "3008", "body": "SUV", "origin": "FRA", "power": "ICE"},
+                    {"make": "Peugeot", "model": "2008", "body": "SUV", "origin": "FRA", "power": "ICE"},
+                    {"make": "Peugeot", "model": "308", "body": "Hatchback", "origin": "FRA", "power": "ICE"},
+                    {"make": "Peugeot", "model": "5008", "body": "SUV", "origin": "FRA", "power": "ICE"},
+                    {"make": "Renault", "model": "Clio", "body": "Hatchback", "origin": "FRA", "power": "ICE"},
+                    {"make": "Renault", "model": "Captur", "body": "SUV", "origin": "FRA", "power": "ICE"},
+                    {"make": "Renault", "model": "Megane", "body": "Hatchback", "origin": "FRA", "power": "ICE"},
+                    {"make": "Renault", "model": "Kadjar", "body": "SUV", "origin": "FRA", "power": "ICE"},
+                    {"make": "Citroën", "model": "C3", "body": "Hatchback", "origin": "FRA", "power": "ICE"},
+                    {"make": "Citroën", "model": "C4", "body": "Hatchback", "origin": "FRA", "power": "ICE"},
+                    {"make": "Citroën", "model": "C5", "body": "SUV", "origin": "FRA", "power": "ICE"},
+                    {"make": "Dacia", "model": "Sandero", "body": "Hatchback", "origin": "ROM", "power": "ICE"},
+                    {"make": "Dacia", "model": "Duster", "body": "SUV", "origin": "ROM", "power": "ICE"},
+                    {"make": "Dacia", "model": "Logan", "body": "Sedan", "origin": "ROM", "power": "ICE"},
+                    {"make": "Skoda", "model": "Octavia", "body": "Sedan", "origin": "CZE", "power": "ICE"},
+                    {"make": "Skoda", "model": "Superb", "body": "Sedan", "origin": "CZE", "power": "ICE"},
+                    {"make": "Skoda", "model": "Kodiaq", "body": "SUV", "origin": "CZE", "power": "ICE"},
+                    {"make": "Skoda", "model": "Karoq", "body": "SUV", "origin": "CZE", "power": "ICE"},
+                    {"make": "Skoda", "model": "Fabia", "body": "Hatchback", "origin": "CZE", "power": "ICE"},
+                    {"make": "SEAT", "model": "Leon", "body": "Hatchback", "origin": "ESP", "power": "ICE"},
+                    {"make": "SEAT", "model": "Ateca", "body": "SUV", "origin": "ESP", "power": "ICE"},
+                    {"make": "SEAT", "model": "Ibiza", "body": "Hatchback", "origin": "ESP", "power": "ICE"},
+                    {"make": "SEAT", "model": "Arona", "body": "SUV", "origin": "ESP", "power": "ICE"},
+                    {"make": "Volvo", "model": "XC90", "body": "SUV", "origin": "SWE", "power": "ICE"},
+                    {"make": "Volvo", "model": "XC60", "body": "SUV", "origin": "SWE", "power": "ICE"},
+                    {"make": "Volvo", "model": "XC40", "body": "SUV", "origin": "SWE", "power": "ICE"},
+                    {"make": "Volvo", "model": "S90", "body": "Sedan", "origin": "SWE", "power": "ICE"},
+                    {"make": "Jaguar", "model": "F-Pace", "body": "SUV", "origin": "GBR", "power": "ICE"},
+                    {"make": "Jaguar", "model": "E-Pace", "body": "SUV", "origin": "GBR", "power": "ICE"},
+                    {"make": "Jaguar", "model": "XF", "body": "Sedan", "origin": "GBR", "power": "ICE"},
+                    {"make": "Jaguar", "model": "F-Type", "body": "Coupe", "origin": "GBR", "power": "ICE"},
+                    {"make": "Land Rover", "model": "Range Rover", "body": "SUV", "origin": "GBR", "power": "ICE"},
+                    {"make": "Land Rover", "model": "Discovery", "body": "SUV", "origin": "GBR", "power": "ICE"},
+                    {"make": "Land Rover", "model": "Evoque", "body": "SUV", "origin": "GBR", "power": "ICE"},
+                    {"make": "Land Rover", "model": "Defender", "body": "SUV", "origin": "GBR", "power": "ICE"},
+                    {"make": "Mini", "model": "Cooper", "body": "Hatchback", "origin": "GBR", "power": "ICE"},
+                    {"make": "Mini", "model": "Countryman", "body": "SUV", "origin": "GBR", "power": "ICE"},
+                    {"make": "Mini", "model": "Clubman", "body": "Wagon", "origin": "GBR", "power": "ICE"},
+                    {"make": "Alfa Romeo", "model": "Giulia", "body": "Sedan", "origin": "ITA", "power": "ICE"},
+                    {"make": "Alfa Romeo", "model": "Stelvio", "body": "SUV", "origin": "ITA", "power": "ICE"},
+                    {"make": "Fiat", "model": "500", "body": "Hatchback", "origin": "ITA", "power": "ICE"},
+                    {"make": "Fiat", "model": "Panda", "body": "Hatchback", "origin": "ITA", "power": "ICE"},
+                    {"make": "Fiat", "model": "Tipo", "body": "Hatchback", "origin": "ITA", "power": "ICE"},
+                    {"make": "Ferrari", "model": "Roma", "body": "Coupe", "origin": "ITA", "power": "ICE"},
+                    {"make": "Ferrari", "model": "F8", "body": "Coupe", "origin": "ITA", "power": "ICE"},
+                    {"make": "Ferrari", "model": "SF90", "body": "Coupe", "origin": "ITA", "power": "HYB"},
+                    {"make": "Lamborghini", "model": "Huracán", "body": "Coupe", "origin": "ITA", "power": "ICE"},
+                    {"make": "Lamborghini", "model": "Aventador", "body": "Coupe", "origin": "ITA", "power": "ICE"},
+                    {"make": "Lamborghini", "model": "Urus", "body": "SUV", "origin": "ITA", "power": "ICE"},
+                    {"make": "Maserati", "model": "Ghibli", "body": "Sedan", "origin": "ITA", "power": "ICE"},
+                    {"make": "Maserati", "model": "Levante", "body": "SUV", "origin": "ITA", "power": "ICE"},
+                    {"make": "Maserati", "model": "Quattroporte", "body": "Sedan", "origin": "ITA", "power": "ICE"}
+                ];
+                
+                // Game settings
+                this.maxAttempts = 5;
+                this.currentGameMode = 'daily'; // 'daily' or 'random'
+                
+                // Game state
+                this.currentCar = null;
+                this.guesses = [];
+                this.gameOver = false;
+                this.gameWon = false;
+                this.startTime = null;
+                this.endTime = null;
+                
+                // Initialize game
+                this.initializeGame();
+                this.setupEventListeners();
+                this.startTimer();
+            }
+
+            initializeGame() {
+                this.loadGameMode();
+                this.selectCar();
+                this.renderGameBoard();
+                this.updateModeIndicator();
+            }
+
+            loadGameMode() {
+                const savedMode = localStorage.getItem('cardleGameMode');
+                if (savedMode) {
+                    this.currentGameMode = savedMode;
+                }
+            }
+
+            saveGameMode() {
+                localStorage.setItem('cardleGameMode', this.currentGameMode);
+            }
+
+            selectCar() {
+                if (this.currentGameMode === 'daily') {
+                    this.currentCar = this.getDailyCar();
+                } else {
+                    this.currentCar = this.getRandomCar();
+                }
+            }
+
+            getDailyCar() {
+                // Use current date as seed for consistent daily car
+                const today = new Date();
+                const dateString = today.toISOString().split('T')[0]; // YYYY-MM-DD
+                const seed = this.hashCode(dateString);
+                const index = Math.abs(seed) % this.carDatabase.length;
+                return this.carDatabase[index];
+            }
+
+            getRandomCar() {
+                const randomIndex = Math.floor(Math.random() * this.carDatabase.length);
+                return this.carDatabase[randomIndex];
+            }
+
+            hashCode(str) {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash; // Convert to 32bit integer
+                }
+                return hash;
+            }
+
+            startTimer() {
+                this.startTime = Date.now();
+                this.updateTimerDisplay();
+            }
+
+            updateTimerDisplay() {
+                if (!this.startTime || this.gameOver) return;
+                
+                const elapsed = Date.now() - this.startTime;
+                const minutes = Math.floor(elapsed / 60000);
+                const seconds = Math.floor((elapsed % 60000) / 1000);
+                
+                const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                document.getElementById('gameTimer').textContent = timeString;
+                
+                setTimeout(() => this.updateTimerDisplay(), 1000);
+            }
+
+            getElapsedTime() {
+                if (!this.startTime) return "00:00";
+                
+                const endTime = this.endTime || Date.now();
+                const elapsed = endTime - this.startTime;
+                const minutes = Math.floor(elapsed / 60000);
+                const seconds = Math.floor((elapsed % 60000) / 1000);
+                
+                return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+
+            setupEventListeners() {
+                const carInput = document.getElementById('carInput');
+                const submitBtn = document.getElementById('submitGuessBtn');
+                const modeToggleBtn = document.getElementById('modeToggleBtn');
+                const helpBtn = document.getElementById('helpBtn');
+                const statsBtn = document.getElementById('statsBtn');
+
+                // Input and autocomplete
+                carInput.addEventListener('input', (e) => this.handleInput(e));
+                carInput.addEventListener('keydown', (e) => this.handleKeyDown(e));
+                submitBtn.addEventListener('click', () => this.submitGuess());
+
+                // Mode toggle
+                modeToggleBtn.addEventListener('click', () => this.toggleGameMode());
+
+                // Modal buttons
+                helpBtn.addEventListener('click', () => this.showModal('helpModal'));
+                statsBtn.addEventListener('click', () => this.showStats());
+
+                // Click outside modal to close
+                document.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('modal')) {
+                        this.closeModal(e.target.id);
+                    }
+                });
+            }
+
+            toggleGameMode() {
+                const newMode = this.currentGameMode === 'daily' ? 'random' : 'daily';
+                this.currentGameMode = newMode;
+                this.saveGameMode();
+                
+                // Reset game with new mode
+                this.resetGame();
+            }
+
+            updateModeIndicator() {
+                const indicator = document.getElementById('gameModeIndicator');
+                const toggleBtn = document.getElementById('modeToggleBtn');
+                
+                if (this.currentGameMode === 'daily') {
+                    indicator.textContent = 'Daily Challenge';
+                    toggleBtn.innerHTML = `
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        Random Mode
+                    `;
+                } else {
+                    indicator.textContent = 'Random Mode';
+                    toggleBtn.innerHTML = `
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M8 2v4l4-4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"></path>
+                        </svg>
+                        Daily Mode
+                    `;
+                }
+            }
+
+            handleInput(e) {
+                const value = e.target.value.trim();
+                const submitBtn = document.getElementById('submitGuessBtn');
+                
+                if (value.length > 0) {
+                    this.showAutocomplete(value);
+                    submitBtn.disabled = false;
+                } else {
+                    this.hideAutocomplete();
+                    submitBtn.disabled = true;
+                }
+            }
+
+            handleKeyDown(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.submitGuess();
+                } else if (e.key === 'Escape') {
+                    this.hideAutocomplete();
+                }
+            }
+
+            showAutocomplete(query) {
+                const dropdown = document.getElementById('autocompleteDropdown');
+                const matches = this.findMatches(query);
+                
+                if (matches.length === 0) {
+                    this.hideAutocomplete();
+                    return;
+                }
+
+                dropdown.innerHTML = matches.slice(0, 10).map(car => `
+                    <div class="autocomplete-item" data-car='${JSON.stringify(car)}'>
+                        ${car.make} ${car.model}
+                    </div>
+                `).join('');
+
+                dropdown.classList.remove('hidden');
+
+                // Add click handlers
+                dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+                    item.addEventListener('click', () => this.selectAutocompleteCar(item));
+                });
+            }
+
+            hideAutocomplete() {
+                const dropdown = document.getElementById('autocompleteDropdown');
+                dropdown.classList.add('hidden');
+            }
+
+            selectAutocompleteCar(item) {
+                const car = JSON.parse(item.dataset.car);
+                const input = document.getElementById('carInput');
+                input.value = `${car.make} ${car.model}`;
+                this.hideAutocomplete();
+                this.submitGuess();
+            }
+
+            findMatches(query) {
+                const normalizedQuery = query.toLowerCase().trim();
+                return this.carDatabase.filter(car => {
+                    const fullName = `${car.make} ${car.model}`.toLowerCase();
+                    return fullName.includes(normalizedQuery) || 
+                           car.make.toLowerCase().includes(normalizedQuery) ||
+                           car.model.toLowerCase().includes(normalizedQuery);
+                });
+            }
+
+            submitGuess() {
+                if (this.gameOver) return;
+
+                const input = document.getElementById('carInput');
+                const guessText = input.value.trim();
+                
+                if (!guessText) return;
+
+                const guessedCar = this.findExactMatch(guessText);
+                if (!guessedCar) {
+                    alert('Please select a valid car from the suggestions.');
+                    return;
+                }
+
+                this.processGuess(guessedCar);
+                input.value = '';
+                input.focus();
+                this.hideAutocomplete();
+                document.getElementById('submitGuessBtn').disabled = true;
+            }
+
+            findExactMatch(query) {
+                const normalizedQuery = query.toLowerCase().trim();
+                return this.carDatabase.find(car => {
+                    const fullName = `${car.make} ${car.model}`.toLowerCase();
+                    return fullName === normalizedQuery;
+                });
+            }
+
+            processGuess(guessedCar) {
+                const feedback = this.getFeedback(guessedCar, this.currentCar);
+                this.guesses.push({ car: guessedCar, feedback });
+                
+                this.renderGuess(this.guesses.length - 1, guessedCar, feedback);
+                
+                if (this.isCorrectGuess(feedback)) {
+                    this.endGame(true);
+                } else if (this.guesses.length >= this.maxAttempts) {
+                    this.endGame(false);
+                }
+            }
+
+            getFeedback(guess, answer) {
+                return {
+                    make: guess.make === answer.make ? 'correct' : 'incorrect',
+                    model: guess.model === answer.model ? 'correct' : 'incorrect',
+                    body: guess.body === answer.body ? 'correct' : 'incorrect',
+                    origin: guess.origin === answer.origin ? 'correct' : 'incorrect',
+                    power: guess.power === answer.power ? 'correct' : 'incorrect'
+                };
+            }
+
+            isCorrectGuess(feedback) {
+                return Object.values(feedback).every(result => result === 'correct');
+            }
+
+            renderGameBoard() {
+                const gameGrid = document.getElementById('gameGrid');
+                gameGrid.innerHTML = '';
+                
+                for (let i = 0; i < this.maxAttempts; i++) {
+                    const row = document.createElement('div');
+                    row.className = 'guess-row';
+                    row.innerHTML = `
+                        <div class="guess-cell" data-col="make"></div>
+                        <div class="guess-cell" data-col="model"></div>
+                        <div class="guess-cell" data-col="body"></div>
+                        <div class="guess-cell" data-col="origin"></div>
+                        <div class="guess-cell" data-col="power"></div>
+                    `;
+                    gameGrid.appendChild(row);
+                }
+            }
+
+            renderGuess(guessIndex, car, feedback) {
+                const rows = document.querySelectorAll('.guess-row');
+                const row = rows[guessIndex];
+                const cells = row.querySelectorAll('.guess-cell');
+                
+                const values = [car.make, car.model, car.body, car.origin, car.power];
+                const feedbackKeys = ['make', 'model', 'body', 'origin', 'power'];
+                
+                cells.forEach((cell, index) => {
+                    setTimeout(() => {
+                        cell.textContent = values[index];
+                        cell.classList.add('revealing');
+                        cell.classList.add(feedback[feedbackKeys[index]]);
+                        
+                        setTimeout(() => {
+                            cell.classList.remove('revealing');
+                        }, 600);
+                    }, index * 100);
+                });
+            }
+
+            endGame(won) {
+                this.gameOver = true;
+                this.gameWon = won;
+                this.endTime = Date.now();
+                
+                this.saveGameStats();
+                
+                setTimeout(() => {
+                    if (won) {
+                        this.showWinModal();
+                    } else {
+                        this.showLossModal();
+                    }
+                }, 1000);
+            }
+
+            showWinModal() {
+                const modal = document.getElementById('winModal');
+                const winTime = document.getElementById('winTime');
+                const winMessage = document.getElementById('winMessage');
+                const winActions = document.getElementById('winActions');
+                
+                winTime.textContent = `Time: ${this.getElapsedTime()}`;
+                
+                if (this.currentGameMode === 'daily') {
+                    winMessage.innerHTML = `<p>You completed today's daily challenge in ${this.guesses.length} ${this.guesses.length === 1 ? 'attempt' : 'attempts'}!</p>`;
+                    winActions.innerHTML = `
+                        <button class="btn btn--primary" onclick="game.playRandomMode()">Play Random Mode</button>
+                        <button class="btn btn--outline" onclick="game.closeModal('winModal')">Close</button>
+                    `;
+                } else {
+                    winMessage.innerHTML = `<p>Great job! You guessed it in ${this.guesses.length} ${this.guesses.length === 1 ? 'attempt' : 'attempts'}!</p>`;
+                    winActions.innerHTML = `
+                        <button class="btn btn--primary" onclick="game.playAnotherRandom()">Play Another</button>
+                        <button class="btn btn--outline" onclick="game.closeModal('winModal')">Close</button>
+                    `;
+                }
+                
+                this.showModal('winModal');
+            }
+
+            showLossModal() {
+                const modal = document.getElementById('lossModal');
+                const lossTime = document.getElementById('lossTime');
+                const lossMessage = document.getElementById('lossMessage');
+                const lossActions = document.getElementById('lossActions');
+                const correctAnswer = document.getElementById('correctAnswer');
+                
+                lossTime.textContent = `Time: ${this.getElapsedTime()}`;
+                
+                correctAnswer.innerHTML = `
+                    <div class="answer-item">
+                        <div class="answer-label">Make</div>
+                        <div class="answer-value">${this.currentCar.make}</div>
+                    </div>
+                    <div class="answer-item">
+                        <div class="answer-label">Model</div>
+                        <div class="answer-value">${this.currentCar.model}</div>
+                    </div>
+                    <div class="answer-item">
+                        <div class="answer-label">Body</div>
+                        <div class="answer-value">${this.currentCar.body}</div>
+                    </div>
+                    <div class="answer-item">
+                        <div class="answer-label">Origin</div>
+                        <div class="answer-value">${this.currentCar.origin}</div>
+                    </div>
+                    <div class="answer-item">
+                        <div class="answer-label">Power</div>
+                        <div class="answer-value">${this.currentCar.power}</div>
+                    </div>
+                `;
+                
+                if (this.currentGameMode === 'daily') {
+                    lossMessage.innerHTML = `<p>The answer was <strong>${this.currentCar.make} ${this.currentCar.model}</strong>. Better luck tomorrow!</p>`;
+                    lossActions.innerHTML = `
+                        <button class="btn btn--primary" onclick="game.playRandomMode()">Try Random Mode</button>
+                        <button class="btn btn--outline" onclick="game.closeModal('lossModal')">Close</button>
+                    `;
+                } else {
+                    lossMessage.innerHTML = `<p>The answer was <strong>${this.currentCar.make} ${this.currentCar.model}</strong>. Try again!</p>`;
+                    lossActions.innerHTML = `
+                        <button class="btn btn--primary" onclick="game.playAnotherRandom()">Play Again</button>
+                        <button class="btn btn--outline" onclick="game.closeModal('lossModal')">Close</button>
+                    `;
+                }
+                
+                this.showModal('lossModal');
+            }
+
+            playRandomMode() {
+                this.currentGameMode = 'random';
+                this.saveGameMode();
+                this.resetGame();
+                this.closeModal('winModal');
+            }
+
+            playAnotherRandom() {
+                this.resetGame();
+                this.closeModal('winModal');
+                this.closeModal('lossModal');
+            }
+
+            resetGame() {
+                this.guesses = [];
+                this.gameOver = false;
+                this.gameWon = false;
+                this.startTime = null;
+                this.endTime = null;
+                
+                this.selectCar();
+                this.renderGameBoard();
+                this.updateModeIndicator();
+                this.startTimer();
+                
+                document.getElementById('carInput').value = '';
+                document.getElementById('submitGuessBtn').disabled = true;
+            }
+
+            saveGameStats() {
+                const stats = this.getStats();
+                const mode = this.currentGameMode;
+                
+                if (!stats[mode]) {
+                    stats[mode] = { played: 0, won: 0, streak: 0, maxStreak: 0 };
+                }
+                
+                stats[mode].played++;
+                
+                if (this.gameWon) {
+                    stats[mode].won++;
+                    stats[mode].streak++;
+                    stats[mode].maxStreak = Math.max(stats[mode].maxStreak, stats[mode].streak);
+                } else {
+                    stats[mode].streak = 0;
+                }
+                
+                localStorage.setItem('cardleStats', JSON.stringify(stats));
+            }
+
+            getStats() {
+                const savedStats = localStorage.getItem('cardleStats');
+                return savedStats ? JSON.parse(savedStats) : {};
+            }
+
+            showStats() {
+                const stats = this.getStats();
+                const statsContent = document.getElementById('statsContent');
+                
+                const dailyStats = stats.daily || { played: 0, won: 0, streak: 0, maxStreak: 0 };
+                const randomStats = stats.random || { played: 0, won: 0, streak: 0, maxStreak: 0 };
+                
+                const dailyWinRate = dailyStats.played > 0 ? Math.round((dailyStats.won / dailyStats.played) * 100) : 0;
+                const randomWinRate = randomStats.played > 0 ? Math.round((randomStats.won / randomStats.played) * 100) : 0;
+                
+                statsContent.innerHTML = `
+                    <div class="help-section">
+                        <h3>Daily Challenge</h3>
+                        <p>Games Played: ${dailyStats.played}</p>
+                        <p>Win Rate: ${dailyWinRate}%</p>
+                        <p>Current Streak: ${dailyStats.streak}</p>
+                        <p>Max Streak: ${dailyStats.maxStreak}</p>
+                    </div>
+                    <div class="help-section">
+                        <h3>Random Mode</h3>
+                        <p>Games Played: ${randomStats.played}</p>
+                        <p>Win Rate: ${randomWinRate}%</p>
+                        <p>Current Streak: ${randomStats.streak}</p>
+                        <p>Max Streak: ${randomStats.maxStreak}</p>
+                    </div>
+                `;
+                
+                this.showModal('statsModal');
+            }
+
+            showModal(modalId) {
+                const modal = document.getElementById(modalId);
+                modal.classList.add('show');
+            }
+
+            closeModal(modalId) {
+                const modal = document.getElementById(modalId);
+                modal.classList.remove('show');
+            }
+        }
+
+        // Global functions for modal interactions
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('show');
+        }
+
+        // Initialize game when page loads
+        let game;
+        document.addEventListener('DOMContentLoaded', () => {
+            game = new Cardle();
+        });
+    </script>
+</body>
+</html>
