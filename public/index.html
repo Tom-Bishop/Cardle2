@@ -1956,13 +1956,13 @@
                     if (!body || !body.me) return null;
                     
                     const me = body.me;
-                    // Parse stats from server response
+                    // Parse stats from server response (support both old and new shapes)
                     return {
                         daily: {
-                            played: me.daily_played || 0,
-                            won: me.daily_won || 0,
-                            streak: me.streak_days || me.streak || 0,
-                            maxStreak: me.max_streak_days || me.max_streak || 0
+                            played: me.daily_played || me.games_played || 0,
+                            won: me.daily_won || me.wins || 0,
+                            streak: (me.daily_streak !== undefined ? me.daily_streak : (me.streak_days !== undefined ? me.streak_days : (me.streak || 0))),
+                            maxStreak: (me.daily_max_streak !== undefined ? me.daily_max_streak : (me.max_streak_days !== undefined ? me.max_streak_days : (me.max_streak || 0)))
                         },
                         random: {
                             played: me.random_played || 0,

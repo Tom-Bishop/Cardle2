@@ -28,71 +28,152 @@ export async function onRequestPost({ request, env }) {
     const today = new Date().toISOString().split('T')[0];
 
     if (mode === 'daily') {
-      // Check if already played today
-      const existing = await env.DB.prepare(`SELECT last_daily_play, daily_streak, daily_max_streak FROM stats WHERE user_id = ?`).bind(userId).first();
-      if (existing?.last_daily_play === today) {
-        return new Response(JSON.stringify({ ok: false, error: 'daily_played_today' }), { status: 409, headers: { 'Content-Type': 'application/json' } });
-      }
-
-      // Compute new streak
-      let newStreak = 0;
-      let newMaxStreak = existing?.daily_max_streak || 0;
-      
-      if (won) {
-        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-        if (existing?.last_daily_play === yesterday) {
-          newStreak = (existing?.daily_streak || 0) + 1;
-        } else {
-          newStreak = 1;
+      try {
+        // Check if already played today (new schema)
+        const existing = await env.DB.prepare(`SELECT last_daily_play, daily_streak, daily_max_streak FROM stats WHERE user_id = ?`).bind(userId).first();
+        if (existing?.last_daily_play === today) {
+          return new Response(JSON.stringify({ ok: false, error: 'daily_played_today' }), { status: 409, headers: { 'Content-Type': 'application/json' } });
         }
-        newMaxStreak = Math.max(newMaxStreak, newStreak);
-      } else {
-        newStreak = 0;
-      }
 
-      await env.DB.prepare(`
-        UPDATE stats
-        SET daily_played = daily_played + 1,
-            daily_won = daily_won + ?,
-            daily_streak = ?,
-            daily_max_streak = ?,
-            last_daily_play = ?,
-            updated_at = ?
-        WHERE user_id = ?
-      `).bind(won ? 1 : 0, newStreak, newMaxStreak, today, now, userId).run();
+        // Compute new streak
+        let newStreak = 0;
+        let newMaxStreak = existing?.daily_max_streak || 0;
+        
+        if (won) {
+          const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          if (existing?.last_daily_play === yesterday) {
+            newStreak = (existing?.daily_streak || 0) + 1;
+          } else {
+            newStreak = 1;
+          }
+          newMaxStreak = Math.max(newMaxStreak, newStreak);
+        } else {
+          newStreak = 0;
+        }
+
+        await env.DB.prepare(`
+          UPDATE stats
+          SET daily_played = daily_played + 1,
+              daily_won = daily_won + ?,
+              daily_streak = ?,
+              daily_max_streak = ?,
+              last_daily_play = ?,
+              updated_at = ?
+          WHERE user_id = ?
+        `).bind(won ? 1 : 0, newStreak, newMaxStreak, today, now, userId).run();
+      } catch (errNewSchema) {
+        // Fallback for older schema that doesn't have daily_* columns
+        const existing = await env.DB.prepare(`SELECT last_daily_play, streak_days, max_streak, wins, games_played, total_guesses, total_time_seconds FROM stats WHERE user_id = ?`).bind(userId).first();
+        if (existing?.last_daily_play === today) {
+          return new Response(JSON.stringify({ ok: false, error: 'daily_played_today' }), { status: 409, headers: { 'Content-Type': 'application/json' } });
+        }
+
+        // Compute new streak using old columns
+        let newStreak = 0;
+        let newMax = existing?.max_streak || 0;
+        if (won) {
+          const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          if (existing?.last_daily_play === yesterday) {
+            newStreak = (existing?.streak_days || 0) + 1;
+          } else {
+            newStreak = 1;
+          }
+          if (newStreak > newMax) newMax = newStreak;
+        } else {
+          newStreak = 0;
+        }
+
+        await env.DB.prepare(`
+          UPDATE stats
+          SET games_played = games_played + 1,
+              wins = wins + ?,
+              total_guesses = total_guesses + ?,
+              total_time_seconds = total_time_seconds + ?,
+              last_daily_play = ?,
+              streak_days = ?,
+              max_streak = ?,
+              updated_at = ?
+          WHERE user_id = ?
+        `).bind(won ? 1 : 0, guesses, timeSeconds, today, newStreak, newMax, now, userId).run();
+      }
     } else {
-      // Random mode - no streak tracking, just update win/loss
-      const existingStreak = await env.DB.prepare(`SELECT random_streak, random_max_streak FROM stats WHERE user_id = ?`).bind(userId).first();
-      let newStreak = 0;
-      let newMaxStreak = existingStreak?.random_max_streak || 0;
+      // Random mode - try new schema first, fallback to old if needed
+      try {
+        const existingStreak = await env.DB.prepare(`SELECT random_streak, random_max_streak FROM stats WHERE user_id = ?`).bind(userId).first();
+        let newStreak = 0;
+        let newMaxStreak = existingStreak?.random_max_streak || 0;
 
-      if (won) {
-        newStreak = (existingStreak?.random_streak || 0) + 1;
-        newMaxStreak = Math.max(newMaxStreak, newStreak);
-      } else {
-        newStreak = 0;
+        if (won) {
+          newStreak = (existingStreak?.random_streak || 0) + 1;
+          newMaxStreak = Math.max(newMaxStreak, newStreak);
+        } else {
+          newStreak = 0;
+        }
+
+        await env.DB.prepare(`
+          UPDATE stats
+          SET random_played = random_played + 1,
+              random_won = random_won + ?,
+              random_streak = ?,
+              random_max_streak = ?,
+              updated_at = ?
+          WHERE user_id = ?
+        `).bind(won ? 1 : 0, newStreak, newMaxStreak, now, userId).run();
+      } catch (errNewSchema) {
+        // Fallback: update aggregate fields on old schema
+        if (won) {
+          // increment wins/games_played
+          await env.DB.prepare(`
+            UPDATE stats
+            SET games_played = games_played + 1,
+                wins = wins + ?,
+                total_guesses = total_guesses + ?,
+                total_time_seconds = total_time_seconds + ?,
+                updated_at = ?
+            WHERE user_id = ?
+          `).bind(won ? 1 : 0, guesses, timeSeconds, now, userId).run();
+        } else {
+          await env.DB.prepare(`
+            UPDATE stats
+            SET games_played = games_played + 1,
+                total_guesses = total_guesses + ?,
+                total_time_seconds = total_time_seconds + ?,
+                updated_at = ?
+            WHERE user_id = ?
+          `).bind(guesses, timeSeconds, now, userId).run();
+        }
       }
-
-      await env.DB.prepare(`
-        UPDATE stats
-        SET random_played = random_played + 1,
-            random_won = random_won + ?,
-            random_streak = ?,
-            random_max_streak = ?,
-            updated_at = ?
-        WHERE user_id = ?
-      `).bind(won ? 1 : 0, newStreak, newMaxStreak, now, userId).run();
     }
 
-    // Return updated stats
-    const updatedStats = await env.DB.prepare(`
-      SELECT daily_played, daily_won, daily_streak, daily_max_streak,
-             random_played, random_won, random_streak, random_max_streak
-      FROM stats
-      WHERE user_id = ?
-    `).bind(userId).first();
+    // Return updated stats (try new schema, fallback to old and map fields)
+    try {
+      const updatedStats = await env.DB.prepare(`
+        SELECT daily_played, daily_won, daily_streak, daily_max_streak,
+               random_played, random_won, random_streak, random_max_streak
+        FROM stats
+        WHERE user_id = ?
+      `).bind(userId).first();
+      return Response.json({ ok: true, stats: updatedStats });
+    } catch (errNew) {
+      // Fallback: read legacy columns and map to new shape
+      const s = await env.DB.prepare(`
+        SELECT wins, games_played, total_guesses, total_time_seconds, streak_days, max_streak, last_daily_play
+        FROM stats
+        WHERE user_id = ?
+      `).bind(userId).first();
 
-    return Response.json({ ok: true, stats: updatedStats });
+      const mapped = {
+        daily_played: s?.games_played || 0,
+        daily_won: s?.wins || 0,
+        daily_streak: s?.streak_days || 0,
+        daily_max_streak: s?.max_streak || 0,
+        random_played: 0,
+        random_won: 0,
+        random_streak: 0,
+        random_max_streak: 0
+      };
+      return Response.json({ ok: true, stats: mapped });
+    }
   } catch (err) {
     console.error('Stats error:', err);
     return new Response(JSON.stringify({ ok: false, error: String(err && err.stack ? err.stack : err) }), { status: 500, headers: { 'Content-Type': 'application/json' } });
