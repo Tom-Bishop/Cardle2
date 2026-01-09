@@ -787,7 +787,9 @@
             try {
                 const res = await fetch('/api/leaderboard');
                 if (!res.ok) throw new Error(await res.text());
-                return res.json();
+                const data = await res.json();
+                // API returns { ok: true, results: [...] }
+                return data && data.results ? data.results : [];
             } catch (error) {
                 console.warn('Failed to fetch leaderboard:', error);
                 return [];
