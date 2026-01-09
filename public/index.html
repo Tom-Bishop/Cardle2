@@ -555,10 +555,22 @@
             color: var(--color-text-muted);
             margin-top: 10px;
         }
+
+        /* Initially hide the app until user authenticates */
+        .app {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .app.authenticated {
+            opacity: 1;
+            pointer-events: auto;
+            transition: opacity 0.3s ease;
+        }
     </style>
 </head>
 <body>
-    <div class="app">
+    <div class="app" id="app">
         <!-- Timer -->
         <div class="timer" id="gameTimer">00:00</div>
 
@@ -921,6 +933,9 @@
 
                 // on success, server sets cookie; update UI and close modal
                 setCookie('cardleUsername', username, 365);
+                // Unlock the app for authenticated users
+                const appDiv = document.getElementById('app') || document.querySelector('.app');
+                if (appDiv) appDiv.classList.add('authenticated');
                 fetchMyStatsAndUpdateUI();
                 closeModal('authModal');
             } catch (e) {
@@ -1696,10 +1711,21 @@
                 const dailyWinRate = dailyStats.played > 0 ? Math.round((dailyStats.won / dailyStats.played) * 100) : 0;
                 const randomWinRate = randomStats.played > 0 ? Math.round((randomStats.won / randomStats.played) * 100) : 0;
                 
+                const totalPlayed = dailyStats.played + randomStats.played;
+                const totalWon = dailyStats.won + randomStats.won;
+                const totalWinRate = totalPlayed > 0 ? Math.round((totalWon / totalPlayed) * 100) : 0;
+                
                 statsContent.innerHTML = `
+                    <div class="help-section">
+                        <h3>Overall</h3>
+                        <p>Total Games Played: ${totalPlayed}</p>
+                        <p>Total Wins: ${totalWon}</p>
+                        <p>Overall Win Rate: ${totalWinRate}%</p>
+                    </div>
                     <div class="help-section">
                         <h3>Daily Challenge</h3>
                         <p>Games Played: ${dailyStats.played}</p>
+                        <p>Wins: ${dailyStats.won}</p>
                         <p>Win Rate: ${dailyWinRate}%</p>
                         <p>Current Streak: ${dailyStats.streak}</p>
                         <p>Max Streak: ${dailyStats.maxStreak}</p>
@@ -1707,6 +1733,7 @@
                     <div class="help-section">
                         <h3>Random Mode</h3>
                         <p>Games Played: ${randomStats.played}</p>
+                        <p>Wins: ${randomStats.won}</p>
                         <p>Win Rate: ${randomWinRate}%</p>
                         <p>Current Streak: ${randomStats.streak}</p>
                         <p>Max Streak: ${randomStats.maxStreak}</p>
@@ -1826,16 +1853,25 @@
         // Initialize game when page loads
         let game;
         document.addEventListener('DOMContentLoaded', () => {
-            // Ensure username cookie exists (prompts if not)
-            getUsername();
-            // populate last-play info
-            fetchMyStatsAndUpdateUI();
-            game = new Cardle();
-                // auth modal buttons
-                const registerBtn = document.getElementById('registerBtn');
-                const loginBtn = document.getElementById('loginBtn');
-                if (registerBtn) registerBtn.addEventListener('click', () => handleAuth('register'));
-                if (loginBtn) loginBtn.addEventListener('click', () => handleAuth('login'));
+            // Check if already authenticated (has username cookie)
+            const username = getCookie('cardleUsername');
+            if (username) {
+                // User is authenticated, unlock the app
+                const appDiv = document.getElementById('app');
+                if (appDiv) appDiv.classList.add('authenticated');
+                // populate last-play info
+                fetchMyStatsAndUpdateUI();
+                game = new Cardle();
+            } else {
+                // No authentication, show auth modal
+                showAuthModal();
+            }
+            
+            // auth modal buttons
+            const registerBtn = document.getElementById('registerBtn');
+            const loginBtn = document.getElementById('loginBtn');
+            if (registerBtn) registerBtn.addEventListener('click', () => handleAuth('register'));
+            if (loginBtn) loginBtn.addEventListener('click', () => handleAuth('login'));
         });
     </script>
 </body>
