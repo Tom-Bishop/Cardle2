@@ -812,7 +812,21 @@
                 if (!res.ok) {
                     // try to show server-provided JSON error
                     let txt = await res.text();
-                    try { const j = JSON.parse(txt); if (j && j.error) txt = j.error; } catch(e){}
+                    try { 
+                        const j = JSON.parse(txt); 
+                        if (j && j.error) {
+                            // Handle daily_played_today with a friendly message
+                            if (j.error === 'daily_played_today') {
+                                const statsContent = document.getElementById('statsContent');
+                                if (statsContent) {
+                                    statsContent.innerHTML = `<div class="help-section"><h3>Daily Played</h3><p>You've already played today's daily challenge. Come back tomorrow or try Random Mode!</p></div>`;
+                                    game.showModal('statsModal');
+                                }
+                                return;
+                            }
+                            txt = j.error; 
+                        } 
+                    } catch(e){}
                     throw new Error(txt || 'Submission failed');
                 }
                 const data = await res.json();
@@ -835,6 +849,7 @@
                 console.warn('Failed to fetch leaderboard:', error);
                 return [];
             }
+        }
 
         async function fetchMyStatsAndUpdateUI() {
             try {
