@@ -1564,8 +1564,10 @@
                     const isCurrentUser = entry.username === currentUsername;
                     const rowClass = isCurrentUser ? 'leaderboard-user-entry' : '';
                     const wins = entry.wins || 0;
-                    const avgG = entry.avgGuesses != null ? Number(entry.avgGuesses).toFixed(2) : '--';
-                    const avgT = entry.avgTimeSeconds != null ? formatTime(Math.round(entry.avgTimeSeconds)) : '--:--';
+                    const avgGuessesVal = (entry.avg_guesses ?? entry.avgGuesses ?? null);
+                    const avgTimeVal = (entry.avg_time_seconds ?? entry.avgTimeSeconds ?? null);
+                    const avgG = avgGuessesVal != null ? Number(avgGuessesVal).toFixed(2) : '--';
+                    const avgT = avgTimeVal != null ? formatTime(Math.round(Number(avgTimeVal))) : '--:--';
 
                     html += `
                         <tr class="${rowClass}">
