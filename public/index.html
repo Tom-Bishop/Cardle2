@@ -2612,13 +2612,17 @@
                 const usersList = document.getElementById('usersList');
                 try {
                     const url = `/api/admin/users?username=${encodeURIComponent(getUsername())}`;
+                    console.log('Fetching admin users from:', url);
                     const res = await fetch(url);
                     
+                    const text = await res.text();
+                    console.log('Response status:', res.status);
+                    console.log('Response text:', text);
+                    
                     if (!res.ok) {
-                        throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+                        throw new Error(`HTTP ${res.status}: ${text}`);
                     }
                     
-                    const text = await res.text();
                     const users = JSON.parse(text);
                     
                     if (!Array.isArray(users) || users.length === 0) {
