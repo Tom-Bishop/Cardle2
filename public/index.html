@@ -2606,9 +2606,10 @@
                     });
                 }
             }
+        });
 
-            // ===== ADMIN HELPER FUNCTIONS =====
-            async function loadAdminUsers() {
+        // ===== ADMIN HELPER FUNCTIONS (outside DOMContentLoaded for global access) =====
+        async function loadAdminUsers() {
                 const usersList = document.getElementById('usersList');
                 try {
                     const url = `/api/admin/users?username=${encodeURIComponent(getUsername())}`;
