@@ -1566,6 +1566,9 @@
                 this.startTime = null;
                 this.endTime = null;
                 
+                // Autocomplete state
+                this.selectedIndex = -1;
+                
                 // Load cars from database, then initialize
                 this.loadCars().then(() => {
                     this.initializeGame();
@@ -1854,6 +1857,8 @@
                 const value = e.target.value.trim();
                 const submitBtn = document.getElementById('submitGuessBtn');
                 
+                this.selectedIndex = -1; // Reset selection on new input
+                
                 if (value.length > 0) {
                     this.showAutocomplete(value);
                     submitBtn.disabled = false;
@@ -1864,12 +1869,45 @@
             }
 
             handleKeyDown(e) {
-                if (e.key === 'Enter') {
+                const dropdown = document.getElementById('autocompleteDropdown');
+                const items = dropdown.querySelectorAll('.autocomplete-item');
+                
+                if (e.key === 'ArrowDown') {
                     e.preventDefault();
-                    this.submitGuess();
+                    if (items.length > 0) {
+                        this.selectedIndex = Math.min(this.selectedIndex + 1, items.length - 1);
+                        this.highlightSelected(items);
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (items.length > 0) {
+                        this.selectedIndex = Math.max(this.selectedIndex - 1, -1);
+                        this.highlightSelected(items);
+                    }
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (this.selectedIndex >= 0 && items[this.selectedIndex]) {
+                        this.selectAutocompleteCar(items[this.selectedIndex]);
+                    } else {
+                        this.submitGuess();
+                    }
                 } else if (e.key === 'Escape') {
                     this.hideAutocomplete();
+                    this.selectedIndex = -1;
                 }
+            }
+
+            highlightSelected(items) {
+                items.forEach((item, index) => {
+                    if (index === this.selectedIndex) {
+                        item.style.backgroundColor = 'var(--color-accent)';
+                        item.style.color = 'var(--color-white)';
+                        item.scrollIntoView({ block: 'nearest' });
+                    } else {
+                        item.style.backgroundColor = '';
+                        item.style.color = '';
+                    }
+                });
             }
 
             showAutocomplete(query) {
@@ -1898,6 +1936,7 @@
             hideAutocomplete() {
                 const dropdown = document.getElementById('autocompleteDropdown');
                 dropdown.classList.add('hidden');
+                this.selectedIndex = -1;
             }
 
             selectAutocompleteCar(item) {
@@ -2588,8 +2627,30 @@
             // auth modal buttons
             const registerBtn = document.getElementById('registerBtn');
             const loginBtn = document.getElementById('loginBtn');
+            const authUsername = document.getElementById('authUsername');
+            const authPassword = document.getElementById('authPassword');
+            
             if (registerBtn) registerBtn.addEventListener('click', () => handleAuth('register'));
             if (loginBtn) loginBtn.addEventListener('click', () => handleAuth('login'));
+            
+            // Enter key on auth modal inputs defaults to login
+            if (authUsername) {
+                authUsername.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAuth('login');
+                    }
+                });
+            }
+            if (authPassword) {
+                authPassword.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAuth('login');
+                    }
+                });
+            }
+            
             const confirmChangePwdBtn = document.getElementById('confirmChangePwdBtn');
             if (confirmChangePwdBtn) confirmChangePwdBtn.addEventListener('click', () => handleChangePassword());
 
