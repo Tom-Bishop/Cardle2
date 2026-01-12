@@ -1183,16 +1183,9 @@
         <div class="modal-content">
             <div class="modal-title">
                 Admin Panel
-                <button class="btn btn--outline btn--sm" onclick="closeModal('adminModal')" style="float:right; margin-top:-5px;">✕</button>
+                <button class="btn btn--outline btn--sm" onclick="document.getElementById('adminModal').style.display='none'" style="float:right; margin-top:-5px;">✕</button>
             </div>
             <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
-                <!-- Wipe All Data Section -->
-                <div class="admin-section" style="margin-bottom:20px; border-bottom:1px solid var(--color-border); padding-bottom:15px;">
-                    <h3 style="margin:0 0 10px 0; color:var(--color-text);">Database Actions</h3>
-                    <button class="btn btn--danger" id="wipeDataBtn">🗑️ Wipe All User Data</button>
-                    <div id="wipeConfirmMsg" style="color:var(--color-danger); font-size:0.9rem; margin-top:8px; display:none;">Are you sure? This will delete all users and stats. <button class="btn btn--danger btn--sm" id="wipeConfirmBtn">Confirm Wipe</button> <button class="btn btn--outline btn--sm" id="wipeCancelBtn">Cancel</button></div>
-                </div>
-
                 <!-- User Management Section -->
                 <div class="admin-section" style="margin-bottom:20px; border-bottom:1px solid var(--color-border); padding-bottom:15px;">
                     <h3 style="margin:0 0 10px 0; color:var(--color-text);">Delete Users</h3>
@@ -2618,7 +2611,7 @@
             async function loadAdminUsers() {
                 const usersList = document.getElementById('usersList');
                 try {
-                    const res = await fetch('/api/admin/users');
+                    const res = await fetch(`/api/admin/users?username=${encodeURIComponent(getUsername())}`);
                     const users = await res.json();
                     
                     if (!Array.isArray(users) || users.length === 0) {
@@ -2653,7 +2646,7 @@
                     const res = await fetch('/api/admin/delete-user', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username })
+                        body: JSON.stringify({ username, adminUsername: getUsername() })
                     });
                     if (res.ok) {
                         alert(`User "${username}" deleted successfully`);
@@ -2666,9 +2659,9 @@
                 }
             }
 
-            async function loadUserStatsForEdit(username) {
+            async function loadUserStatsForEdit(selectedUsername) {
                 try {
-                    const res = await fetch(`/api/admin/users?username=${username}`);
+                    const res = await fetch(`/api/admin/users?username=${encodeURIComponent(getUsername())}&targetUser=${encodeURIComponent(selectedUsername)}`);
                     const data = await res.json();
                     const user = Array.isArray(data) ? data[0] : data;
 
@@ -2713,7 +2706,7 @@
                     const res = await fetch('/api/admin/update-user-stats', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username, stats })
+                        body: JSON.stringify({ username, stats, adminUsername: getUsername() })
                     });
 
                     if (res.ok) {

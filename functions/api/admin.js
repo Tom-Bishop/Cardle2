@@ -1,7 +1,6 @@
 export async function onRequest(context) {
     const { request, env } = context;
     const url = new URL(request.url);
-    const action = url.searchParams.get('action');
     
     // Parse request body
     let body = {};
@@ -13,8 +12,8 @@ export async function onRequest(context) {
         }
     }
 
-    // Verify admin (must be Tom)
-    const adminUsername = body.username || url.searchParams.get('username');
+    // Verify admin (must be Tom) - check both body and query params
+    const adminUsername = body.adminUsername || body.username || url.searchParams.get('username');
     if (adminUsername !== 'Tom') {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 403 });
     }
@@ -42,7 +41,7 @@ export async function onRequest(context) {
 // GET /api/admin/users - List all users with stats
 async function handleGetUsers(env, url) {
     try {
-        const filterUsername = url.searchParams.get('username');
+        const targetUser = url.searchParams.get('targetUser');
         
         let query = `
             SELECT 
@@ -55,9 +54,9 @@ async function handleGetUsers(env, url) {
             LEFT JOIN stats s ON u.id = s.user_id
         `;
 
-        if (filterUsername) {
+        if (targetUser) {
             query += ` WHERE u.username = ?`;
-            const result = await env.DB.prepare(query).bind(filterUsername).all();
+            const result = await env.DB.prepare(query).bind(targetUser).all();
             return new Response(JSON.stringify(result.results || []), { 
                 headers: { 'Content-Type': 'application/json' }
             });
