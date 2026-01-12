@@ -941,6 +941,13 @@
                     </svg>
                 </button>
             </div>
+            <div class="top-support" id="topSupportWrapper" style="display: none;">
+                <button class="btn btn--outline btn--sm" id="supportTicketBtn" title="Support Ticket">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </button>
+            </div>
             <div class="top-account" id="topAccountWrapper">
                 <button class="btn btn--outline btn--sm" id="topAccountBtn" title="Account">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1693,6 +1700,20 @@
                     document.addEventListener('click', () => { if (accountMenu) accountMenu.style.display = 'none'; });
                     if (logoutBtn) logoutBtn.addEventListener('click', () => { logout(); });
                     if (changePasswordBtn) changePasswordBtn.addEventListener('click', () => { showChangePasswordModal(); });
+                
+                // Support Ticket button (Jon only)
+                const supportWrapper = document.getElementById('topSupportWrapper');
+                const supportTicketBtn = document.getElementById('supportTicketBtn');
+                const username = getUsername();
+                if (username === 'Jon' && supportWrapper) {
+                    supportWrapper.style.display = 'block';
+                    if (supportTicketBtn) {
+                        supportTicketBtn.addEventListener('click', () => {
+                            window.open('https://support.example.com', '_blank');
+                        });
+                    }
+                }
+                
                 leaderboardBtn.addEventListener('click', () => this.showLeaderboard());
                     const accountBtn = document.getElementById('accountBtn');
                     if (accountBtn) accountBtn.addEventListener('click', () => showAuthModal());
