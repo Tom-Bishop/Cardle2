@@ -141,6 +141,35 @@
             z-index: 1000;
         }
 
+        /* Account menu dropdown */
+        #accountMenu {
+            background-color: var(--color-surface);
+            border: 1.5px solid var(--color-border);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 8px !important;
+            display: none;
+            position: absolute;
+            top: 40px !important;
+            right: 0 !important;
+            width: auto !important;
+            min-width: 160px;
+        }
+
+        #accountMenu > div {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            text-align: center;
+        }
+
+        #accountMenu .btn {
+            margin: 0 !important;
+            width: 100%;
+            font-size: 0.8rem;
+            padding: 8px 12px;
+        }
+
         /* Buttons */
         .btn {
             display: inline-flex;
@@ -791,10 +820,10 @@
                         <circle cx="12" cy="7" r="4"></circle>
                     </svg>
                 </button>
-                <div id="accountMenu" class="modal-content" style="display:none; position: absolute; top:40px; right:0; width:200px;">
-                    <div style="text-align:left; padding:12px;">
-                        <button class="btn btn--outline" id="changePasswordBtn">Change Password</button>
-                        <button class="btn btn--outline" id="logoutBtn" style="margin-left:8px;">Logout</button>
+                <div id="accountMenu">
+                    <div>
+                        <button class="btn btn--outline btn--sm" id="changePasswordBtn">Change Password</button>
+                        <button class="btn btn--outline btn--sm" id="logoutBtn">Logout</button>
                     </div>
                 </div>
             </div>

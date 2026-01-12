@@ -10,12 +10,14 @@ export async function onRequestPost({ request, env }) {
   const body = await request.json().catch(() => null);
   if (!body) return new Response(JSON.stringify({ ok: false, error: 'bad_json' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
 
-  const action = String(body.action || '').trim(); // 'register' or 'login'
+  const action = String(body.action || '').trim(); // 'register', 'login', or 'change_password'
   const username = String(body.username || '').trim();
   const password = String(body.password || '');
 
   if (!username || username.length > 24) return new Response(JSON.stringify({ ok: false, error: 'bad_username' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
-  if (!password) return new Response(JSON.stringify({ ok: false, error: 'bad_password' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+
+  // Only check password field for register/login actions
+  if ((action === 'register' || action === 'login') && !password) return new Response(JSON.stringify({ ok: false, error: 'bad_password' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
 
   const now = new Date().toISOString();
 
