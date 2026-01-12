@@ -1073,6 +1073,19 @@
         </div>
     </div>
 
+    <!-- Support Ticket Modal -->
+    <div class="modal" id="supportTicketModal">
+        <div class="modal-content">
+            <div class="modal-title">Support Ticket</div>
+            <div class="modal-body">
+                <img id="supportTicketImage" src="https://via.placeholder.com/400x300?text=Support+Ticket" alt="Support" style="width: 100%; max-width: 400px; border-radius: 8px; margin-bottom: 16px;">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn--primary" onclick="closeModal('supportTicketModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Stats Modal -->
     <div class="modal" id="statsModal">
         <div class="modal-content">
@@ -1709,7 +1722,7 @@
                     supportWrapper.style.display = 'block';
                     if (supportTicketBtn) {
                         supportTicketBtn.addEventListener('click', () => {
-                            window.open('https://support.example.com', '_blank');
+                            game.showModal('supportTicketModal');
                         });
                     }
                 }
