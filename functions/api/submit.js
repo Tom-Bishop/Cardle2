@@ -46,8 +46,12 @@ export async function onRequestPost({ request, env }) {
       let newStreak = 0;
       let newMax = existing?.max_streak || 0;
       if (won) {
-        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-        if (existing?.last_daily_play === yesterday) {
+        // compute previous business day (skip weekends)
+        const d = new Date();
+        d.setDate(d.getDate() - 1);
+        while (d.getDay() === 0 || d.getDay() === 6) { d.setDate(d.getDate() - 1); }
+        const prevBusiness = d.toISOString().split('T')[0];
+        if (existing?.last_daily_play === prevBusiness) {
           newStreak = (existing?.streak_days || 0) + 1;
         } else {
           newStreak = 1;

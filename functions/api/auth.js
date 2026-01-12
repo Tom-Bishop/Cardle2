@@ -64,5 +64,22 @@ export async function onRequestPost({ request, env }) {
     return new Response(JSON.stringify({ ok: true, me }), { headers });
   }
 
+  if (action === 'change_password') {
+    // require username, currentPassword, newPassword
+    const current = String(body.currentPassword || '');
+    const next = String(body.newPassword || '');
+    if (!current || !next) return new Response(JSON.stringify({ ok: false, error: 'bad_password' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+
+    const row = await env.DB.prepare(`SELECT id, password_hash FROM users WHERE username = ?`).bind(username).first();
+    if (!row?.id) return new Response(JSON.stringify({ ok: false, error: 'not_found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
+    const curHash = await sha256Hex(current);
+    if (curHash !== row.password_hash) return new Response(JSON.stringify({ ok: false, error: 'bad_credentials' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+
+    const newHash = await sha256Hex(next);
+    await env.DB.prepare(`UPDATE users SET password_hash = ? WHERE id = ?`).bind(newHash, row.id).run();
+
+    return new Response(JSON.stringify({ ok: true }), { headers: { 'Content-Type': 'application/json' } });
+  }
+
   return new Response(JSON.stringify({ ok: false, error: 'unknown_action' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
 }

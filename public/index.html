@@ -73,15 +73,15 @@
         }
 
         .game-title {
-            font-size: 3.8rem;
-            letter-spacing: 0.15em;
+            font-size: 3rem;
+            letter-spacing: 0.12em;
             font-weight: 900;
             color: var(--color-accent);
             margin: 0;
         }
 
         #streakBadge {
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             color: var(--color-warning);
             font-weight: 700;
             white-space: nowrap;
@@ -131,6 +131,14 @@
             color: var(--color-accent);
             z-index: 1000;
             box-shadow: 0 4px 12px rgba(14, 165, 164, 0.15);
+        }
+
+        /* Account button near timer */
+        .top-account {
+            position: fixed;
+            top: 18px;
+            right: 110px;
+            z-index: 1000;
         }
 
         /* Buttons */
@@ -774,7 +782,22 @@
 <body>
     <div class="app" id="app">
         <!-- Timer -->
-        <div class="timer" id="gameTimer">00:00</div>
+            <div class="timer" id="gameTimer">00:00</div>
+            <div class="top-account" id="topAccountWrapper">
+                <button class="btn btn--outline btn--sm" id="topAccountBtn" title="Account">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M4 21v-2a4 4 0 0 1 3-3.87"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </button>
+                <div id="accountMenu" class="modal-content" style="display:none; position: absolute; top:40px; right:0; width:200px;">
+                    <div style="text-align:left; padding:12px;">
+                        <button class="btn btn--outline" id="changePasswordBtn">Change Password</button>
+                        <button class="btn btn--outline" id="logoutBtn" style="margin-left:8px;">Logout</button>
+                    </div>
+                </div>
+            </div>
 
         <!-- Header -->
         <header class="header">
@@ -800,14 +823,7 @@
                     </svg>
                     Leaderboard
                 </button>
-                <button class="btn btn--outline btn--sm" id="accountBtn" title="Account">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M20 21v-2a4 4 0 0 0-3-3.87"></path>
-                        <path d="M4 21v-2a4 4 0 0 1 3-3.87"></path>
-                        <circle cx="12" cy="7" r="4"></circle>
-                    </svg>
-                    Account
-                </button>
+                <!-- account button moved to top-right -->
                 <button class="btn btn--outline btn--sm" id="modeToggleBtn">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
@@ -982,6 +998,28 @@
         </div>
     </div>
 
+    <!-- Change Password Modal -->
+    <div class="modal" id="changePasswordModal">
+        <div class="modal-content">
+            <div class="modal-title">Change Password</div>
+            <div class="modal-body">
+                <div style="margin-bottom:10px; text-align:left;">
+                    <label for="currentPassword">Current Password</label>
+                    <input id="currentPassword" type="password" class="form-control" style="margin-top:6px;">
+                </div>
+                <div style="margin-bottom:10px; text-align:left;">
+                    <label for="newPassword">New Password</label>
+                    <input id="newPassword" type="password" class="form-control" style="margin-top:6px;">
+                </div>
+                <div id="changePwdMessage" style="color:var(--color-danger); margin-top:6px; min-height:18px;"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn--primary" id="confirmChangePwdBtn">Change Password</button>
+                <button class="btn btn--outline" onclick="closeModal('changePasswordModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script>
 
         // Leaderboard and Result Management (cookie-based username)
@@ -1102,6 +1140,49 @@
             if (msg) msg.textContent = '';
             const m = document.getElementById('authModal');
             m.classList.add('show');
+        }
+
+        function logout() {
+            // clear cookie and show auth modal
+            setCookie('cardleUsername', '', -1);
+            const appDiv = document.getElementById('app');
+            if (appDiv) appDiv.classList.remove('authenticated');
+            showAuthModal();
+        }
+
+        function showChangePasswordModal() {
+            closeModal('accountMenu');
+            const m = document.getElementById('changePasswordModal');
+            const msg = document.getElementById('changePwdMessage');
+            const cur = document.getElementById('currentPassword');
+            const nw = document.getElementById('newPassword');
+            if (cur) cur.value = '';
+            if (nw) nw.value = '';
+            if (msg) msg.textContent = '';
+            m.classList.add('show');
+        }
+
+        async function handleChangePassword() {
+            const cur = document.getElementById('currentPassword');
+            const nw = document.getElementById('newPassword');
+            const msg = document.getElementById('changePwdMessage');
+            if (!cur || !nw) return;
+            const currentPassword = cur.value || '';
+            const newPassword = nw.value || '';
+            if (!currentPassword || !newPassword) { if (msg) msg.textContent = 'Enter both passwords'; return; }
+            const username = getCookie('cardleUsername');
+            try {
+                const res = await fetch('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'change_password', username, currentPassword, newPassword }) });
+                const body = await res.json().catch(() => null);
+                if (!res.ok || !body || !body.ok) {
+                    if (msg) msg.textContent = (body && body.error) || 'Failed to change password';
+                    return;
+                }
+                closeModal('changePasswordModal');
+                alert('Password changed');
+            } catch (e) {
+                if (msg) msg.textContent = 'Network error';
+            }
         }
 
         async function handleAuth(action) {
@@ -1550,7 +1631,19 @@
 
                 // Modal buttons
                 helpBtn.addEventListener('click', () => this.showModal('helpModal'));
-                statsBtn.addEventListener('click', () => this.showStats());
+                    statsBtn.addEventListener('click', () => this.showStats());
+                    // top account button handlers
+                    const topAccountBtn = document.getElementById('topAccountBtn');
+                    const accountMenu = document.getElementById('accountMenu');
+                    const logoutBtn = document.getElementById('logoutBtn');
+                    const changePasswordBtn = document.getElementById('changePasswordBtn');
+                    if (topAccountBtn) topAccountBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (accountMenu.style.display === 'none') accountMenu.style.display = 'block'; else accountMenu.style.display = 'none';
+                    });
+                    document.addEventListener('click', () => { if (accountMenu) accountMenu.style.display = 'none'; });
+                    if (logoutBtn) logoutBtn.addEventListener('click', () => { logout(); });
+                    if (changePasswordBtn) changePasswordBtn.addEventListener('click', () => { showChangePasswordModal(); });
                 leaderboardBtn.addEventListener('click', () => this.showLeaderboard());
                     const accountBtn = document.getElementById('accountBtn');
                     if (accountBtn) accountBtn.addEventListener('click', () => showAuthModal());
@@ -2182,6 +2275,8 @@
             const loginBtn = document.getElementById('loginBtn');
             if (registerBtn) registerBtn.addEventListener('click', () => handleAuth('register'));
             if (loginBtn) loginBtn.addEventListener('click', () => handleAuth('login'));
+            const confirmChangePwdBtn = document.getElementById('confirmChangePwdBtn');
+            if (confirmChangePwdBtn) confirmChangePwdBtn.addEventListener('click', () => handleChangePassword());
         });
     </script>
 </body>
