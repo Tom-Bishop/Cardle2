@@ -906,21 +906,9 @@
             }
         }
 
-        /* Animation for cell reveals */
-        @keyframes cellReveal {
-            0% {
-                transform: scaleY(1);
-            }
-            50% {
-                transform: scaleY(0);
-            }
-            100% {
-                transform: scaleY(1);
-            }
-        }
-
+        /* Disable size-changing reveal animation to prevent box growth */
         .guess-cell.revealing {
-            animation: cellReveal 0.6s ease-in-out;
+            animation: none;
         }
 
         /* App authentication state */
