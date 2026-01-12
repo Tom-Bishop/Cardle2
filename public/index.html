@@ -2490,6 +2490,135 @@
             modal.classList.remove('show');
         }
 
+        // ===== ADMIN HELPER FUNCTIONS (global scope) =====
+        async function loadAdminUsers() {
+            const usersList = document.getElementById('usersList');
+            try {
+                const url = `/api/admin/users?username=${encodeURIComponent(getUsername())}`;
+                console.log('Fetching admin users from:', url);
+                const res = await fetch(url);
+                
+                const text = await res.text();
+                console.log('Response status:', res.status);
+                console.log('Response text:', text);
+                
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}: ${text}`);
+                }
+                
+                const users = JSON.parse(text);
+                
+                if (!Array.isArray(users) || users.length === 0) {
+                    usersList.innerHTML = '<p style="color:var(--color-text-dim); text-align:center; padding:20px 0;">No users found</p>';
+                    return;
+                }
+
+                usersList.innerHTML = users.map(user => `
+                    <div class="user-item" style="padding:10px; border-bottom:1px solid var(--color-border); display:flex; justify-content:space-between; align-items:center;">
+                        <div class="user-info">
+                            <div class="user-name" style="font-weight:600; color:var(--color-text);">${user.username}</div>
+                            <div class="user-stats" style="font-size:0.85rem; color:var(--color-text-dim); margin-top:2px;">
+                                ${user.wins || 0} wins / ${user.games_played || 0} games
+                            </div>
+                        </div>
+                        <button class="btn btn--danger btn--sm" onclick="deleteAdminUser('${user.username.replace(/'/g, "\\'")}')" >Delete</button>
+                    </div>
+                `).join('');
+
+                // Also populate user select dropdown
+                const adminUserSelect = document.getElementById('adminUserSelect');
+                adminUserSelect.innerHTML = '<option value="">-- Choose a user --</option>' + 
+                    users.map(u => `<option value="${u.username}">${u.username}</option>`).join('');
+            } catch (e) {
+                console.error('Admin users error:', e);
+                usersList.innerHTML = `<p style="color:var(--color-danger); text-align:center; padding:20px 0;">Error: ${e.message}</p>`;
+            }
+        }
+
+        async function deleteAdminUser(username) {
+            if (!confirm(`Delete user "${username}" and all their stats?`)) return;
+            try {
+                const res = await fetch('/api/admin/delete-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, adminUsername: getUsername() })
+                });
+                if (res.ok) {
+                    alert(`User "${username}" deleted successfully`);
+                    loadAdminUsers();
+                } else {
+                    alert('Error deleting user: ' + (await res.text()));
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        async function loadUserStatsForEdit(selectedUsername) {
+            try {
+                const res = await fetch(`/api/admin/users?username=${encodeURIComponent(getUsername())}&targetUser=${encodeURIComponent(selectedUsername)}`);
+                const data = await res.json();
+                const user = Array.isArray(data) ? data[0] : data;
+
+                if (!user) {
+                    alert('User not found');
+                    return;
+                }
+
+                document.getElementById('stat_wins').value = user.wins || 0;
+                document.getElementById('stat_games').value = user.games_played || 0;
+                document.getElementById('stat_guesses').value = user.total_guesses || 0;
+                document.getElementById('stat_time').value = user.total_time_seconds || 0;
+                document.getElementById('stat_daily_wins').value = user.daily_won || 0;
+                document.getElementById('stat_daily_streak').value = user.daily_streak || 0;
+                document.getElementById('stat_daily_max').value = user.daily_max_streak || 0;
+                document.getElementById('stat_random_wins').value = user.random_won || 0;
+                document.getElementById('stat_random_streak').value = user.random_streak || 0;
+                document.getElementById('stat_random_max').value = user.random_max_streak || 0;
+            } catch (e) {
+                alert('Error loading user stats: ' + e.message);
+            }
+        }
+
+        async function saveUserStats() {
+            const username = document.getElementById('adminUserSelect').value;
+            const statsMessage = document.getElementById('statsMessage');
+            
+            try {
+                const stats = {
+                    wins: parseInt(document.getElementById('stat_wins').value) || 0,
+                    games_played: parseInt(document.getElementById('stat_games').value) || 0,
+                    total_guesses: parseInt(document.getElementById('stat_guesses').value) || 0,
+                    total_time_seconds: parseInt(document.getElementById('stat_time').value) || 0,
+                    daily_won: parseInt(document.getElementById('stat_daily_wins').value) || 0,
+                    daily_streak: parseInt(document.getElementById('stat_daily_streak').value) || 0,
+                    daily_max_streak: parseInt(document.getElementById('stat_daily_max').value) || 0,
+                    random_won: parseInt(document.getElementById('stat_random_wins').value) || 0,
+                    random_streak: parseInt(document.getElementById('stat_random_streak').value) || 0,
+                    random_max_streak: parseInt(document.getElementById('stat_random_max').value) || 0
+                };
+
+                const res = await fetch('/api/admin/update-user-stats', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, stats, adminUsername: getUsername() })
+                });
+
+                if (res.ok) {
+                    statsMessage.style.color = 'var(--color-success)';
+                    statsMessage.textContent = 'Stats saved successfully!';
+                    setTimeout(() => { statsMessage.textContent = ''; }, 3000);
+                    loadAdminUsers();
+                } else {
+                    statsMessage.style.color = 'var(--color-danger)';
+                    statsMessage.textContent = 'Error saving stats: ' + (await res.text());
+                }
+            } catch (e) {
+                statsMessage.style.color = 'var(--color-danger)';
+                statsMessage.textContent = 'Error: ' + e.message;
+            }
+        }
+
         // Initialize game when page loads
         let game;
         document.addEventListener('DOMContentLoaded', () => {
@@ -2604,136 +2733,6 @@
                         adminUserSelect.value = '';
                         statsEditor.style.display = 'none';
                     });
-                }
-            }
-        });
-
-        // ===== ADMIN HELPER FUNCTIONS (outside DOMContentLoaded for global access) =====
-        async function loadAdminUsers() {
-                const usersList = document.getElementById('usersList');
-                try {
-                    const url = `/api/admin/users?username=${encodeURIComponent(getUsername())}`;
-                    console.log('Fetching admin users from:', url);
-                    const res = await fetch(url);
-                    
-                    const text = await res.text();
-                    console.log('Response status:', res.status);
-                    console.log('Response text:', text);
-                    
-                    if (!res.ok) {
-                        throw new Error(`HTTP ${res.status}: ${text}`);
-                    }
-                    
-                    const users = JSON.parse(text);
-                    
-                    if (!Array.isArray(users) || users.length === 0) {
-                        usersList.innerHTML = '<p style="color:var(--color-text-dim); text-align:center; padding:20px 0;">No users found</p>';
-                        return;
-                    }
-
-                    usersList.innerHTML = users.map(user => `
-                        <div class="user-item" style="padding:10px; border-bottom:1px solid var(--color-border); display:flex; justify-content:space-between; align-items:center;">
-                            <div class="user-info">
-                                <div class="user-name" style="font-weight:600; color:var(--color-text);">${user.username}</div>
-                                <div class="user-stats" style="font-size:0.85rem; color:var(--color-text-dim); margin-top:2px;">
-                                    ${user.wins || 0} wins / ${user.games_played || 0} games
-                                </div>
-                            </div>
-                            <button class="btn btn--danger btn--sm" onclick="deleteAdminUser('${user.username.replace(/'/g, "\\'")}')">Delete</button>
-                        </div>
-                    `).join('');
-
-                    // Also populate user select dropdown
-                    const adminUserSelect = document.getElementById('adminUserSelect');
-                    adminUserSelect.innerHTML = '<option value="">-- Choose a user --</option>' + 
-                        users.map(u => `<option value="${u.username}">${u.username}</option>`).join('');
-                } catch (e) {
-                    console.error('Admin users error:', e);
-                    usersList.innerHTML = `<p style="color:var(--color-danger); text-align:center; padding:20px 0;">Error: ${e.message}</p>`;
-                }
-            }
-
-            async function deleteAdminUser(username) {
-                if (!confirm(`Delete user "${username}" and all their stats?`)) return;
-                try {
-                    const res = await fetch('/api/admin/delete-user', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username, adminUsername: getUsername() })
-                    });
-                    if (res.ok) {
-                        alert(`User "${username}" deleted successfully`);
-                        loadAdminUsers();
-                    } else {
-                        alert('Error deleting user: ' + (await res.text()));
-                    }
-                } catch (e) {
-                    alert('Error: ' + e.message);
-                }
-            }
-
-            async function loadUserStatsForEdit(selectedUsername) {
-                try {
-                    const res = await fetch(`/api/admin/users?username=${encodeURIComponent(getUsername())}&targetUser=${encodeURIComponent(selectedUsername)}`);
-                    const data = await res.json();
-                    const user = Array.isArray(data) ? data[0] : data;
-
-                    if (!user) {
-                        alert('User not found');
-                        return;
-                    }
-
-                    document.getElementById('stat_wins').value = user.wins || 0;
-                    document.getElementById('stat_games').value = user.games_played || 0;
-                    document.getElementById('stat_guesses').value = user.total_guesses || 0;
-                    document.getElementById('stat_time').value = user.total_time_seconds || 0;
-                    document.getElementById('stat_daily_wins').value = user.daily_won || 0;
-                    document.getElementById('stat_daily_streak').value = user.daily_streak || 0;
-                    document.getElementById('stat_daily_max').value = user.daily_max_streak || 0;
-                    document.getElementById('stat_random_wins').value = user.random_won || 0;
-                    document.getElementById('stat_random_streak').value = user.random_streak || 0;
-                    document.getElementById('stat_random_max').value = user.random_max_streak || 0;
-                } catch (e) {
-                    alert('Error loading user stats: ' + e.message);
-                }
-            }
-
-            async function saveUserStats() {
-                const username = document.getElementById('adminUserSelect').value;
-                const statsMessage = document.getElementById('statsMessage');
-                
-                try {
-                    const stats = {
-                        wins: parseInt(document.getElementById('stat_wins').value) || 0,
-                        games_played: parseInt(document.getElementById('stat_games').value) || 0,
-                        total_guesses: parseInt(document.getElementById('stat_guesses').value) || 0,
-                        total_time_seconds: parseInt(document.getElementById('stat_time').value) || 0,
-                        daily_won: parseInt(document.getElementById('stat_daily_wins').value) || 0,
-                        daily_streak: parseInt(document.getElementById('stat_daily_streak').value) || 0,
-                        daily_max_streak: parseInt(document.getElementById('stat_daily_max').value) || 0,
-                        random_won: parseInt(document.getElementById('stat_random_wins').value) || 0,
-                        random_streak: parseInt(document.getElementById('stat_random_streak').value) || 0,
-                        random_max_streak: parseInt(document.getElementById('stat_random_max').value) || 0
-                    };
-
-                    const res = await fetch('/api/admin/update-user-stats', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username, stats, adminUsername: getUsername() })
-                    });
-
-                    if (res.ok) {
-                        statsMessage.style.color = 'var(--color-success)';
-                        statsMessage.textContent = 'Stats saved successfully!';
-                        setTimeout(() => { statsMessage.textContent = ''; }, 3000);
-                        loadAdminUsers();
-                    } else {
-                        statsMessage.style.color = 'var(--color-danger)';
-                        statsMessage.textContent = 'Error saving stats: ' + (await res.text());
-                    }
-                } catch (e) {
-                    statsMessage.style.color = 'var(--color-danger)';
-                    statsMessage.textContent = 'Error: ' + e.message;
                 }
             }
         });
