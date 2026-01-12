@@ -1469,207 +1469,8 @@
         // Enhanced Cardle Game Logic with Timer and Dual Game Modes
         class Cardle {
             constructor() {
-                // Car database
-                this.carDatabase = [
-                    {"make": "Toyota", "model": "Corolla", "body": "Sedan", "origin": "JPN", "power": "ICE"},
-                    {"make": "Toyota", "model": "RAV4", "body": "SUV", "origin": "JPN", "power": "HYB"},
-                    {"make": "Toyota", "model": "Camry", "body": "Sedan", "origin": "JPN", "power": "HYB"},
-                    {"make": "Toyota", "model": "Prius", "body": "Hatchback", "origin": "JPN", "power": "HYB"},
-                    {"make": "Toyota", "model": "Highlander", "body": "SUV", "origin": "JPN", "power": "HYB"},
-                    {"make": "Toyota", "model": "C-HR", "body": "SUV", "origin": "JPN", "power": "HYB"},
-                    {"make": "Toyota", "model": "Yaris", "body": "Hatchback", "origin": "JPN", "power": "ICE"},
-                    {"make": "Toyota", "model": "Hilux", "body": "Pickup", "origin": "JPN", "power": "ICE"},
-                    {"make": "Toyota", "model": "Land Cruiser", "body": "SUV", "origin": "JPN", "power": "ICE"},
-                    {"make": "Honda", "model": "Civic", "body": "Sedan", "origin": "JPN", "power": "ICE"},
-                    {"make": "Honda", "model": "CR-V", "body": "SUV", "origin": "JPN", "power": "HYB"},
-                    {"make": "Honda", "model": "Accord", "body": "Sedan", "origin": "JPN", "power": "HYB"},
-                    {"make": "Honda", "model": "HR-V", "body": "SUV", "origin": "JPN", "power": "ICE"},
-                    {"make": "Honda", "model": "Pilot", "body": "SUV", "origin": "JPN", "power": "ICE"},
-                    {"make": "Honda", "model": "Fit", "body": "Hatchback", "origin": "JPN", "power": "ICE"},
-                    {"make": "Nissan", "model": "Sentra", "body": "Sedan", "origin": "JPN", "power": "ICE"},
-                    {"make": "Nissan", "model": "Rogue", "body": "SUV", "origin": "JPN", "power": "ICE"},
-                    {"make": "Nissan", "model": "Altima", "body": "Sedan", "origin": "JPN", "power": "ICE"},
-                    {"make": "Nissan", "model": "Pathfinder", "body": "SUV", "origin": "JPN", "power": "ICE"},
-                    {"make": "Nissan", "model": "Qashqai", "body": "SUV", "origin": "JPN", "power": "ICE"},
-                    {"make": "Nissan", "model": "Juke", "body": "SUV", "origin": "JPN", "power": "ICE"},
-                    {"make": "Nissan", "model": "Leaf", "body": "Hatchback", "origin": "JPN", "power": "EV"},
-                    {"make": "Nissan", "model": "GT-R", "body": "Coupe", "origin": "JPN", "power": "ICE"},
-                    {"make": "Mazda", "model": "Mazda3", "body": "Hatchback", "origin": "JPN", "power": "ICE"},
-                    {"make": "Mazda", "model": "CX-5", "body": "SUV", "origin": "JPN", "power": "ICE"},
-                    {"make": "Mazda", "model": "MX-5", "body": "Convertible", "origin": "JPN", "power": "ICE"},
-                    {"make": "Mazda", "model": "CX-9", "body": "SUV", "origin": "JPN", "power": "ICE"},
-                    {"make": "Mazda", "model": "CX-30", "body": "SUV", "origin": "JPN", "power": "ICE"},
-                    {"make": "Subaru", "model": "Outback", "body": "Wagon", "origin": "JPN", "power": "ICE"},
-                    {"make": "Subaru", "model": "Forester", "body": "SUV", "origin": "JPN", "power": "ICE"},
-                    {"make": "Subaru", "model": "Crosstrek", "body": "SUV", "origin": "JPN", "power": "ICE"},
-                    {"make": "Subaru", "model": "Impreza", "body": "Hatchback", "origin": "JPN", "power": "ICE"},
-                    {"make": "Subaru", "model": "WRX", "body": "Sedan", "origin": "JPN", "power": "ICE"},
-                    {"make": "Subaru", "model": "BRZ", "body": "Coupe", "origin": "JPN", "power": "ICE"},
-                    {"make": "Ford", "model": "F-150", "body": "Pickup", "origin": "USA", "power": "ICE"},
-                    {"make": "Ford", "model": "Explorer", "body": "SUV", "origin": "USA", "power": "ICE"},
-                    {"make": "Ford", "model": "Escape", "body": "SUV", "origin": "USA", "power": "HYB"},
-                    {"make": "Ford", "model": "Mustang", "body": "Coupe", "origin": "USA", "power": "ICE"},
-                    {"make": "Ford", "model": "Edge", "body": "SUV", "origin": "USA", "power": "ICE"},
-                    {"make": "Ford", "model": "Focus", "body": "Hatchback", "origin": "USA", "power": "ICE"},
-                    {"make": "Ford", "model": "Fiesta", "body": "Hatchback", "origin": "USA", "power": "ICE"},
-                    {"make": "Ford", "model": "Bronco", "body": "SUV", "origin": "USA", "power": "ICE"},
-                    {"make": "Ford", "model": "Ranger", "body": "Pickup", "origin": "USA", "power": "ICE"},
-                    {"make": "Chevrolet", "model": "Silverado", "body": "Pickup", "origin": "USA", "power": "ICE"},
-                    {"make": "Chevrolet", "model": "Equinox", "body": "SUV", "origin": "USA", "power": "ICE"},
-                    {"make": "Chevrolet", "model": "Malibu", "body": "Sedan", "origin": "USA", "power": "ICE"},
-                    {"make": "Chevrolet", "model": "Traverse", "body": "SUV", "origin": "USA", "power": "ICE"},
-                    {"make": "Chevrolet", "model": "Camaro", "body": "Coupe", "origin": "USA", "power": "ICE"},
-                    {"make": "Chevrolet", "model": "Tahoe", "body": "SUV", "origin": "USA", "power": "ICE"},
-                    {"make": "Chevrolet", "model": "Suburban", "body": "SUV", "origin": "USA", "power": "ICE"},
-                    {"make": "Chevrolet", "model": "Corvette", "body": "Coupe", "origin": "USA", "power": "ICE"},
-                    {"make": "Chevrolet", "model": "Blazer", "body": "SUV", "origin": "USA", "power": "ICE"},
-                    {"make": "GMC", "model": "Sierra", "body": "Pickup", "origin": "USA", "power": "ICE"},
-                    {"make": "GMC", "model": "Acadia", "body": "SUV", "origin": "USA", "power": "ICE"},
-                    {"make": "GMC", "model": "Terrain", "body": "SUV", "origin": "USA", "power": "ICE"},
-                    {"make": "GMC", "model": "Yukon", "body": "SUV", "origin": "USA", "power": "ICE"},
-                    {"make": "Tesla", "model": "Model 3", "body": "Sedan", "origin": "USA", "power": "EV"},
-                    {"make": "Tesla", "model": "Model Y", "body": "SUV", "origin": "USA", "power": "EV"},
-                    {"make": "Tesla", "model": "Model S", "body": "Sedan", "origin": "USA", "power": "EV"},
-                    {"make": "Tesla", "model": "Model X", "body": "SUV", "origin": "USA", "power": "EV"},
-                    {"make": "Jeep", "model": "Wrangler", "body": "SUV", "origin": "USA", "power": "ICE"},
-                    {"make": "Jeep", "model": "Grand Cherokee", "body": "SUV", "origin": "USA", "power": "ICE"},
-                    {"make": "Jeep", "model": "Cherokee", "body": "SUV", "origin": "USA", "power": "ICE"},
-                    {"make": "Jeep", "model": "Compass", "body": "SUV", "origin": "USA", "power": "ICE"},
-                    {"make": "Jeep", "model": "Renegade", "body": "SUV", "origin": "USA", "power": "ICE"},
-                    {"make": "Jeep", "model": "Gladiator", "body": "Pickup", "origin": "USA", "power": "ICE"},
-                    {"make": "Ram", "model": "1500", "body": "Pickup", "origin": "USA", "power": "ICE"},
-                    {"make": "Ram", "model": "2500", "body": "Pickup", "origin": "USA", "power": "ICE"},
-                    {"make": "Dodge", "model": "Charger", "body": "Sedan", "origin": "USA", "power": "ICE"},
-                    {"make": "Dodge", "model": "Challenger", "body": "Coupe", "origin": "USA", "power": "ICE"},
-                    {"make": "Dodge", "model": "Durango", "body": "SUV", "origin": "USA", "power": "ICE"},
-                    {"make": "BMW", "model": "3 Series", "body": "Sedan", "origin": "GER", "power": "ICE"},
-                    {"make": "BMW", "model": "X3", "body": "SUV", "origin": "GER", "power": "ICE"},
-                    {"make": "BMW", "model": "X5", "body": "SUV", "origin": "GER", "power": "ICE"},
-                    {"make": "BMW", "model": "5 Series", "body": "Sedan", "origin": "GER", "power": "ICE"},
-                    {"make": "BMW", "model": "X1", "body": "SUV", "origin": "GER", "power": "ICE"},
-                    {"make": "BMW", "model": "4 Series", "body": "Coupe", "origin": "GER", "power": "ICE"},
-                    {"make": "BMW", "model": "i4", "body": "Sedan", "origin": "GER", "power": "EV"},
-                    {"make": "BMW", "model": "iX", "body": "SUV", "origin": "GER", "power": "EV"},
-                    {"make": "BMW", "model": "X7", "body": "SUV", "origin": "GER", "power": "ICE"},
-                    {"make": "Mercedes-Benz", "model": "C-Class", "body": "Sedan", "origin": "GER", "power": "ICE"},
-                    {"make": "Mercedes-Benz", "model": "GLC", "body": "SUV", "origin": "GER", "power": "ICE"},
-                    {"make": "Mercedes-Benz", "model": "E-Class", "body": "Sedan", "origin": "GER", "power": "ICE"},
-                    {"make": "Mercedes-Benz", "model": "GLE", "body": "SUV", "origin": "GER", "power": "ICE"},
-                    {"make": "Mercedes-Benz", "model": "A-Class", "body": "Hatchback", "origin": "GER", "power": "ICE"},
-                    {"make": "Mercedes-Benz", "model": "S-Class", "body": "Sedan", "origin": "GER", "power": "ICE"},
-                    {"make": "Mercedes-Benz", "model": "EQS", "body": "Sedan", "origin": "GER", "power": "EV"},
-                    {"make": "Mercedes-Benz", "model": "G-Class", "body": "SUV", "origin": "GER", "power": "ICE"},
-                    {"make": "Audi", "model": "A4", "body": "Sedan", "origin": "GER", "power": "ICE"},
-                    {"make": "Audi", "model": "Q5", "body": "SUV", "origin": "GER", "power": "ICE"},
-                    {"make": "Audi", "model": "A3", "body": "Hatchback", "origin": "GER", "power": "ICE"},
-                    {"make": "Audi", "model": "Q3", "body": "SUV", "origin": "GER", "power": "ICE"},
-                    {"make": "Audi", "model": "A6", "body": "Sedan", "origin": "GER", "power": "ICE"},
-                    {"make": "Audi", "model": "Q7", "body": "SUV", "origin": "GER", "power": "ICE"},
-                    {"make": "Audi", "model": "e-tron", "body": "SUV", "origin": "GER", "power": "EV"},
-                    {"make": "Audi", "model": "TT", "body": "Coupe", "origin": "GER", "power": "ICE"},
-                    {"make": "Volkswagen", "model": "Golf", "body": "Hatchback", "origin": "GER", "power": "ICE"},
-                    {"make": "Volkswagen", "model": "Tiguan", "body": "SUV", "origin": "GER", "power": "ICE"},
-                    {"make": "Volkswagen", "model": "Passat", "body": "Sedan", "origin": "GER", "power": "ICE"},
-                    {"make": "Volkswagen", "model": "Jetta", "body": "Sedan", "origin": "GER", "power": "ICE"},
-                    {"make": "Volkswagen", "model": "Atlas", "body": "SUV", "origin": "GER", "power": "ICE"},
-                    {"make": "Volkswagen", "model": "Polo", "body": "Hatchback", "origin": "GER", "power": "ICE"},
-                    {"make": "Volkswagen", "model": "T-Roc", "body": "SUV", "origin": "GER", "power": "ICE"},
-                    {"make": "Volkswagen", "model": "ID.4", "body": "SUV", "origin": "GER", "power": "EV"},
-                    {"make": "Porsche", "model": "911", "body": "Coupe", "origin": "GER", "power": "ICE"},
-                    {"make": "Porsche", "model": "Cayenne", "body": "SUV", "origin": "GER", "power": "ICE"},
-                    {"make": "Porsche", "model": "Macan", "body": "SUV", "origin": "GER", "power": "ICE"},
-                    {"make": "Porsche", "model": "Panamera", "body": "Sedan", "origin": "GER", "power": "ICE"},
-                    {"make": "Porsche", "model": "Taycan", "body": "Sedan", "origin": "GER", "power": "EV"},
-                    {"make": "Hyundai", "model": "Elantra", "body": "Sedan", "origin": "KOR", "power": "ICE"},
-                    {"make": "Hyundai", "model": "Tucson", "body": "SUV", "origin": "KOR", "power": "ICE"},
-                    {"make": "Hyundai", "model": "Santa Fe", "body": "SUV", "origin": "KOR", "power": "ICE"},
-                    {"make": "Hyundai", "model": "Sonata", "body": "Sedan", "origin": "KOR", "power": "ICE"},
-                    {"make": "Hyundai", "model": "Kona", "body": "SUV", "origin": "KOR", "power": "ICE"},
-                    {"make": "Hyundai", "model": "Palisade", "body": "SUV", "origin": "KOR", "power": "ICE"},
-                    {"make": "Hyundai", "model": "Ioniq", "body": "Hatchback", "origin": "KOR", "power": "EV"},
-                    {"make": "Hyundai", "model": "Venue", "body": "SUV", "origin": "KOR", "power": "ICE"},
-                    {"make": "Kia", "model": "Forte", "body": "Sedan", "origin": "KOR", "power": "ICE"},
-                    {"make": "Kia", "model": "Sportage", "body": "SUV", "origin": "KOR", "power": "ICE"},
-                    {"make": "Kia", "model": "Sorento", "body": "SUV", "origin": "KOR", "power": "ICE"},
-                    {"make": "Kia", "model": "Optima", "body": "Sedan", "origin": "KOR", "power": "ICE"},
-                    {"make": "Kia", "model": "Soul", "body": "Hatchback", "origin": "KOR", "power": "ICE"},
-                    {"make": "Kia", "model": "Telluride", "body": "SUV", "origin": "KOR", "power": "ICE"},
-                    {"make": "Kia", "model": "Rio", "body": "Hatchback", "origin": "KOR", "power": "ICE"},
-                    {"make": "Kia", "model": "Niro", "body": "SUV", "origin": "KOR", "power": "HYB"},
-                    {"make": "Kia", "model": "EV6", "body": "SUV", "origin": "KOR", "power": "EV"},
-                    {"make": "Lexus", "model": "RX", "body": "SUV", "origin": "JPN", "power": "HYB"},
-                    {"make": "Lexus", "model": "ES", "body": "Sedan", "origin": "JPN", "power": "HYB"},
-                    {"make": "Lexus", "model": "NX", "body": "SUV", "origin": "JPN", "power": "HYB"},
-                    {"make": "Lexus", "model": "GX", "body": "SUV", "origin": "JPN", "power": "ICE"},
-                    {"make": "Lexus", "model": "IS", "body": "Sedan", "origin": "JPN", "power": "ICE"},
-                    {"make": "Genesis", "model": "G90", "body": "Sedan", "origin": "KOR", "power": "ICE"},
-                    {"make": "Genesis", "model": "GV70", "body": "SUV", "origin": "KOR", "power": "ICE"},
-                    {"make": "Genesis", "model": "G80", "body": "Sedan", "origin": "KOR", "power": "ICE"},
-                    {"make": "Infiniti", "model": "Q50", "body": "Sedan", "origin": "JPN", "power": "ICE"},
-                    {"make": "Infiniti", "model": "QX60", "body": "SUV", "origin": "JPN", "power": "ICE"},
-                    {"make": "Infiniti", "model": "QX80", "body": "SUV", "origin": "JPN", "power": "ICE"},
-                    {"make": "Acura", "model": "MDX", "body": "SUV", "origin": "JPN", "power": "ICE"},
-                    {"make": "Acura", "model": "RDX", "body": "SUV", "origin": "JPN", "power": "ICE"},
-                    {"make": "Acura", "model": "TLX", "body": "Sedan", "origin": "JPN", "power": "ICE"},
-                    {"make": "Cadillac", "model": "Escalade", "body": "SUV", "origin": "USA", "power": "ICE"},
-                    {"make": "Cadillac", "model": "XT5", "body": "SUV", "origin": "USA", "power": "ICE"},
-                    {"make": "Cadillac", "model": "CT5", "body": "Sedan", "origin": "USA", "power": "ICE"},
-                    {"make": "Lincoln", "model": "Navigator", "body": "SUV", "origin": "USA", "power": "ICE"},
-                    {"make": "Lincoln", "model": "Aviator", "body": "SUV", "origin": "USA", "power": "ICE"},
-                    {"make": "Peugeot", "model": "208", "body": "Hatchback", "origin": "FRA", "power": "ICE"},
-                    {"make": "Peugeot", "model": "3008", "body": "SUV", "origin": "FRA", "power": "ICE"},
-                    {"make": "Peugeot", "model": "2008", "body": "SUV", "origin": "FRA", "power": "ICE"},
-                    {"make": "Peugeot", "model": "308", "body": "Hatchback", "origin": "FRA", "power": "ICE"},
-                    {"make": "Peugeot", "model": "5008", "body": "SUV", "origin": "FRA", "power": "ICE"},
-                    {"make": "Renault", "model": "Clio", "body": "Hatchback", "origin": "FRA", "power": "ICE"},
-                    {"make": "Renault", "model": "Captur", "body": "SUV", "origin": "FRA", "power": "ICE"},
-                    {"make": "Renault", "model": "Megane", "body": "Hatchback", "origin": "FRA", "power": "ICE"},
-                    {"make": "Renault", "model": "Kadjar", "body": "SUV", "origin": "FRA", "power": "ICE"},
-                    {"make": "Citroën", "model": "C3", "body": "Hatchback", "origin": "FRA", "power": "ICE"},
-                    {"make": "Citroën", "model": "C4", "body": "Hatchback", "origin": "FRA", "power": "ICE"},
-                    {"make": "Citroën", "model": "C5", "body": "SUV", "origin": "FRA", "power": "ICE"},
-                    {"make": "Dacia", "model": "Sandero", "body": "Hatchback", "origin": "ROM", "power": "ICE"},
-                    {"make": "Dacia", "model": "Duster", "body": "SUV", "origin": "ROM", "power": "ICE"},
-                    {"make": "Dacia", "model": "Logan", "body": "Sedan", "origin": "ROM", "power": "ICE"},
-                    {"make": "Skoda", "model": "Octavia", "body": "Sedan", "origin": "CZE", "power": "ICE"},
-                    {"make": "Skoda", "model": "Superb", "body": "Sedan", "origin": "CZE", "power": "ICE"},
-                    {"make": "Skoda", "model": "Kodiaq", "body": "SUV", "origin": "CZE", "power": "ICE"},
-                    {"make": "Skoda", "model": "Karoq", "body": "SUV", "origin": "CZE", "power": "ICE"},
-                    {"make": "Skoda", "model": "Fabia", "body": "Hatchback", "origin": "CZE", "power": "ICE"},
-                    {"make": "SEAT", "model": "Leon", "body": "Hatchback", "origin": "ESP", "power": "ICE"},
-                    {"make": "SEAT", "model": "Ateca", "body": "SUV", "origin": "ESP", "power": "ICE"},
-                    {"make": "SEAT", "model": "Ibiza", "body": "Hatchback", "origin": "ESP", "power": "ICE"},
-                    {"make": "SEAT", "model": "Arona", "body": "SUV", "origin": "ESP", "power": "ICE"},
-                    {"make": "Volvo", "model": "XC90", "body": "SUV", "origin": "SWE", "power": "ICE"},
-                    {"make": "Volvo", "model": "XC60", "body": "SUV", "origin": "SWE", "power": "ICE"},
-                    {"make": "Volvo", "model": "XC40", "body": "SUV", "origin": "SWE", "power": "ICE"},
-                    {"make": "Volvo", "model": "S90", "body": "Sedan", "origin": "SWE", "power": "ICE"},
-                    {"make": "Jaguar", "model": "F-Pace", "body": "SUV", "origin": "GBR", "power": "ICE"},
-                    {"make": "Jaguar", "model": "E-Pace", "body": "SUV", "origin": "GBR", "power": "ICE"},
-                    {"make": "Jaguar", "model": "XF", "body": "Sedan", "origin": "GBR", "power": "ICE"},
-                    {"make": "Jaguar", "model": "F-Type", "body": "Coupe", "origin": "GBR", "power": "ICE"},
-                    {"make": "Land Rover", "model": "Range Rover", "body": "SUV", "origin": "GBR", "power": "ICE"},
-                    {"make": "Land Rover", "model": "Discovery", "body": "SUV", "origin": "GBR", "power": "ICE"},
-                    {"make": "Land Rover", "model": "Evoque", "body": "SUV", "origin": "GBR", "power": "ICE"},
-                    {"make": "Land Rover", "model": "Defender", "body": "SUV", "origin": "GBR", "power": "ICE"},
-                    {"make": "Mini", "model": "Cooper", "body": "Hatchback", "origin": "GBR", "power": "ICE"},
-                    {"make": "Mini", "model": "Countryman", "body": "SUV", "origin": "GBR", "power": "ICE"},
-                    {"make": "Mini", "model": "Clubman", "body": "Wagon", "origin": "GBR", "power": "ICE"},
-                    {"make": "Alfa Romeo", "model": "Giulia", "body": "Sedan", "origin": "ITA", "power": "ICE"},
-                    {"make": "Alfa Romeo", "model": "Stelvio", "body": "SUV", "origin": "ITA", "power": "ICE"},
-                    {"make": "Fiat", "model": "500", "body": "Hatchback", "origin": "ITA", "power": "ICE"},
-                    {"make": "Fiat", "model": "Panda", "body": "Hatchback", "origin": "ITA", "power": "ICE"},
-                    {"make": "Fiat", "model": "Tipo", "body": "Hatchback", "origin": "ITA", "power": "ICE"},
-                    {"make": "Ferrari", "model": "Roma", "body": "Coupe", "origin": "ITA", "power": "ICE"},
-                    {"make": "Ferrari", "model": "F8", "body": "Coupe", "origin": "ITA", "power": "ICE"},
-                    {"make": "Ferrari", "model": "SF90", "body": "Coupe", "origin": "ITA", "power": "HYB"},
-                    {"make": "Lamborghini", "model": "Huracán", "body": "Coupe", "origin": "ITA", "power": "ICE"},
-                    {"make": "Lamborghini", "model": "Aventador", "body": "Coupe", "origin": "ITA", "power": "ICE"},
-                    {"make": "Lamborghini", "model": "Urus", "body": "SUV", "origin": "ITA", "power": "ICE"},
-                    {"make": "Maserati", "model": "Ghibli", "body": "Sedan", "origin": "ITA", "power": "ICE"},
-                    {"make": "Maserati", "model": "Levante", "body": "SUV", "origin": "ITA", "power": "ICE"},
-                    {"make": "Maserati", "model": "Quattroporte", "body": "Sedan", "origin": "ITA", "power": "ICE"}
-                ];
+                // Car database will be loaded from API
+                this.carDatabase = [];
                 
                 // Game settings
                 this.maxAttempts = 5;
@@ -1683,8 +1484,17 @@
                 this.startTime = null;
                 this.endTime = null;
                 
-                // Initialize game
-                this.initializeGame();
+                // Load cars from database, then initialize
+                this.loadCars().then(() => {
+                    this.initializeGame();
+                }).catch(err => {
+                    console.error('Failed to load cars:', err);
+                    // Fallback: show error message
+                    const appDiv = document.getElementById('app');
+                    if (appDiv) {
+                        appDiv.innerHTML = '<div class="error-message">Failed to load game data. Please refresh the page.</div>';
+                    }
+                });
                 this.setupEventListeners();
                 this.startTimer();
             }
@@ -1898,6 +1708,22 @@
             }
 
             toggleGameMode() {
+                            async loadCars() {
+                                try {
+                                    const res = await fetch('/api/cars');
+                                    if (!res.ok) {
+                                        throw new Error(`HTTP ${res.status}`);
+                                    }
+                                    const cars = await res.json();
+                                    this.carDatabase = Array.isArray(cars) ? cars : cars.results || [];
+                                    console.log(`Loaded ${this.carDatabase.length} cars from database`);
+                                } catch (err) {
+                                    console.error('Failed to load cars from API:', err);
+                                    throw err;
+                                }
+                            }
+
+                            toggleGameMode() {
                 const newMode = this.currentGameMode === 'daily' ? 'random' : 'daily';
                 this.currentGameMode = newMode;
                 this.saveGameMode();
