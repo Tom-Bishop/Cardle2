@@ -1707,23 +1707,22 @@
                 });
             }
 
-            toggleGameMode() {
-                            async loadCars() {
-                                try {
-                                    const res = await fetch('/api/cars');
-                                    if (!res.ok) {
-                                        throw new Error(`HTTP ${res.status}`);
-                                    }
-                                    const cars = await res.json();
-                                    this.carDatabase = Array.isArray(cars) ? cars : cars.results || [];
-                                    console.log(`Loaded ${this.carDatabase.length} cars from database`);
-                                } catch (err) {
-                                    console.error('Failed to load cars from API:', err);
-                                    throw err;
-                                }
-                            }
+            async loadCars() {
+                try {
+                    const res = await fetch('/api/cars');
+                    if (!res.ok) {
+                        throw new Error(`HTTP ${res.status}`);
+                    }
+                    const cars = await res.json();
+                    this.carDatabase = Array.isArray(cars) ? cars : cars.results || [];
+                    console.log(`Loaded ${this.carDatabase.length} cars from database`);
+                } catch (err) {
+                    console.error('Failed to load cars from API:', err);
+                    throw err;
+                }
+            }
 
-                            toggleGameMode() {
+            toggleGameMode() {
                 const newMode = this.currentGameMode === 'daily' ? 'random' : 'daily';
                 this.currentGameMode = newMode;
                 this.saveGameMode();
