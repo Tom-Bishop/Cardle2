@@ -1,7 +1,0 @@
--- Add leaderboard aggregation columns (do not wrap in BEGIN/COMMIT for D1 remote)
-ALTER TABLE stats ADD COLUMN wins INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE stats ADD COLUMN games_played INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE stats ADD COLUMN total_guesses INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE stats ADD COLUMN total_time_seconds INTEGER NOT NULL DEFAULT 0;
-
-CREATE INDEX IF NOT EXISTS idx_stats_wins ON stats(wins DESC);
