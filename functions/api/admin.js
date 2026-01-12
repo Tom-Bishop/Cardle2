@@ -46,26 +46,37 @@ async function handleGetUsers(env, url) {
         let query = `
             SELECT 
                 u.id, u.username, u.created_at,
-                s.wins, s.games_played, s.total_guesses, s.total_time_seconds,
-                s.daily_won, s.daily_played, s.daily_streak, s.daily_max_streak,
-                s.random_won, s.random_played, s.random_streak, s.random_max_streak,
-                s.streak_days, s.max_streak, s.last_daily_play
+                COALESCE(s.wins, 0) as wins, 
+                COALESCE(s.games_played, 0) as games_played, 
+                COALESCE(s.total_guesses, 0) as total_guesses, 
+                COALESCE(s.total_time_seconds, 0) as total_time_seconds,
+                COALESCE(s.daily_won, 0) as daily_won, 
+                COALESCE(s.daily_played, 0) as daily_played, 
+                COALESCE(s.daily_streak, 0) as daily_streak, 
+                COALESCE(s.daily_max_streak, 0) as daily_max_streak,
+                COALESCE(s.random_won, 0) as random_won, 
+                COALESCE(s.random_played, 0) as random_played, 
+                COALESCE(s.random_streak, 0) as random_streak, 
+                COALESCE(s.random_max_streak, 0) as random_max_streak,
+                COALESCE(s.streak_days, 0) as streak_days, 
+                COALESCE(s.max_streak, 0) as max_streak, 
+                s.last_daily_play
             FROM users u
             LEFT JOIN stats s ON u.id = s.user_id
         `;
 
+        let result;
         if (targetUser) {
             query += ` WHERE u.username = ?`;
-            const result = await env.DB.prepare(query).bind(targetUser).all();
-            return new Response(JSON.stringify(result.results || []), { 
-                headers: { 'Content-Type': 'application/json' }
-            });
+            result = await env.DB.prepare(query).bind(targetUser).all();
         } else {
-            const result = await env.DB.prepare(query).all();
-            return new Response(JSON.stringify(result.results || []), { 
-                headers: { 'Content-Type': 'application/json' }
-            });
+            result = await env.DB.prepare(query).all();
         }
+        
+        const users = result.results || [];
+        return new Response(JSON.stringify(users), { 
+            headers: { 'Content-Type': 'application/json' }
+        });
     } catch (error) {
         console.error('Error fetching users:', error);
         return new Response(JSON.stringify({ error: error.message }), { status: 500 });

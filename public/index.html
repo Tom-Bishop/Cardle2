@@ -2611,8 +2611,15 @@
             async function loadAdminUsers() {
                 const usersList = document.getElementById('usersList');
                 try {
-                    const res = await fetch(`/api/admin/users?username=${encodeURIComponent(getUsername())}`);
-                    const users = await res.json();
+                    const url = `/api/admin/users?username=${encodeURIComponent(getUsername())}`;
+                    const res = await fetch(url);
+                    
+                    if (!res.ok) {
+                        throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+                    }
+                    
+                    const text = await res.text();
+                    const users = JSON.parse(text);
                     
                     if (!Array.isArray(users) || users.length === 0) {
                         usersList.innerHTML = '<p style="color:var(--color-text-dim); text-align:center; padding:20px 0;">No users found</p>';
@@ -2636,7 +2643,8 @@
                     adminUserSelect.innerHTML = '<option value="">-- Choose a user --</option>' + 
                         users.map(u => `<option value="${u.username}">${u.username}</option>`).join('');
                 } catch (e) {
-                    usersList.innerHTML = `<p style="color:var(--color-danger); text-align:center; padding:20px 0;">Error loading users: ${e.message}</p>`;
+                    console.error('Admin users error:', e);
+                    usersList.innerHTML = `<p style="color:var(--color-danger); text-align:center; padding:20px 0;">Error: ${e.message}</p>`;
                 }
             }
 
