@@ -1001,7 +1001,7 @@
 
         <!-- Game Subtitle -->
         <div class="game-subtitle">
-            <p>Guess the car in 5 tries. Each guess provides feedback across 5 categories.</p>
+            <p>Guess the car in 5 tries. Each guess provides feedback across 6 categories.</p>
         </div>
 
         <!-- Game Input -->
@@ -1025,6 +1025,7 @@
                 <div class="header-cell" data-help="body">Body</div>
                 <div class="header-cell" data-help="origin">Origin</div>
                 <div class="header-cell" data-help="power">Power</div>
+                <div class="header-cell" data-help="segment">Segment</div>
             </div>
             <div class="game-grid" id="gameGrid">
                 <!-- Game rows will be populated here -->
@@ -1050,6 +1051,7 @@
                     <p><strong>Body:</strong> Vehicle type (SUV, Sedan, Hatchback, Coupe, Pickup, Wagon, Convertible)</p>
                     <p><strong>Origin:</strong> Country codes (JPN=Japan, GER=Germany, USA=United States, etc.)</p>
                     <p><strong>Power:</strong> Engine type (ICE=Internal Combustion, HYB=Hybrid, EV=Electric)</p>
+                    <p><strong>Segment:</strong> Market positioning (Performance, Luxury, Executive, Family, Urban, Economy, Adventure, Green, Utility)</p>
                 </div>
                 <div class="help-section">
                     <h3>Color Coding</h3>
@@ -1906,8 +1908,30 @@
                     'AUS': 'Oceania'
                 };
 
+                // Define adjacent segments for amber matching
+                const adjacentSegments = {
+                    'Performance': ['Luxury'],
+                    'Luxury': ['Performance', 'Executive'],
+                    'Executive': ['Luxury', 'Family'],
+                    'Family': ['Executive', 'Adventure'],
+                    'Adventure': ['Family', 'Utility'],
+                    'Urban': ['Economy'],
+                    'Economy': ['Urban'],
+                    'Green': [],
+                    'Utility': ['Adventure']
+                };
+
                 const getRegion = (country) => regions[country] || 'Other';
                 const getParent = (make) => parentCompanies[make] || null;
+
+                // Segment feedback logic
+                const getSegmentFeedback = (guessSegment, answerSegment) => {
+                    if (guessSegment === answerSegment) {
+                        return 'correct';
+                    }
+                    const adjacent = adjacentSegments[answerSegment] || [];
+                    return adjacent.includes(guessSegment) ? 'partial' : 'incorrect';
+                };
 
                 return {
                     make: guess.make === answer.make ? 'correct' : 
@@ -1916,7 +1940,8 @@
                     body: guess.body === answer.body ? 'correct' : 'incorrect',
                     origin: guess.origin === answer.origin ? 'correct' : 
                             (getRegion(guess.origin) === getRegion(answer.origin) ? 'partial' : 'incorrect'),
-                    power: guess.power === answer.power ? 'correct' : 'incorrect'
+                    power: guess.power === answer.power ? 'correct' : 'incorrect',
+                    segment: getSegmentFeedback(guess.segment, answer.segment)
                 };
             }
 
@@ -1937,6 +1962,7 @@
                         <div class="guess-cell" data-col="body"></div>
                         <div class="guess-cell" data-col="origin"></div>
                         <div class="guess-cell" data-col="power"></div>
+                        <div class="guess-cell" data-col="segment"></div>
                     `;
                     gameGrid.appendChild(row);
                 }
@@ -1947,8 +1973,8 @@
                 const row = rows[guessIndex];
                 const cells = row.querySelectorAll('.guess-cell');
                 
-                const values = [car.make, car.model, car.body, car.origin, car.power];
-                const feedbackKeys = ['make', 'model', 'body', 'origin', 'power'];
+                const values = [car.make, car.model, car.body, car.origin, car.power, car.segment];
+                const feedbackKeys = ['make', 'model', 'body', 'origin', 'power', 'segment'];
                 
                 cells.forEach((cell, index) => {
                     setTimeout(() => {
@@ -2046,6 +2072,10 @@
                     <div class="answer-item">
                         <div class="answer-label">Power</div>
                         <div class="answer-value">${this.currentCar.power}</div>
+                    </div>
+                    <div class="answer-item">
+                        <div class="answer-label">Segment</div>
+                        <div class="answer-value">${this.currentCar.segment}</div>
                     </div>
                 `;
                 
