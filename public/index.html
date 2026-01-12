@@ -141,6 +141,155 @@
             z-index: 1000;
         }
 
+        /* Admin button */
+        .top-admin {
+            position: fixed;
+            top: 18px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .top-admin.hidden {
+            display: none;
+        }
+
+        /* Admin modal */
+        #adminModal {
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .admin-section {
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .admin-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .admin-section h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--color-accent);
+            margin-bottom: 16px;
+        }
+
+        .users-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .user-item {
+            padding: 14px;
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--color-muted-surface);
+        }
+
+        .user-item:last-child {
+            border-bottom: none;
+        }
+
+        .user-item:hover {
+            background-color: rgba(14, 165, 164, 0.08);
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 4px;
+        }
+
+        .user-stats {
+            font-size: 0.85rem;
+            color: var(--color-text-muted);
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn--danger {
+            background-color: var(--color-danger);
+            color: var(--color-white);
+            border: none;
+        }
+
+        .btn--danger:hover {
+            background-color: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(239, 68, 68, 0.25);
+        }
+
+        .btn--danger:disabled {
+            background-color: #fecaca;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .stats-editor {
+            background-color: var(--color-muted-surface);
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .stat-input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-input-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .stat-input-group input {
+            padding: 10px;
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            background-color: var(--color-surface);
+            color: var(--color-text);
+        }
+
+        .stat-input-group input:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 3px rgba(14, 165, 164, 0.1);
+        }
+
+        .admin-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
         /* Buttons */
         .btn {
             display: inline-flex;
@@ -783,6 +932,15 @@
     <div class="app" id="app">
         <!-- Timer -->
             <div class="timer" id="gameTimer">00:00</div>
+            <!-- Admin Panel (Tom only) -->
+            <div class="top-admin hidden" id="topAdminWrapper">
+                <button class="btn btn--outline btn--sm" id="adminBtn" title="Admin">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="1"></circle>
+                        <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"></path>
+                    </svg>
+                </button>
+            </div>
             <div class="top-account" id="topAccountWrapper">
                 <button class="btn btn--outline btn--sm" id="topAccountBtn" title="Account">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1016,6 +1174,92 @@
             <div class="modal-actions">
                 <button class="btn btn--primary" id="confirmChangePwdBtn">Change Password</button>
                 <button class="btn btn--outline" onclick="closeModal('changePasswordModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Modal (Tom only) -->
+    <div class="modal" id="adminModal">
+        <div class="modal-content">
+            <div class="modal-title">
+                Admin Panel
+                <button class="btn btn--outline btn--sm" onclick="closeModal('adminModal')" style="float:right; margin-top:-5px;">✕</button>
+            </div>
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <!-- Wipe All Data Section -->
+                <div class="admin-section" style="margin-bottom:20px; border-bottom:1px solid var(--color-border); padding-bottom:15px;">
+                    <h3 style="margin:0 0 10px 0; color:var(--color-text);">Database Actions</h3>
+                    <button class="btn btn--danger" id="wipeDataBtn">🗑️ Wipe All User Data</button>
+                    <div id="wipeConfirmMsg" style="color:var(--color-danger); font-size:0.9rem; margin-top:8px; display:none;">Are you sure? This will delete all users and stats. <button class="btn btn--danger btn--sm" id="wipeConfirmBtn">Confirm Wipe</button> <button class="btn btn--outline btn--sm" id="wipeCancelBtn">Cancel</button></div>
+                </div>
+
+                <!-- User Management Section -->
+                <div class="admin-section" style="margin-bottom:20px; border-bottom:1px solid var(--color-border); padding-bottom:15px;">
+                    <h3 style="margin:0 0 10px 0; color:var(--color-text);">Delete Users</h3>
+                    <div class="users-list" id="usersList" style="max-height:200px; overflow-y:auto; border:1px solid var(--color-border); border-radius:4px; padding:8px;">
+                        <p style="color:var(--color-text-dim); text-align:center; padding:20px 0;">Loading users...</p>
+                    </div>
+                </div>
+
+                <!-- Edit User Stats Section -->
+                <div class="admin-section">
+                    <h3 style="margin:0 0 10px 0; color:var(--color-text);">Edit User Stats</h3>
+                    <div style="margin-bottom:15px;">
+                        <label for="adminUserSelect" style="display:block; margin-bottom:6px; color:var(--color-text);">Select User</label>
+                        <select id="adminUserSelect" class="form-control" style="width:100%; padding:8px; border:1px solid var(--color-border); border-radius:4px; background:var(--color-bg); color:var(--color-text);">
+                            <option value="">-- Choose a user --</option>
+                        </select>
+                    </div>
+                    <div class="stats-editor" id="statsEditor" style="display:none;">
+                        <div class="stats-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:15px;">
+                            <div class="stat-input-group">
+                                <label for="stat_wins">Wins</label>
+                                <input type="number" id="stat_wins" class="form-control" min="0">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat_games">Games Played</label>
+                                <input type="number" id="stat_games" class="form-control" min="0">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat_guesses">Total Guesses</label>
+                                <input type="number" id="stat_guesses" class="form-control" min="0">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat_time">Total Time (sec)</label>
+                                <input type="number" id="stat_time" class="form-control" min="0">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat_daily_wins">Daily Wins</label>
+                                <input type="number" id="stat_daily_wins" class="form-control" min="0">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat_daily_streak">Daily Streak</label>
+                                <input type="number" id="stat_daily_streak" class="form-control" min="0">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat_daily_max">Daily Max Streak</label>
+                                <input type="number" id="stat_daily_max" class="form-control" min="0">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat_random_wins">Random Wins</label>
+                                <input type="number" id="stat_random_wins" class="form-control" min="0">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat_random_streak">Random Streak</label>
+                                <input type="number" id="stat_random_streak" class="form-control" min="0">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat_random_max">Random Max Streak</label>
+                                <input type="number" id="stat_random_max" class="form-control" min="0">
+                            </div>
+                        </div>
+                        <div class="admin-buttons" style="display:flex; gap:8px; justify-content:flex-end;">
+                            <button class="btn btn--primary" id="saveStatsBtn">Save Changes</button>
+                            <button class="btn btn--outline" id="cancelStatsBtn">Cancel</button>
+                        </div>
+                        <div id="statsMessage" style="color:var(--color-success); margin-top:8px; min-height:18px; text-align:center;"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -2277,6 +2521,215 @@
             if (loginBtn) loginBtn.addEventListener('click', () => handleAuth('login'));
             const confirmChangePwdBtn = document.getElementById('confirmChangePwdBtn');
             if (confirmChangePwdBtn) confirmChangePwdBtn.addEventListener('click', () => handleChangePassword());
+
+            // ===== ADMIN SETUP =====
+            // Initialize admin panel if user is Tom
+            if (username === 'Tom') {
+                const topAdminWrapper = document.getElementById('topAdminWrapper');
+                if (topAdminWrapper) topAdminWrapper.classList.remove('hidden');
+
+                const adminBtn = document.getElementById('adminBtn');
+                const adminModal = document.getElementById('adminModal');
+                
+                if (adminBtn) {
+                    adminBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        adminModal.style.display = 'block';
+                        loadAdminUsers();
+                    });
+                }
+
+                // Wipe Data functionality
+                const wipeDataBtn = document.getElementById('wipeDataBtn');
+                const wipeConfirmMsg = document.getElementById('wipeConfirmMsg');
+                const wipeConfirmBtn = document.getElementById('wipeConfirmBtn');
+                const wipeCancelBtn = document.getElementById('wipeCancelBtn');
+
+                if (wipeDataBtn) {
+                    wipeDataBtn.addEventListener('click', () => {
+                        wipeConfirmMsg.style.display = 'block';
+                        wipeDataBtn.style.display = 'none';
+                    });
+                }
+
+                if (wipeConfirmBtn) {
+                    wipeConfirmBtn.addEventListener('click', async () => {
+                        try {
+                            const res = await fetch('/api/admin/wipe-data', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ username })
+                            });
+                            if (res.ok) {
+                                alert('All user data has been wiped successfully!');
+                                wipeConfirmMsg.style.display = 'none';
+                                wipeDataBtn.style.display = 'block';
+                                loadAdminUsers();
+                            } else {
+                                alert('Error wiping data: ' + (await res.text()));
+                            }
+                        } catch (e) {
+                            alert('Error: ' + e.message);
+                        }
+                    });
+                }
+
+                if (wipeCancelBtn) {
+                    wipeCancelBtn.addEventListener('click', () => {
+                        wipeConfirmMsg.style.display = 'none';
+                        wipeDataBtn.style.display = 'block';
+                    });
+                }
+
+                // User selection for stats editing
+                const adminUserSelect = document.getElementById('adminUserSelect');
+                const statsEditor = document.getElementById('statsEditor');
+
+                if (adminUserSelect) {
+                    adminUserSelect.addEventListener('change', async (e) => {
+                        if (e.target.value) {
+                            await loadUserStatsForEdit(e.target.value);
+                            statsEditor.style.display = 'block';
+                        } else {
+                            statsEditor.style.display = 'none';
+                        }
+                    });
+                }
+
+                // Save stats button
+                const saveStatsBtn = document.getElementById('saveStatsBtn');
+                if (saveStatsBtn) {
+                    saveStatsBtn.addEventListener('click', async () => {
+                        await saveUserStats();
+                    });
+                }
+
+                // Cancel stats editing
+                const cancelStatsBtn = document.getElementById('cancelStatsBtn');
+                if (cancelStatsBtn) {
+                    cancelStatsBtn.addEventListener('click', () => {
+                        adminUserSelect.value = '';
+                        statsEditor.style.display = 'none';
+                    });
+                }
+            }
+
+            // ===== ADMIN HELPER FUNCTIONS =====
+            async function loadAdminUsers() {
+                const usersList = document.getElementById('usersList');
+                try {
+                    const res = await fetch('/api/admin/users');
+                    const users = await res.json();
+                    
+                    if (!Array.isArray(users) || users.length === 0) {
+                        usersList.innerHTML = '<p style="color:var(--color-text-dim); text-align:center; padding:20px 0;">No users found</p>';
+                        return;
+                    }
+
+                    usersList.innerHTML = users.map(user => `
+                        <div class="user-item" style="padding:10px; border-bottom:1px solid var(--color-border); display:flex; justify-content:space-between; align-items:center;">
+                            <div class="user-info">
+                                <div class="user-name" style="font-weight:600; color:var(--color-text);">${user.username}</div>
+                                <div class="user-stats" style="font-size:0.85rem; color:var(--color-text-dim); margin-top:2px;">
+                                    ${user.wins || 0} wins / ${user.games_played || 0} games
+                                </div>
+                            </div>
+                            <button class="btn btn--danger btn--sm" onclick="deleteAdminUser('${user.username.replace(/'/g, "\\'")}')">Delete</button>
+                        </div>
+                    `).join('');
+
+                    // Also populate user select dropdown
+                    const adminUserSelect = document.getElementById('adminUserSelect');
+                    adminUserSelect.innerHTML = '<option value="">-- Choose a user --</option>' + 
+                        users.map(u => `<option value="${u.username}">${u.username}</option>`).join('');
+                } catch (e) {
+                    usersList.innerHTML = `<p style="color:var(--color-danger); text-align:center; padding:20px 0;">Error loading users: ${e.message}</p>`;
+                }
+            }
+
+            async function deleteAdminUser(username) {
+                if (!confirm(`Delete user "${username}" and all their stats?`)) return;
+                try {
+                    const res = await fetch('/api/admin/delete-user', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username })
+                    });
+                    if (res.ok) {
+                        alert(`User "${username}" deleted successfully`);
+                        loadAdminUsers();
+                    } else {
+                        alert('Error deleting user: ' + (await res.text()));
+                    }
+                } catch (e) {
+                    alert('Error: ' + e.message);
+                }
+            }
+
+            async function loadUserStatsForEdit(username) {
+                try {
+                    const res = await fetch(`/api/admin/users?username=${username}`);
+                    const data = await res.json();
+                    const user = Array.isArray(data) ? data[0] : data;
+
+                    if (!user) {
+                        alert('User not found');
+                        return;
+                    }
+
+                    document.getElementById('stat_wins').value = user.wins || 0;
+                    document.getElementById('stat_games').value = user.games_played || 0;
+                    document.getElementById('stat_guesses').value = user.total_guesses || 0;
+                    document.getElementById('stat_time').value = user.total_time_seconds || 0;
+                    document.getElementById('stat_daily_wins').value = user.daily_won || 0;
+                    document.getElementById('stat_daily_streak').value = user.daily_streak || 0;
+                    document.getElementById('stat_daily_max').value = user.daily_max_streak || 0;
+                    document.getElementById('stat_random_wins').value = user.random_won || 0;
+                    document.getElementById('stat_random_streak').value = user.random_streak || 0;
+                    document.getElementById('stat_random_max').value = user.random_max_streak || 0;
+                } catch (e) {
+                    alert('Error loading user stats: ' + e.message);
+                }
+            }
+
+            async function saveUserStats() {
+                const username = document.getElementById('adminUserSelect').value;
+                const statsMessage = document.getElementById('statsMessage');
+                
+                try {
+                    const stats = {
+                        wins: parseInt(document.getElementById('stat_wins').value) || 0,
+                        games_played: parseInt(document.getElementById('stat_games').value) || 0,
+                        total_guesses: parseInt(document.getElementById('stat_guesses').value) || 0,
+                        total_time_seconds: parseInt(document.getElementById('stat_time').value) || 0,
+                        daily_won: parseInt(document.getElementById('stat_daily_wins').value) || 0,
+                        daily_streak: parseInt(document.getElementById('stat_daily_streak').value) || 0,
+                        daily_max_streak: parseInt(document.getElementById('stat_daily_max').value) || 0,
+                        random_won: parseInt(document.getElementById('stat_random_wins').value) || 0,
+                        random_streak: parseInt(document.getElementById('stat_random_streak').value) || 0,
+                        random_max_streak: parseInt(document.getElementById('stat_random_max').value) || 0
+                    };
+
+                    const res = await fetch('/api/admin/update-user-stats', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, stats })
+                    });
+
+                    if (res.ok) {
+                        statsMessage.style.color = 'var(--color-success)';
+                        statsMessage.textContent = 'Stats saved successfully!';
+                        setTimeout(() => { statsMessage.textContent = ''; }, 3000);
+                        loadAdminUsers();
+                    } else {
+                        statsMessage.style.color = 'var(--color-danger)';
+                        statsMessage.textContent = 'Error saving stats: ' + (await res.text());
+                    }
+                } catch (e) {
+                    statsMessage.style.color = 'var(--color-danger)';
+                    statsMessage.textContent = 'Error: ' + e.message;
+                }
+            }
         });
     </script>
 </body>
