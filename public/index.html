@@ -42,13 +42,43 @@
         }
 
         .app {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 32px 24px;
             flex: 1;
             display: flex;
-            flex-direction: column;
             background: transparent;
+            max-width: 100%;
+            width: 100%;
+            padding: 0;
+        }
+
+        .sidebar {
+            width: 200px;
+            min-width: 200px;
+            background-color: var(--color-surface);
+            border-right: 1.5px solid var(--color-border);
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar .btn {
+            width: 100%;
+            justify-content: flex-start;
+            text-align: left;
+        }
+
+        .main-content {
+            flex: 1;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 32px 24px;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
         }
 
         /* Header */
@@ -57,9 +87,9 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 24px;
-            margin-bottom: 48px;
-            padding-bottom: 32px;
+            gap: 16px;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
             border-bottom: 1px solid var(--color-border);
             position: relative;
         }
@@ -73,7 +103,7 @@
         }
 
         .game-title {
-            font-size: 3rem;
+            font-size: 2.5rem;
             letter-spacing: 0.12em;
             font-weight: 900;
             color: var(--color-accent);
@@ -101,20 +131,7 @@
 
         .header-left,
         .header-right {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .header-left {
-            justify-content: center;
-        }
-
-        .header-right {
-            justify-content: center;
-            gap: 10px;
+            display: none;
         }
 
         /* Timer */
@@ -447,14 +464,14 @@
         .board-headers {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
-            gap: 12px;
-            margin-bottom: 24px;
+            gap: 8px;
+            margin-bottom: 16px;
             padding: 0 4px;
         }
 
         .header-cell {
             text-align: center;
-            font-size: 0.95rem;
+            font-size: 0.8rem;
             font-weight: 700;
             color: var(--color-accent);
             padding: 14px 8px;
@@ -480,22 +497,22 @@
         .guess-row {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
-            gap: 12px;
+            gap: 8px;
         }
 
         .guess-cell {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             font-weight: 700;
             color: var(--color-text);
             border: 1.5px solid var(--color-border);
             border-radius: 10px;
             text-align: center;
-            padding: 8px;
-            width: 84px;
-            height: 84px;
+            padding: 6px;
+            width: 70px;
+            height: 70px;
             background-color: var(--color-surface);
             transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
             overflow: hidden;
@@ -790,6 +807,28 @@
 
         @media (max-width: 768px) {
             .app {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                min-width: 100%;
+                height: auto;
+                position: static;
+                border-right: none;
+                border-bottom: 1.5px solid var(--color-border);
+                padding: 16px;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .sidebar .btn {
+                width: auto;
+                flex: 0 0 auto;
+            }
+
+            .main-content {
                 padding: 20px 14px;
             }
 
@@ -852,9 +891,18 @@
         }
 
         @media (max-width: 640px) {
-            .app {
+            .sidebar {
                 padding: 12px 8px;
-                margin: 0;
+                gap: 6px;
+            }
+
+            .sidebar .btn {
+                font-size: 0.7rem;
+                padding: 6px 10px;
+            }
+
+            .main-content {
+                padding: 12px 8px;
             }
 
             .header {
@@ -1026,6 +1074,41 @@
                 </div>
             </div>
 
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <button class="btn btn--outline btn--sm" id="helpBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <circle cx="12" cy="17" r="0.5"></circle>
+                </svg>
+                How to Play
+            </button>
+            <button class="btn btn--outline btn--sm" id="leaderboardBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 9h12M6 9l1.5-4.5h9L18 9M6 9v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9M10 14v3M14 14v3"></path>
+                </svg>
+                Leaderboard
+            </button>
+            <button class="btn btn--outline btn--sm" id="modeToggleBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                Random Mode
+            </button>
+            <button class="btn btn--outline btn--sm" id="statsBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+                Stats
+            </button>
+        </div>
+
+        <!-- Main Game Content -->
+        <div class="main-content">
+
         <!-- Header -->
         <header class="header">
             <div class="game-mode-indicator" id="gameModeIndicator">Daily Challenge</div>
@@ -1100,7 +1183,9 @@
                 <!-- Game rows will be populated here -->
             </div>
         </div>
-    </div>
+
+        </div> <!-- End main-content -->
+    </div> <!-- End app -->
 
     <!-- Modals -->
     
