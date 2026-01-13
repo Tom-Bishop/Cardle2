@@ -67,6 +67,42 @@
             box-shadow: 0 4px 12px rgba(14, 165, 164, 0.15);
         }
 
+        /* Hamburger Menu Button */
+        .burger-menu {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background-color: var(--color-surface);
+            border: 1.5px solid var(--color-border);
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(14, 165, 164, 0.15);
+        }
+
+        .burger-menu div {
+            width: 25px;
+            height: 3px;
+            background-color: var(--color-accent);
+            margin: 5px 0;
+            transition: 0.3s;
+            border-radius: 2px;
+        }
+
+        .burger-menu.active div:nth-child(1) {
+            transform: rotate(-45deg) translate(-5px, 6px);
+        }
+
+        .burger-menu.active div:nth-child(2) {
+            opacity: 0;
+        }
+
+        .burger-menu.active div:nth-child(3) {
+            transform: rotate(45deg) translate(-5px, -6px);
+        }
+
         .main-content {
             flex: 1;
             display: flex;
@@ -882,10 +918,22 @@
         }
 
         @media (max-width: 640px) {
+            .burger-menu {
+                display: block;
+            }
+
             .left-nav {
-                top: 50px;
-                left: 8px;
-                gap: 6px;
+                top: 70px;
+                left: -200px;
+                background-color: var(--color-surface);
+                border: 1.5px solid var(--color-border);
+                border-radius: 8px;
+                padding: 12px;
+                transition: left 0.3s ease;
+            }
+
+            .left-nav.active {
+                left: 20px;
             }
 
             .left-nav .btn {
@@ -1045,6 +1093,14 @@
     <div class="app" id="app">
         <!-- Timer -->
             <div class="timer" id="gameTimer">00:00</div>
+            
+            <!-- Hamburger Menu (Mobile Only) -->
+            <div class="burger-menu" id="burgerMenu">
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+
             <!-- Admin Panel (Tom only) -->
             <div class="top-admin hidden" id="topAdminWrapper">
                 <button class="btn btn--outline btn--sm" id="adminBtn" title="Admin">
@@ -2689,6 +2745,34 @@
         // Initialize game when page loads
         let game;
         document.addEventListener('DOMContentLoaded', () => {
+            // Hamburger menu toggle for mobile
+            const burgerMenu = document.getElementById('burgerMenu');
+            const leftNav = document.querySelector('.left-nav');
+            
+            if (burgerMenu && leftNav) {
+                burgerMenu.addEventListener('click', () => {
+                    burgerMenu.classList.toggle('active');
+                    leftNav.classList.toggle('active');
+                });
+
+                // Close menu when clicking a nav button
+                const navButtons = leftNav.querySelectorAll('.btn');
+                navButtons.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        burgerMenu.classList.remove('active');
+                        leftNav.classList.remove('active');
+                    });
+                });
+
+                // Close menu when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!leftNav.contains(e.target) && !burgerMenu.contains(e.target)) {
+                        burgerMenu.classList.remove('active');
+                        leftNav.classList.remove('active');
+                    }
+                });
+            }
+
             // Check if already authenticated (has username cookie)
             const username = getCookie('cardleUsername');
             if (username) {
