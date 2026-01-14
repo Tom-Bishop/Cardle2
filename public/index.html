@@ -2288,13 +2288,11 @@
                 
                 this.saveGameStats();
                 
-                // Submit win result to leaderboard if won
-                if (won) {
-                    const timeSeconds = this.getElapsedSeconds();
-                    submitResult({ won: true, guesses: this.guesses.length, timeSeconds, mode: this.currentGameMode })
-                      .catch(console.warn)
-                      .then(() => fetchMyStatsAndUpdateUI());
-                }
+                // Submit result to leaderboard (both wins and losses)
+                const timeSeconds = this.getElapsedSeconds();
+                submitResult({ won: won, guesses: this.guesses.length, timeSeconds, mode: this.currentGameMode })
+                  .catch(console.warn)
+                  .then(() => fetchMyStatsAndUpdateUI());
 
                 // Mark daily played to prevent replays (for daily mode)
                 if (this.currentGameMode === 'daily') {
