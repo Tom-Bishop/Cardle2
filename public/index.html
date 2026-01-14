@@ -2593,21 +2593,38 @@
                     return;
                 }
                 
-                // Filter data by game mode
                 const mode = this.leaderboardMode || 'daily';
-                const filteredData = leaderboardData.filter(entry => {
-                    const entryMode = entry.mode || 'daily';
-                    return entryMode === mode;
-                });
-
-                // Expect entries shaped like { username, wins, avgGuesses, avgTimeSeconds }
                 const currentUsername = getUsername();
 
-                // Sort by wins desc, then avgTimeSeconds asc
-                const sorted = [...filteredData].sort((a, b) => {
-                    const wa = a.wins || 0; const wb = b.wins || 0;
-                    if (wb !== wa) return wb - wa;
-                    return (a.avgTimeSeconds || 0) - (b.avgTimeSeconds || 0);
+                // Get field prefix based on mode
+                const prefix = mode === 'daily' ? 'daily' : 'random';
+                const playsField = `${prefix}_plays`;
+                const winsField = `${prefix}_wins`;
+                const guessesField = `${prefix}_guesses`;
+                const timeField = `${prefix}_time`;
+
+                // Transform data to use mode-specific fields
+                const modeData = leaderboardData.map(entry => {
+                    const plays = entry[playsField] || 0;
+                    const wins = entry[winsField] || 0;
+                    const totalGuesses = entry[guessesField] || 0;
+                    const totalTime = entry[timeField] || 0;
+                    const avgGuesses = plays > 0 ? totalGuesses / plays : 0;
+                    const avgTime = plays > 0 ? totalTime / plays : 0;
+                    
+                    return {
+                        username: entry.username,
+                        plays,
+                        wins,
+                        avgGuesses,
+                        avgTime
+                    };
+                }).filter(entry => entry.plays > 0); // Only include users with plays
+
+                // Sort by wins desc, then avgTime asc
+                const sorted = modeData.sort((a, b) => {
+                    if (b.wins !== a.wins) return b.wins - a.wins;
+                    return a.avgTime - b.avgTime;
                 });
 
                 if (sorted.length === 0) {
@@ -2622,6 +2639,7 @@
                                 <th class="leaderboard-rank">Rank</th>
                                 <th class="leaderboard-username">Player</th>
                                 <th>Wins</th>
+                                <th>Plays</th>
                                 <th>WinRate</th>
                                 <th>Avg Guesses</th>
                                 <th>Avg Time</th>
@@ -2633,26 +2651,25 @@
                 const formatTime = (s) => {
                     if (!s && s !== 0) return '--:--';
                     const m = Math.floor(s / 60).toString().padStart(2, '0');
-                    const sec = (s % 60).toString().padStart(2, '0');
+                    const sec = Math.floor(s % 60).toString().padStart(2, '0');
                     return `${m}:${sec}`;
                 };
 
                 sorted.forEach((entry, index) => {
                     const isCurrentUser = entry.username === currentUsername;
                     const rowClass = isCurrentUser ? 'leaderboard-user-entry' : '';
-                    const wins = entry.wins || 0;
-                    const played = entry.games_played || entry.played || 0;
-                    const winRate = played > 0 ? Math.round((wins / played) * 100) + '%' : '--%';
-                    const avgGuessesVal = (entry.avg_guesses ?? entry.avgGuesses ?? null);
-                    const avgTimeVal = (entry.avg_time_seconds ?? entry.avgTimeSeconds ?? null);
-                    const avgG = avgGuessesVal != null ? Number(avgGuessesVal).toFixed(2) : '--';
-                    const avgT = avgTimeVal != null ? formatTime(Math.round(Number(avgTimeVal))) : '--:--';
+                    const wins = entry.wins;
+                    const plays = entry.plays;
+                    const winRate = plays > 0 ? Math.round((wins / plays) * 100) + '%' : '0%';
+                    const avgG = entry.avgGuesses.toFixed(2);
+                    const avgT = formatTime(entry.avgTime);
 
                     html += `
                         <tr class="${rowClass}">
                             <td class="leaderboard-rank">#${index + 1}</td>
                             <td class="leaderboard-username">${entry.username}</td>
                             <td>${wins}</td>
+                            <td>${plays}</td>
                             <td>${winRate}</td>
                             <td>${avgG}</td>
                             <td>${avgT}</td>
