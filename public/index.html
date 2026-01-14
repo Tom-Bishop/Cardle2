@@ -25,6 +25,17 @@
             --color-danger: #ef4444;
         }
 
+        html.dark-mode {
+            --color-bg-start: #0b1419;
+            --color-bg-end: #132027;
+            --color-surface: #1a252d;
+            --color-surface-light: #22303a;
+            --color-muted-surface: #1f2a33;
+            --color-border: #2a3a47;
+            --color-text: #e8f4f8;
+            --color-text-muted: #9db0b8;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -1122,6 +1133,11 @@
                 <div class="top-support" id="topSupportWrapper" style="display: none;">
                     <button class="btn btn--outline btn--sm" id="supportTicketBtn" title="Support Ticket">Support Ticket</button>
                 </div>
+                <button class="btn btn--outline btn--sm" id="darkModeToggleBtn" title="Toggle Dark Mode">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
                 <div class="top-account" id="topAccountWrapper">
                     <button class="btn btn--outline btn--sm" id="topAccountBtn" title="Account">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2753,6 +2769,20 @@
         // Initialize game when page loads
         let game;
         document.addEventListener('DOMContentLoaded', () => {
+            // Dark mode toggle
+            const darkModeToggleBtn = document.getElementById('darkModeToggleBtn');
+            const isDarkMode = localStorage.getItem('darkMode') === 'true';
+            if (isDarkMode) {
+                document.documentElement.classList.add('dark-mode');
+            }
+            
+            if (darkModeToggleBtn) {
+                darkModeToggleBtn.addEventListener('click', () => {
+                    const isDark = document.documentElement.classList.toggle('dark-mode');
+                    localStorage.setItem('darkMode', isDark);
+                });
+            }
+
             // Hamburger menu toggle for mobile
             const burgerMenu = document.getElementById('burgerMenu');
             const leftNav = document.querySelector('.left-nav');
