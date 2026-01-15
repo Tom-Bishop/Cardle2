@@ -37,14 +37,17 @@ export async function onRequestPost({ request, env }) {
     // If mode is daily, check last_daily_play to prevent multiple plays and update streaks
     const today = new Date().toISOString().split('T')[0];
     if (mode === 'daily') {
-      const existing = await env.DB.prepare(`SELECT last_daily_play, streak_days, max_streak FROM stats WHERE user_id = ?`).bind(userId).first();
+      const existing = await env.DB.prepare(`SELECT last_daily_play, streak_days, max_streak, daily_streak, daily_max_streak FROM stats WHERE user_id = ?`).bind(userId).first();
       if (existing?.last_daily_play === today) {
         return new Response(JSON.stringify({ ok: false, error: 'daily_played_today' }), { status: 409, headers: { 'Content-Type': 'application/json' } });
       }
 
-      // compute new streak
+      // compute new streak (for both streak_days and daily_streak)
       let newStreak = 0;
       let newMax = existing?.max_streak || 0;
+      let newDailyStreak = 0;
+      let newDailyMax = existing?.daily_max_streak || 0;
+      
       if (won) {
         // compute previous business day (skip weekends)
         const d = new Date();
@@ -53,12 +56,16 @@ export async function onRequestPost({ request, env }) {
         const prevBusiness = d.toISOString().split('T')[0];
         if (existing?.last_daily_play === prevBusiness) {
           newStreak = (existing?.streak_days || 0) + 1;
+          newDailyStreak = (existing?.daily_streak || 0) + 1;
         } else {
           newStreak = 1;
+          newDailyStreak = 1;
         }
         if (newStreak > newMax) newMax = newStreak;
+        if (newDailyStreak > newDailyMax) newDailyMax = newDailyStreak;
       } else {
         newStreak = 0;
+        newDailyStreak = 0;
       }
 
       await env.DB.prepare(`
@@ -70,19 +77,48 @@ export async function onRequestPost({ request, env }) {
             last_daily_play = ?,
             streak_days = ?,
             max_streak = ?,
+            daily_plays = daily_plays + 1,
+            daily_wins = daily_wins + ?,
+            daily_losses = daily_losses + ?,
+            daily_guesses = daily_guesses + ?,
+            daily_time = daily_time + ?,
+            daily_streak = ?,
+            daily_max_streak = ?,
+            total_plays = total_plays + 1,
+            total_wins = total_wins + ?,
+            total_losses = total_losses + ?,
             updated_at = ?
         WHERE user_id = ?
-      `).bind(won ? 1 : 0, guesses, timeSeconds, today, newStreak, newMax, now, userId).run();
+      `).bind(
+        won ? 1 : 0, guesses, timeSeconds, today, newStreak, newMax,
+        won ? 1 : 0, won ? 0 : 1, guesses, timeSeconds, newDailyStreak, newDailyMax,
+        won ? 1 : 0, won ? 0 : 1,
+        now, userId
+      ).run();
     } else {
+      // Random mode
       await env.DB.prepare(`
         UPDATE stats
         SET games_played = games_played + 1,
             wins = wins + ?,
             total_guesses = total_guesses + ?,
             total_time_seconds = total_time_seconds + ?,
+            random_plays = random_plays + 1,
+            random_wins = random_wins + ?,
+            random_losses = random_losses + ?,
+            random_guesses = random_guesses + ?,
+            random_time = random_time + ?,
+            total_plays = total_plays + 1,
+            total_wins = total_wins + ?,
+            total_losses = total_losses + ?,
             updated_at = ?
         WHERE user_id = ?
-      `).bind(won ? 1 : 0, guesses, timeSeconds, now, userId).run();
+      `).bind(
+        won ? 1 : 0, guesses, timeSeconds,
+        won ? 1 : 0, won ? 0 : 1, guesses, timeSeconds,
+        won ? 1 : 0, won ? 0 : 1,
+        now, userId
+      ).run();
     }
 
     const me = await env.DB.prepare(`

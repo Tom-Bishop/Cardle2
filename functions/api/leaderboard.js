@@ -1,5 +1,5 @@
 export async function onRequestGet({ env }) {
-  // Return leaderboard entries with wins, avg guesses and avg time
+  // Return leaderboard entries with mode-specific stats
   const { results } = await env.DB.prepare(`
         SELECT u.username,
           s.wins,
@@ -7,7 +7,15 @@ export async function onRequestGet({ env }) {
           s.streak_days,
           s.max_streak,
           CASE WHEN s.games_played > 0 THEN (CAST(s.total_guesses AS FLOAT)/s.games_played) ELSE NULL END AS avg_guesses,
-          CASE WHEN s.games_played > 0 THEN (CAST(s.total_time_seconds AS FLOAT)/s.games_played) ELSE NULL END AS avg_time_seconds
+          CASE WHEN s.games_played > 0 THEN (CAST(s.total_time_seconds AS FLOAT)/s.games_played) ELSE NULL END AS avg_time_seconds,
+          s.daily_plays,
+          s.daily_wins,
+          s.daily_guesses,
+          s.daily_time,
+          s.random_plays,
+          s.random_wins,
+          s.random_guesses,
+          s.random_time
     FROM stats s
     JOIN users u ON u.id = s.user_id
     ORDER BY s.wins DESC, (CASE WHEN s.games_played > 0 THEN (CAST(s.total_time_seconds AS FLOAT)/s.games_played) ELSE 999999 END) ASC
