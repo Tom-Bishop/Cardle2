@@ -569,8 +569,9 @@
             background-color: var(--color-surface);
             transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
             overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
+            word-wrap: break-word;
+            white-space: normal;
+            line-height: 1.1;
         }
 
         .guess-cell.correct {
