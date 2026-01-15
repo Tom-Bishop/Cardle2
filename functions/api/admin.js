@@ -30,8 +30,6 @@ export async function onRequest(context) {
             return handleWipeData(env);
         } else if (action === 'update-user-stats') {
             return handleUpdateUserStats(env, body);
-        } else if (action === 'reset-password') {
-            return handleResetPassword(env, body);
         } else {
             return new Response(JSON.stringify({ error: 'Unknown action' }), { status: 400 });
         }
@@ -190,49 +188,6 @@ async function handleUpdateUserStats(env, body) {
         });
     } catch (error) {
         console.error('Error updating stats:', error);
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
-    }
-}
-
-// POST /api/admin/reset-password - Reset user password to a default value
-async function handleResetPassword(env, body) {
-    try {
-        const { username, newPassword } = body;
-        
-        if (!username || !newPassword) {
-            return new Response(JSON.stringify({ error: 'Username and newPassword required' }), { status: 400 });
-        }
-
-        // Hash the new password (same logic as auth.js)
-        async function sha256Hex(str) {
-            const enc = new TextEncoder();
-            const data = enc.encode(str);
-            const hash = await crypto.subtle.digest('SHA-256', data);
-            const bytes = new Uint8Array(hash);
-            return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
-        }
-
-        const hash = await sha256Hex(newPassword);
-
-        // Get user ID
-        const userResult = await env.DB.prepare(
-            'SELECT id FROM users WHERE username = ?'
-        ).bind(username).first();
-
-        if (!userResult) {
-            return new Response(JSON.stringify({ error: 'User not found' }), { status: 404 });
-        }
-
-        // Update password
-        await env.DB.prepare(
-            'UPDATE users SET password_hash = ? WHERE id = ?'
-        ).bind(hash, userResult.id).run();
-
-        return new Response(JSON.stringify({ success: true, message: `Password reset for ${username}` }), { 
-            headers: { 'Content-Type': 'application/json' }
-        });
-    } catch (error) {
-        console.error('Error resetting password:', error);
         return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
 }

@@ -2946,10 +2946,10 @@
             }
             
             try {
-                const res = await fetch('/api/admin/reset-password', {
+                const res = await fetch(`/api/admin/reset-password?username=${encodeURIComponent(getUsername())}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, newPassword, adminUsername: getUsername() })
+                    body: JSON.stringify({ username, newPassword })
                 });
                 if (res.ok) {
                     alert(`Password reset for "${username}"`);
