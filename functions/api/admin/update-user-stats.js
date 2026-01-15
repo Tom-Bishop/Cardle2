@@ -56,6 +56,19 @@ export async function onRequest(context) {
         if (stats.random_max_streak !== undefined) { updateFields.push('random_max_streak = ?'); values.push(stats.random_max_streak); }
         if (stats.streak_days !== undefined) { updateFields.push('streak_days = ?'); values.push(stats.streak_days); }
         if (stats.max_streak !== undefined) { updateFields.push('max_streak = ?'); values.push(stats.max_streak); }
+        if (stats.daily_plays !== undefined) { updateFields.push('daily_plays = ?'); values.push(stats.daily_plays); }
+        if (stats.daily_wins !== undefined) { updateFields.push('daily_wins = ?'); values.push(stats.daily_wins); }
+        if (stats.daily_losses !== undefined) { updateFields.push('daily_losses = ?'); values.push(stats.daily_losses); }
+        if (stats.daily_guesses !== undefined) { updateFields.push('daily_guesses = ?'); values.push(stats.daily_guesses); }
+        if (stats.daily_time !== undefined) { updateFields.push('daily_time = ?'); values.push(stats.daily_time); }
+        if (stats.random_plays !== undefined) { updateFields.push('random_plays = ?'); values.push(stats.random_plays); }
+        if (stats.random_wins !== undefined) { updateFields.push('random_wins = ?'); values.push(stats.random_wins); }
+        if (stats.random_losses !== undefined) { updateFields.push('random_losses = ?'); values.push(stats.random_losses); }
+        if (stats.random_guesses !== undefined) { updateFields.push('random_guesses = ?'); values.push(stats.random_guesses); }
+        if (stats.random_time !== undefined) { updateFields.push('random_time = ?'); values.push(stats.random_time); }
+        if (stats.total_plays !== undefined) { updateFields.push('total_plays = ?'); values.push(stats.total_plays); }
+        if (stats.total_wins !== undefined) { updateFields.push('total_wins = ?'); values.push(stats.total_wins); }
+        if (stats.total_losses !== undefined) { updateFields.push('total_losses = ?'); values.push(stats.total_losses); }
 
         updateFields.push('updated_at = CURRENT_TIMESTAMP');
         values.push(userId);

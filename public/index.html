@@ -1519,6 +1519,58 @@
                                 <label for="stat_random_max">Random Max Streak</label>
                                 <input type="number" id="stat_random_max" class="form-control" min="0">
                             </div>
+                            <div class="stat-input-group">
+                                <label for="stat_daily_plays">Daily Plays (new)</label>
+                                <input type="number" id="stat_daily_plays" class="form-control" min="0">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat_daily_wins_new">Daily Wins (new)</label>
+                                <input type="number" id="stat_daily_wins_new" class="form-control" min="0">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat_daily_losses">Daily Losses</label>
+                                <input type="number" id="stat_daily_losses" class="form-control" min="0">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat_daily_guesses">Daily Guesses</label>
+                                <input type="number" id="stat_daily_guesses" class="form-control" min="0">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat_daily_time">Daily Time (sec)</label>
+                                <input type="number" id="stat_daily_time" class="form-control" min="0">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat_random_plays">Random Plays (new)</label>
+                                <input type="number" id="stat_random_plays" class="form-control" min="0">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat_random_wins_new">Random Wins (new)</label>
+                                <input type="number" id="stat_random_wins_new" class="form-control" min="0">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat_random_losses">Random Losses</label>
+                                <input type="number" id="stat_random_losses" class="form-control" min="0">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat_random_guesses">Random Guesses</label>
+                                <input type="number" id="stat_random_guesses" class="form-control" min="0">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat_random_time">Random Time (sec)</label>
+                                <input type="number" id="stat_random_time" class="form-control" min="0">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat_total_plays">Total Plays</label>
+                                <input type="number" id="stat_total_plays" class="form-control" min="0">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat_total_wins">Total Wins</label>
+                                <input type="number" id="stat_total_wins" class="form-control" min="0">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat_total_losses">Total Losses</label>
+                                <input type="number" id="stat_total_losses" class="form-control" min="0">
+                            </div>
                         </div>
                         <div class="admin-buttons" style="display:flex; gap:8px; justify-content:flex-end;">
                             <button class="btn btn--primary" id="saveStatsBtn">Save Changes</button>
@@ -2799,6 +2851,19 @@
                 document.getElementById('stat_random_wins').value = user.random_won || 0;
                 document.getElementById('stat_random_streak').value = user.random_streak || 0;
                 document.getElementById('stat_random_max').value = user.random_max_streak || 0;
+                document.getElementById('stat_daily_plays').value = user.daily_plays || 0;
+                document.getElementById('stat_daily_wins_new').value = user.daily_wins || 0;
+                document.getElementById('stat_daily_losses').value = user.daily_losses || 0;
+                document.getElementById('stat_daily_guesses').value = user.daily_guesses || 0;
+                document.getElementById('stat_daily_time').value = user.daily_time || 0;
+                document.getElementById('stat_random_plays').value = user.random_plays || 0;
+                document.getElementById('stat_random_wins_new').value = user.random_wins || 0;
+                document.getElementById('stat_random_losses').value = user.random_losses || 0;
+                document.getElementById('stat_random_guesses').value = user.random_guesses || 0;
+                document.getElementById('stat_random_time').value = user.random_time || 0;
+                document.getElementById('stat_total_plays').value = user.total_plays || 0;
+                document.getElementById('stat_total_wins').value = user.total_wins || 0;
+                document.getElementById('stat_total_losses').value = user.total_losses || 0;
             } catch (e) {
                 alert('Error loading user stats: ' + e.message);
             }
@@ -2819,7 +2884,20 @@
                     daily_max_streak: parseInt(document.getElementById('stat_daily_max').value) || 0,
                     random_won: parseInt(document.getElementById('stat_random_wins').value) || 0,
                     random_streak: parseInt(document.getElementById('stat_random_streak').value) || 0,
-                    random_max_streak: parseInt(document.getElementById('stat_random_max').value) || 0
+                    random_max_streak: parseInt(document.getElementById('stat_random_max').value) || 0,
+                    daily_plays: parseInt(document.getElementById('stat_daily_plays').value) || 0,
+                    daily_wins: parseInt(document.getElementById('stat_daily_wins_new').value) || 0,
+                    daily_losses: parseInt(document.getElementById('stat_daily_losses').value) || 0,
+                    daily_guesses: parseInt(document.getElementById('stat_daily_guesses').value) || 0,
+                    daily_time: parseInt(document.getElementById('stat_daily_time').value) || 0,
+                    random_plays: parseInt(document.getElementById('stat_random_plays').value) || 0,
+                    random_wins: parseInt(document.getElementById('stat_random_wins_new').value) || 0,
+                    random_losses: parseInt(document.getElementById('stat_random_losses').value) || 0,
+                    random_guesses: parseInt(document.getElementById('stat_random_guesses').value) || 0,
+                    random_time: parseInt(document.getElementById('stat_random_time').value) || 0,
+                    total_plays: parseInt(document.getElementById('stat_total_plays').value) || 0,
+                    total_wins: parseInt(document.getElementById('stat_total_wins').value) || 0,
+                    total_losses: parseInt(document.getElementById('stat_total_losses').value) || 0
                 };
 
                 const res = await fetch('/api/admin/update-user-stats', {

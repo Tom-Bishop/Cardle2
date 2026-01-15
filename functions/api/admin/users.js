@@ -34,6 +34,19 @@ export async function onRequest(context) {
                 COALESCE(s.random_max_streak, 0) as random_max_streak,
                 COALESCE(s.streak_days, 0) as streak_days, 
                 COALESCE(s.max_streak, 0) as max_streak, 
+                COALESCE(s.daily_plays, 0) as daily_plays,
+                COALESCE(s.daily_wins, 0) as daily_wins,
+                COALESCE(s.daily_losses, 0) as daily_losses,
+                COALESCE(s.daily_guesses, 0) as daily_guesses,
+                COALESCE(s.daily_time, 0) as daily_time,
+                COALESCE(s.random_plays, 0) as random_plays,
+                COALESCE(s.random_wins, 0) as random_wins,
+                COALESCE(s.random_losses, 0) as random_losses,
+                COALESCE(s.random_guesses, 0) as random_guesses,
+                COALESCE(s.random_time, 0) as random_time,
+                COALESCE(s.total_plays, 0) as total_plays,
+                COALESCE(s.total_wins, 0) as total_wins,
+                COALESCE(s.total_losses, 0) as total_losses,
                 s.last_daily_play
             FROM users u
             LEFT JOIN stats s ON u.id = s.user_id
