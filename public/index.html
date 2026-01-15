@@ -163,6 +163,27 @@
             min-height: 80px;
         }
 
+        .mode-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 12px;
+            background-color: var(--color-accent);
+            color: white;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-right: 12px;
+            text-transform: uppercase;
+            box-shadow: 0 2px 6px rgba(14, 165, 164, 0.3);
+        }
+
+        .mode-badge.random {
+            background-color: #8b5cf6;
+            box-shadow: 0 2px 6px rgba(139, 92, 246, 0.3);
+        }
+
         #streakBadge {
             font-size: 1.2rem;
             color: var(--color-warning);
@@ -922,6 +943,12 @@
                 letter-spacing: 0.1em;
             }
 
+            .mode-badge {
+                padding: 4px 8px;
+                font-size: 0.65rem;
+                margin-right: 8px;
+            }
+
             #streakBadge {
                 font-size: 1.2rem;
             }
@@ -1016,6 +1043,13 @@
             .game-title {
                 font-size: 1.8rem;
                 letter-spacing: 0.08em;
+            }
+
+            .mode-badge {
+                padding: 3px 6px;
+                font-size: 0.6rem;
+                margin-right: 0;
+                margin-bottom: 4px;
             }
 
             #streakBadge {
@@ -1220,6 +1254,7 @@
         <header class="header">
             <div class="game-mode-indicator" id="gameModeIndicator">Daily Challenge</div>
             <div class="title-section">
+                <div class="mode-badge" id="modeBadge">Daily</div>
                 <div class="game-logo">CARDLE</div>
                 <div id="streakBadge">🔥 0</div>
             </div>
@@ -2077,9 +2112,12 @@
             updateModeIndicator() {
                 const indicator = document.getElementById('gameModeIndicator');
                 const toggleBtn = document.getElementById('modeToggleBtn');
+                const modeBadge = document.getElementById('modeBadge');
                 
                 if (this.currentGameMode === 'daily') {
                     indicator.textContent = 'Daily Challenge';
+                    modeBadge.textContent = 'Daily';
+                    modeBadge.classList.remove('random');
                     toggleBtn.innerHTML = `
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
@@ -2088,6 +2126,8 @@
                     `;
                 } else {
                     indicator.textContent = 'Random Mode';
+                    modeBadge.textContent = 'Random';
+                    modeBadge.classList.add('random');
                     toggleBtn.innerHTML = `
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M8 2v4l4-4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"></path>
