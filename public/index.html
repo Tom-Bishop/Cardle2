@@ -2371,7 +2371,7 @@
                     const guessParts = guessBody.split('-');
                     const answerParts = answerBody.split('-');
                     const hasMatch = guessParts.some(gp => answerParts.some(ap => ap === gp));
-                    return hasMatch ? { status: 'partial', link: answerBody } : { status: 'incorrect', link: null };
+                    return hasMatch ? { status: 'partial', link: null } : { status: 'incorrect', link: null };
                 };
 
                 // Segment feedback logic
