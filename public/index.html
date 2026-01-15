@@ -608,6 +608,28 @@
             border-color: #d97706;
             box-shadow: 0 8px 16px rgba(245, 158, 11, 0.3);
             font-weight: 700;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 6px 8px;
+        }
+
+        .cell-main {
+            font-weight: 700;
+        }
+
+        .cell-link {
+            font-size: 0.65rem;
+            font-weight: 500;
+            opacity: 0.75;
+            color: rgba(10, 10, 10, 0.7);
+            line-height: 1;
+            max-width: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .guess-cell.incorrect {
@@ -2341,29 +2363,62 @@
                 const getRegion = (country) => regions[country] || 'Other';
                 const getParent = (make) => parentCompanies[make] || null;
 
+                // Body matching: handles compound types like "SUV-Coupe"
+                const getBodyFeedback = (guessBody, answerBody) => {
+                    if (guessBody === answerBody) {
+                        return { status: 'correct', link: null };
+                    }
+                    const guessParts = guessBody.split('-');
+                    const answerParts = answerBody.split('-');
+                    const hasMatch = guessParts.some(gp => answerParts.some(ap => ap === gp));
+                    return hasMatch ? { status: 'partial', link: answerBody } : { status: 'incorrect', link: null };
+                };
+
                 // Segment feedback logic
                 const getSegmentFeedback = (guessSegment, answerSegment) => {
                     if (guessSegment === answerSegment) {
-                        return 'correct';
+                        return { status: 'correct', link: null };
                     }
                     const adjacent = adjacentSegments[answerSegment] || [];
-                    return adjacent.includes(guessSegment) ? 'partial' : 'incorrect';
+                    return adjacent.includes(guessSegment) ? { status: 'partial', link: answerSegment } : { status: 'incorrect', link: null };
+                };
+
+                // Make feedback with parent company link
+                const getMakeFeedback = (guessMake, answerMake) => {
+                    if (guessMake === answerMake) {
+                        return { status: 'correct', link: null };
+                    }
+                    const guessParent = getParent(guessMake);
+                    const answerParent = getParent(answerMake);
+                    if (guessParent && answerParent && guessParent === answerParent) {
+                        return { status: 'partial', link: answerParent };
+                    }
+                    return { status: 'incorrect', link: null };
+                };
+
+                // Origin feedback with region link
+                const getOriginFeedback = (guessOrigin, answerOrigin) => {
+                    if (guessOrigin === answerOrigin) {
+                        return { status: 'correct', link: null };
+                    }
+                    if (getRegion(guessOrigin) === getRegion(answerOrigin)) {
+                        return { status: 'partial', link: getRegion(answerOrigin) };
+                    }
+                    return { status: 'incorrect', link: null };
                 };
 
                 return {
-                    make: guess.make === answer.make ? 'correct' : 
-                          (getParent(guess.make) && getParent(answer.make) && getParent(guess.make) === getParent(answer.make) ? 'partial' : 'incorrect'),
-                    model: guess.model === answer.model ? 'correct' : 'incorrect',
-                    body: guess.body === answer.body ? 'correct' : 'incorrect',
-                    origin: guess.origin === answer.origin ? 'correct' : 
-                            (getRegion(guess.origin) === getRegion(answer.origin) ? 'partial' : 'incorrect'),
-                    power: guess.power === answer.power ? 'correct' : 'incorrect',
+                    make: getMakeFeedback(guess.make, answer.make),
+                    model: guess.model === answer.model ? { status: 'correct', link: null } : { status: 'incorrect', link: null },
+                    body: getBodyFeedback(guess.body, answer.body),
+                    origin: getOriginFeedback(guess.origin, answer.origin),
+                    power: guess.power === answer.power ? { status: 'correct', link: null } : { status: 'incorrect', link: null },
                     segment: getSegmentFeedback(guess.segment, answer.segment)
                 };
             }
 
             isCorrectGuess(feedback) {
-                return Object.values(feedback).every(result => result === 'correct');
+                return Object.values(feedback).every(result => result.status === 'correct');
             }
 
             renderGameBoard() {
@@ -2395,9 +2450,18 @@
                 
                 cells.forEach((cell, index) => {
                     setTimeout(() => {
-                        cell.textContent = values[index];
+                        const feedbackObj = feedback[feedbackKeys[index]];
+                        const feedbackStatus = feedbackObj.status;
+                        const feedbackLink = feedbackObj.link;
+                        
+                        if (feedbackLink && feedbackStatus === 'partial') {
+                            cell.innerHTML = `<div class="cell-main">${values[index]}</div><div class="cell-link">${feedbackLink}</div>`;
+                        } else {
+                            cell.textContent = values[index];
+                        }
+                        
                         cell.classList.add('revealing');
-                        cell.classList.add(feedback[feedbackKeys[index]]);
+                        cell.classList.add(feedbackStatus);
                         
                         setTimeout(() => {
                             cell.classList.remove('revealing');
