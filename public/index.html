@@ -3117,6 +3117,11 @@
         // Initialize game when page loads
         let game;
         document.addEventListener('DOMContentLoaded', () => {
+            // Skip initialization for verification files
+            if (window.location.pathname.includes('google')) {
+                return;
+            }
+            
             // Dark mode toggle
             const darkModeToggleBtn = document.getElementById('darkModeToggleBtn');
             const isDarkMode = localStorage.getItem('darkMode') === 'true';
