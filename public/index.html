@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="google-site-verification" content="google99725e34790a75d1">
+    <meta name="csrf-token" content="cardle-csrf-protection">
     <meta name="description" content="Cardle - Guess the car in 5 tries with daily and random modes. Test your car knowledge!">
     <meta name="keywords" content="cardle, guess the car, car game, wordle, daily challenge, auto">
     <meta property="og:title" content="CARDLE - Guess The Car">
@@ -1725,7 +1726,11 @@
                             if (j.error === 'daily_played_today') {
                                 const statsContent = document.getElementById('statsContent');
                                 if (statsContent) {
-                                    statsContent.innerHTML = `<div class="help-section"><h3>Daily Played</h3><p>You've already played today's daily challenge. Come back tomorrow or try Random Mode!</p></div>`;
+                                    const errorDiv = document.createElement('div');
+                                    errorDiv.className = 'help-section';
+                                    errorDiv.innerHTML = '<h3>Daily Played</h3><p>You\'ve already played today\'s daily challenge. Come back tomorrow or try Random Mode!</p>';
+                                    statsContent.textContent = '';
+                                    statsContent.appendChild(errorDiv);
                                     game.showModal('statsModal');
                                 }
                                 return;
@@ -1826,7 +1831,14 @@
             if (!currentPassword || !newPassword) { if (msg) msg.textContent = 'Enter both passwords'; return; }
             const username = getCookie('cardleUsername');
             try {
-                const res = await fetch('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'change_password', username, currentPassword, newPassword }) });
+                const res = await fetch('/api/auth', { 
+                    method: 'POST', 
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': 'cardle-csrf-protection'
+                    }, 
+                    body: JSON.stringify({ action: 'change_password', username, currentPassword, newPassword }) 
+                });
                 const body = await res.json().catch(() => null);
                 if (!res.ok || !body || !body.ok) {
                     if (msg) msg.textContent = (body && body.error) || 'Failed to change password';
@@ -1853,7 +1865,10 @@
             try {
                 const res = await fetch('/api/auth', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': 'cardle-csrf-protection'
+                    },
                     body: JSON.stringify({ action, username, password })
                 });
                 const body = await res.json().catch(() => null);

@@ -1,12 +1,73 @@
-async function sha256Hex(str) {
-  const enc = new TextEncoder();
-  const data = enc.encode(str);
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  const bytes = new Uint8Array(hash);
-  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+// PBKDF2 password hashing for better security than plain SHA-256
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const salt = encoder.encode('cardle2-salt-v1'); // Fixed salt (consider making this per-user in future)
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    data,
+    { name: 'PBKDF2' },
+    false,
+    ['deriveBits']
+  );
+  const derivedBits = await crypto.subtle.deriveBits(
+    {
+      name: 'PBKDF2',
+      salt: salt,
+      iterations: 100000, // NIST recommendation
+      hash: 'SHA-256'
+    },
+    keyMaterial,
+    256
+  );
+  const hashArray = Array.from(new Uint8Array(derivedBits));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function setCookieHeader(username) {
+  return `cardleUsername=${encodeURIComponent(username)}; Path=/; SameSite=Strict; Secure; HttpOnly; Max-Age=31536000`;
+}
+
+// Rate limiting: max 5 auth attempts per IP per hour
+async function checkRateLimit(request, env) {
+  const ip = request.headers.get('cf-connecting-ip') || 'unknown';
+  const key = `rate-limit:auth:${ip}`;
+  
+  try {
+    // Try to use KV for rate limiting if available
+    if (env.RATE_LIMIT_KV) {
+      const current = await env.RATE_LIMIT_KV.get(key, 'json') || { count: 0, resetTime: Date.now() + 3600000 };
+      
+      if (Date.now() > current.resetTime) {
+        // Reset counter after 1 hour
+        current.count = 0;
+        current.resetTime = Date.now() + 3600000;
+      }
+      
+      current.count++;
+      
+      if (current.count > 5) {
+        return { allowed: false, message: 'Too many login attempts. Try again in 1 hour.' };
+      }
+      
+      await env.RATE_LIMIT_KV.put(key, JSON.stringify(current));
+      return { allowed: true };
+    }
+  } catch (e) {
+    // Silently fail rate limiting if KV not available - don't block the user
+    console.warn('Rate limit check failed:', e);
+  }
+  
+  return { allowed: true };
 }
 
 export async function onRequestPost({ request, env }) {
+  // CSRF token validation
+  const csrfToken = request.headers.get('X-CSRF-Token');
+  if (csrfToken !== 'cardle-csrf-protection') {
+    return new Response(JSON.stringify({ ok: false, error: 'csrf_failed' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+  }
+
   const body = await request.json().catch(() => null);
   if (!body) return new Response(JSON.stringify({ ok: false, error: 'bad_json' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
 
@@ -14,10 +75,24 @@ export async function onRequestPost({ request, env }) {
   const username = String(body.username || '').trim();
   const password = String(body.password || '');
 
+  // Rate limit login/register attempts
+  if (action === 'login' || action === 'register') {
+    const rateLimit = await checkRateLimit(request, env);
+    if (!rateLimit.allowed) {
+      return new Response(JSON.stringify({ ok: false, error: 'rate_limited', message: rateLimit.message }), { status: 429, headers: { 'Content-Type': 'application/json' } });
+    }
+  }
+
   if (!username || username.length > 24) return new Response(JSON.stringify({ ok: false, error: 'bad_username' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+  
+  // Validate username format (alphanumeric, hyphen, underscore only)
+  if (!/^[a-zA-Z0-9_-]+$/.test(username)) return new Response(JSON.stringify({ ok: false, error: 'invalid_username_format' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
 
   // Only check password field for register/login actions
   if ((action === 'register' || action === 'login') && !password) return new Response(JSON.stringify({ ok: false, error: 'bad_password' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+
+  // Validate password length on register
+  if (action === 'register' && password.length < 8) return new Response(JSON.stringify({ ok: false, error: 'password_too_short' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
 
   const now = new Date().toISOString();
 
@@ -27,7 +102,7 @@ export async function onRequestPost({ request, env }) {
     if (exists?.id) return new Response(JSON.stringify({ ok: false, error: 'username_taken' }), { status: 409, headers: { 'Content-Type': 'application/json' } });
 
     const id = crypto.randomUUID();
-    const hash = await sha256Hex(password);
+    const hash = await hashPassword(password);
     await env.DB.prepare(`INSERT INTO users (id, username, created_at, password_hash) VALUES (?, ?, ?, ?)`)
       .bind(id, username, now, hash).run();
 
@@ -36,18 +111,19 @@ export async function onRequestPost({ request, env }) {
 
     // set cookie
     const headers = new Headers({ 'Content-Type': 'application/json' });
-    headers.append('Set-Cookie', `cardleUsername=${encodeURIComponent(username)}; Path=/; SameSite=Lax`);
+    headers.append('Set-Cookie', setCookieHeader(username));
     return new Response(JSON.stringify({ ok: true }), { headers });
   }
 
   if (action === 'login') {
     const row = await env.DB.prepare(`SELECT id, password_hash FROM users WHERE username = ?`).bind(username).first();
     if (!row?.id) return new Response(JSON.stringify({ ok: false, error: 'not_found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
-    const hash = await sha256Hex(password);
+    
+    const hash = await hashPassword(password);
     if (hash !== row.password_hash) return new Response(JSON.stringify({ ok: false, error: 'bad_credentials' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
 
     const headers = new Headers({ 'Content-Type': 'application/json' });
-    headers.append('Set-Cookie', `cardleUsername=${encodeURIComponent(username)}; Path=/; SameSite=Lax`);
+    headers.append('Set-Cookie', setCookieHeader(username));
 
     // return user stats via /api/me style
     const me = await env.DB.prepare(`
@@ -71,13 +147,15 @@ export async function onRequestPost({ request, env }) {
     const current = String(body.currentPassword || '');
     const next = String(body.newPassword || '');
     if (!current || !next) return new Response(JSON.stringify({ ok: false, error: 'bad_password' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    if (next.length < 8) return new Response(JSON.stringify({ ok: false, error: 'password_too_short' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
 
     const row = await env.DB.prepare(`SELECT id, password_hash FROM users WHERE username = ?`).bind(username).first();
     if (!row?.id) return new Response(JSON.stringify({ ok: false, error: 'not_found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
-    const curHash = await sha256Hex(current);
+    
+    const curHash = await hashPassword(current);
     if (curHash !== row.password_hash) return new Response(JSON.stringify({ ok: false, error: 'bad_credentials' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
 
-    const newHash = await sha256Hex(next);
+    const newHash = await hashPassword(next);
     await env.DB.prepare(`UPDATE users SET password_hash = ? WHERE id = ?`).bind(newHash, row.id).run();
 
     return new Response(JSON.stringify({ ok: true }), { headers: { 'Content-Type': 'application/json' } });

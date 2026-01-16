@@ -137,6 +137,8 @@ export async function onRequestPost({ request, env }) {
 
     return Response.json({ ok: true, me });
   } catch (err) {
-    return new Response(JSON.stringify({ ok: false, error: String(err && err.stack ? err.stack : err) }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    // Log error server-side, don't expose stack to client
+    console.error('Submit error:', err instanceof Error ? err.stack : err);
+    return new Response(JSON.stringify({ ok: false, error: 'Internal error' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 }
