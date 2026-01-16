@@ -24,6 +24,15 @@ async function hashPassword(password) {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// Legacy SHA-256 hashing (for migration only)
+async function sha256Hex(str) {
+  const enc = new TextEncoder();
+  const data = enc.encode(str);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  const bytes = new Uint8Array(hash);
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 function setCookieHeader(username) {
   return `cardleUsername=${encodeURIComponent(username)}; Path=/; SameSite=Strict; Secure; Max-Age=31536000`;
 }
@@ -119,8 +128,26 @@ export async function onRequestPost({ request, env }) {
     const row = await env.DB.prepare(`SELECT id, password_hash FROM users WHERE username = ?`).bind(username).first();
     if (!row?.id) return new Response(JSON.stringify({ ok: false, error: 'not_found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
     
-    const hash = await hashPassword(password);
-    if (hash !== row.password_hash) return new Response(JSON.stringify({ ok: false, error: 'bad_credentials' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+    // Try PBKDF2 hash first (new method)
+    const pbkdf2Hash = await hashPassword(password);
+    let isValid = pbkdf2Hash === row.password_hash;
+    let needsMigration = false;
+    
+    // If PBKDF2 fails, try legacy SHA-256 (migration support)
+    if (!isValid) {
+      const legacyHash = await sha256Hex(password);
+      isValid = legacyHash === row.password_hash;
+      needsMigration = isValid; // If legacy hash matches, we need to migrate to PBKDF2
+    }
+    
+    if (!isValid) {
+      return new Response(JSON.stringify({ ok: false, error: 'bad_credentials' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+    }
+    
+    // Auto-migrate legacy users to PBKDF2
+    if (needsMigration) {
+      await env.DB.prepare(`UPDATE users SET password_hash = ? WHERE id = ?`).bind(pbkdf2Hash, row.id).run();
+    }
 
     const headers = new Headers({ 'Content-Type': 'application/json' });
     headers.append('Set-Cookie', setCookieHeader(username));
@@ -152,9 +179,20 @@ export async function onRequestPost({ request, env }) {
     const row = await env.DB.prepare(`SELECT id, password_hash FROM users WHERE username = ?`).bind(username).first();
     if (!row?.id) return new Response(JSON.stringify({ ok: false, error: 'not_found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
     
-    const curHash = await hashPassword(current);
-    if (curHash !== row.password_hash) return new Response(JSON.stringify({ ok: false, error: 'bad_credentials' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+    // Try PBKDF2 first, fall back to legacy SHA-256 for verification
+    const curPbkdf2Hash = await hashPassword(current);
+    let isValid = curPbkdf2Hash === row.password_hash;
+    
+    if (!isValid) {
+      const curLegacyHash = await sha256Hex(current);
+      isValid = curLegacyHash === row.password_hash;
+    }
+    
+    if (!isValid) {
+      return new Response(JSON.stringify({ ok: false, error: 'bad_credentials' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+    }
 
+    // Always save new password with PBKDF2
     const newHash = await hashPassword(next);
     await env.DB.prepare(`UPDATE users SET password_hash = ? WHERE id = ?`).bind(newHash, row.id).run();
 
