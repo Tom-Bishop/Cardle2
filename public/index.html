@@ -1661,6 +1661,33 @@
             return null;
         }
 
+        // Game state persistence (localStorage)
+        function saveGameState(guesses, currentCar, gameMode) {
+            const state = {
+                guesses: guesses.map(g => ({ car: g.car, feedback: g.feedback })),
+                currentCar: currentCar,
+                gameMode: gameMode,
+                timestamp: new Date().getTime()
+            };
+            localStorage.setItem('cardleGameState', JSON.stringify(state));
+        }
+
+        function loadGameState() {
+            const stored = localStorage.getItem('cardleGameState');
+            if (stored) {
+                try {
+                    return JSON.parse(stored);
+                } catch (e) {
+                    return null;
+                }
+            }
+            return null;
+        }
+
+        function clearGameState() {
+            localStorage.removeItem('cardleGameState');
+        }
+
         function getUsername() {
             let u = getCookie('cardleUsername');
             if (!u) {
@@ -1887,9 +1914,27 @@
 
             initializeGame() {
                 this.loadGameMode();
-                this.selectCar();
-                this.renderGameBoard();
-                this.updateModeIndicator();
+                
+                // Try to restore previous game state
+                const savedState = loadGameState();
+                if (savedState && savedState.gameMode === this.currentGameMode) {
+                    // Restore the saved car and guesses
+                    this.currentCar = savedState.currentCar;
+                    this.guesses = savedState.guesses;
+                    this.renderGameBoard();
+                    this.updateModeIndicator();
+                    
+                    // Re-render all saved guesses
+                    this.guesses.forEach((guess, index) => {
+                        this.renderGuess(index, guess.car, guess.feedback);
+                    });
+                } else {
+                    // New game
+                    this.selectCar();
+                    this.renderGameBoard();
+                    this.updateModeIndicator();
+                    clearGameState();
+                }
 
                 // Check server-side if daily mode and already played today
                 if (this.currentGameMode === 'daily') {
@@ -2296,6 +2341,9 @@
                 const feedback = this.getFeedback(guessedCar, this.currentCar);
                 this.guesses.push({ car: guessedCar, feedback });
                 
+                // Save game state to localStorage
+                saveGameState(this.guesses, this.currentCar, this.currentGameMode);
+                
                 this.renderGuess(this.guesses.length - 1, guessedCar, feedback);
                 // hide autocomplete dropdown after processing
                 this.hideAutocomplete();
@@ -2488,6 +2536,9 @@
                     try { this.markDailyPlayed(won); } catch (e) { /* ignore */ }
                 }
                 
+                // Clear saved game state since game ended
+                clearGameState();
+                
                 setTimeout(() => {
                     if (won) {
                         this.showWinModal();
@@ -2594,6 +2645,9 @@
                 this.gameWon = false;
                 this.startTime = null;
                 this.endTime = null;
+                
+                // Clear saved game state for new game
+                clearGameState();
                 
                 this.selectCar();
                 this.renderGameBoard();
