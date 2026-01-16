@@ -25,7 +25,7 @@ async function hashPassword(password) {
 }
 
 function setCookieHeader(username) {
-  return `cardleUsername=${encodeURIComponent(username)}; Path=/; SameSite=Strict; Secure; HttpOnly; Max-Age=31536000`;
+  return `cardleUsername=${encodeURIComponent(username)}; Path=/; SameSite=Strict; Secure; Max-Age=31536000`;
 }
 
 // Rate limiting: max 5 auth attempts per IP per hour
