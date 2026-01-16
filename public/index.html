@@ -505,7 +505,7 @@
             border: 1.5px solid var(--color-border);
             border-top: none;
             border-radius: 0 0 12px 12px;
-            max-height: 280px;
+            max-height: 400px;
             overflow-y: auto;
             z-index: 1000;
             box-shadow: 0 12px 24px rgba(11, 15, 16, 0.1);
@@ -2225,7 +2225,7 @@
                     return;
                 }
 
-                dropdown.innerHTML = matches.slice(0, 10).map(car => `
+                dropdown.innerHTML = matches.map(car => `
                     <div class="autocomplete-item" data-car='${JSON.stringify(car)}'>
                         ${car.make} ${car.model}
                     </div>
