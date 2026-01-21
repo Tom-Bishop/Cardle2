@@ -9,7 +9,7 @@ export async function onRequest(context) {
 
     try {
         const db = env.DB;
-        const cars = await db.prepare('SELECT id, make, model, body, origin, power, segment FROM cars').all();
+        const cars = await db.prepare('SELECT id, make, model, body, origin, power, segment FROM cars ORDER BY id').all();
         
         return new Response(JSON.stringify(cars.results || []), {
             status: 200,
