@@ -3015,7 +3015,7 @@
             
             try {
                 const adminUsername = getUsername();
-                let url = `/api/admin/guesses?username=${encodeURIComponent(adminUsername)}&mode=${mode}&limit=50`;
+                let url = `/api/admin/guesses?username=${encodeURIComponent(adminUsername)}&mode=${mode}&limit=10`;
                 if (mode === 'user' && username) {
                     url += `&user=${encodeURIComponent(username)}`;
                 }
@@ -3050,7 +3050,7 @@
                 });
                 
                 html += '</table>';
-                html += `<p style="margin-top:12px; font-size:12px; color:#999;">Showing top ${Math.min(50, data.data.length)} entries</p>`;
+                html += `<p style="margin-top:12px; font-size:12px; color:#999;">Showing top ${Math.min(10, data.data.length)} entries</p>`;
                 html += '</div>';
                 
                 container.innerHTML = html;
