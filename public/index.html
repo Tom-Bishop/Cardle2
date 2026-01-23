@@ -2031,12 +2031,18 @@
             }
 
             hashCode(str) {
-                let hash = 0;
+                // Better hash function for more random distribution
+                let hash = 0x811c9dc5; // FNV offset basis
                 for (let i = 0; i < str.length; i++) {
-                    const char = str.charCodeAt(i);
-                    hash = ((hash << 5) - hash) + char;
-                    hash = hash & hash; // Convert to 32bit integer
+                    hash ^= str.charCodeAt(i);
+                    hash = Math.imul(hash, 0x01000193); // FNV prime
                 }
+                // Additional mixing for better distribution
+                hash ^= hash >>> 16;
+                hash = Math.imul(hash, 0x85ebca6b);
+                hash ^= hash >>> 13;
+                hash = Math.imul(hash, 0xc2b2ae35);
+                hash ^= hash >>> 16;
                 return hash;
             }
 
@@ -2394,7 +2400,7 @@
                     // Hyundai Group
                     'Hyundai': 'Hyundai', 'Genesis': 'Hyundai', 'Kia': 'Hyundai',
                     // Volkswagen Group
-                    'Volkswagen': 'VW Group', 'Audi': 'VW Group', 'Porsche': 'VW Group', 'Skoda': 'VW Group', 'SEAT': 'VW Group',
+                    'Volkswagen': 'VW Group', 'Audi': 'VW Group', 'Porsche': 'VW Group', 'Skoda': 'VW Group', 'SEAT': 'VW Group', 'Cupra': 'VW Group',
                     // BMW Group
                     'BMW': 'BMW Group', 'MINI': 'BMW Group',
                     // Ford Motor
