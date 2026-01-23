@@ -7,6 +7,18 @@ const corsHeaders = {
     'Content-Type': 'application/json'
 };
 
+function getCookie(request, name) {
+    const cookie = request.headers.get('Cookie');
+    if (!cookie) return null;
+    const parts = cookie.split(';').map(p => p.trim());
+    for (const part of parts) {
+        if (part.startsWith(name + '=')) {
+            return decodeURIComponent(part.slice(name.length + 1));
+        }
+    }
+    return null;
+}
+
 export async function onRequest(context) {
     const { request, env } = context;
 
@@ -22,6 +34,11 @@ export async function onRequest(context) {
     try {
         const body = await request.json();
         const { username, carId, carMake, carModel } = body;
+
+        const cookieUser = getCookie(request, 'cardleUsername');
+        if (!cookieUser || cookieUser !== username) {
+            return new Response(JSON.stringify({ error: 'Unauthorized user' }), { status: 401, headers: corsHeaders });
+        }
 
         // Validate inputs
         if (!username || username.trim().length === 0) {
