@@ -3050,9 +3050,10 @@
             }
         }
 
-        
+        // Global functions for modal interactions
+        function closeModal(modalId) {
             const modal = document.getElementById(modalId);
-            modal.classList.remove('show');
+            if (modal) modal.classList.remove('show');
         }
 
         // ===== ADMIN HELPER FUNCTIONS (global scope) =====
