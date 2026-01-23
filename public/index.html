@@ -532,6 +532,14 @@
             color: var(--color-text);
         }
 
+        .autocomplete-item mark {
+            background-color: var(--color-accent);
+            color: var(--color-black);
+            font-weight: 600;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
         .autocomplete-item:hover,
         .autocomplete-item.highlighted {
             background-color: var(--color-accent);
@@ -765,6 +773,62 @@
             font-weight: 700;
             color: var(--color-accent);
             font-size: 0.95rem;
+        }
+
+        /* Toast notifications */
+        #toastContainer {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: var(--color-success);
+            color: white;
+            padding: 14px 18px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: slideInRight 0.3s ease;
+            pointer-events: auto;
+            max-width: 300px;
+        }
+
+        .toast--error { background: var(--color-danger); }
+        .toast--warning { background: var(--color-warning); color: #000; }
+        .toast--info { background: #3b82f6; }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Confetti animation */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            pointer-events: none;
+            z-index: 2500;
+        }
+
+        @keyframes confettiFall {
+            to {
+                transform: translateY(500px) rotate(360deg);
+                opacity: 0;
+            }
         }
 
         /* Help modal specific styles */
@@ -1049,6 +1113,15 @@
             .left-nav .btn svg {
                 width: 14px;
                 height: 14px;
+            }
+
+            /* Reposition admin button on mobile to avoid burger menu overlap */
+            .top-admin {
+                position: fixed;
+                top: 18px;
+                left: auto;
+                right: 20px;
+                z-index: 999;
             }
 
             .app {
@@ -1671,6 +1744,38 @@
 
     <script>
 
+        // Toast notification system
+        function showToast(message, type = 'info', duration = 3000) {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            
+            const toast = document.createElement('div');
+            toast.className = `toast toast--${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        // Confetti animation
+        function triggerConfetti() {
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * window.innerWidth + 'px';
+                confetti.style.top = '-10px';
+                confetti.style.backgroundColor = ['#0ea5a4', '#10b981', '#3b82f6', '#f59e0b', '#ef4444'][Math.floor(Math.random() * 5)];
+                confetti.style.animation = `confettiFall ${2 + Math.random() * 1}s linear forwards`;
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => confetti.remove(), 3000);
+            }
+        }
+
         // Leaderboard and Result Management (cookie-based username)
         function setCookie(name, value, days = 365) {
             const d = new Date();
@@ -2283,6 +2388,23 @@
                 const dropdown = document.getElementById('autocompleteDropdown');
                 const items = dropdown.querySelectorAll('.autocomplete-item');
                 
+                // Global: Escape closes all modals and autocomplete
+                if (e.key === 'Escape') {
+                    const modals = document.querySelectorAll('.modal.show');
+                    modals.forEach(m => m.classList.remove('show'));
+                    this.hideAutocomplete();
+                    this.selectedIndex = -1;
+                    return;
+                }
+                
+                // Global: ? or Shift+/ opens help
+                if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+                    e.preventDefault();
+                    this.showModal('helpModal');
+                    return;
+                }
+                
+                // Autocomplete navigation
                 if (e.key === 'ArrowDown') {
                     e.preventDefault();
                     if (items.length > 0) {
@@ -2302,9 +2424,6 @@
                     } else {
                         this.submitGuess();
                     }
-                } else if (e.key === 'Escape') {
-                    this.hideAutocomplete();
-                    this.selectedIndex = -1;
                 }
             }
 
@@ -2330,11 +2449,20 @@
                     return;
                 }
 
-                dropdown.innerHTML = matches.map(car => `
-                    <div class="autocomplete-item" data-car='${JSON.stringify(car)}'>
-                        ${car.make} ${car.model}
-                    </div>
-                `).join('');
+                const normalizedQuery = query.toLowerCase().trim();
+                dropdown.innerHTML = matches.map(car => {
+                    const fullName = `${car.make} ${car.model}`;
+                    const fullNameLower = fullName.toLowerCase();
+                    const index = fullNameLower.indexOf(normalizedQuery);
+                    let displayName = fullName;
+                    if (index !== -1 && normalizedQuery.length > 0) {
+                        const before = fullName.substring(0, index);
+                        const match = fullName.substring(index, index + normalizedQuery.length);
+                        const after = fullName.substring(index + normalizedQuery.length);
+                        displayName = `${before}<mark>${match}</mark>${after}`;
+                    }
+                    return `<div class="autocomplete-item" data-car='${JSON.stringify(car)}'>${displayName}</div>`;
+                }).join('');
 
                 dropdown.classList.remove('hidden');
 
@@ -2360,12 +2488,24 @@
 
             findMatches(query) {
                 const normalizedQuery = query.toLowerCase().trim();
-                return this.carDatabase.filter(car => {
+                
+                // Exact matches (make + model starts with query)
+                const exactMatches = this.carDatabase.filter(car => {
                     const fullName = `${car.make} ${car.model}`.toLowerCase();
-                    return fullName.includes(normalizedQuery) || 
-                           car.make.toLowerCase().includes(normalizedQuery) ||
-                           car.model.toLowerCase().includes(normalizedQuery);
+                    return fullName.startsWith(normalizedQuery);
                 });
+                
+                // Partial matches (contains query but not exact start)
+                const partialMatches = this.carDatabase.filter(car => {
+                    const fullName = `${car.make} ${car.model}`.toLowerCase();
+                    return (fullName.includes(normalizedQuery) || 
+                           car.make.toLowerCase().includes(normalizedQuery) ||
+                           car.model.toLowerCase().includes(normalizedQuery)) &&
+                           !fullName.startsWith(normalizedQuery);
+                });
+                
+                // Return top 5 exact + top 5 partial (max 10)
+                return [...exactMatches.slice(0, 5), ...partialMatches.slice(0, 5)];
             }
 
             submitGuess() {
@@ -2613,6 +2753,8 @@
                 
                 setTimeout(() => {
                     if (won) {
+                        triggerConfetti();
+                        showToast('🎉 Correct! Great job!', 'success');
                         this.showWinModal();
                     } else {
                         this.showLossModal();
@@ -2627,6 +2769,20 @@
                 const winActions = document.getElementById('winActions');
                 
                 winTime.textContent = `Time: ${this.getElapsedTime()}`;
+                
+                // Check for streak milestones
+                const streakMilestones = [5, 10, 50, 100, 365];
+                fetch(`/api/me?username=${encodeURIComponent(getUsername())}`)
+                    .then(r => r.json())
+                    .then(body => {
+                        if (body?.me) {
+                            const streak = Number(body.me.streak_days || body.me.daily_streak || 0);
+                            if (streakMilestones.includes(streak)) {
+                                showToast(`🔥 ${streak}-day streak! Amazing!`, 'warning', 5000);
+                            }
+                        }
+                    })
+                    .catch(() => {});
                 
                 if (this.currentGameMode === 'daily') {
                     winMessage.innerHTML = `<p>You completed today's daily challenge in ${this.guesses.length} ${this.guesses.length === 1 ? 'attempt' : 'attempts'}!</p>`;
@@ -3430,5 +3586,6 @@
             }
         });
     </script>
+    <div id="toastContainer"></div>
 </body>
 </html>
