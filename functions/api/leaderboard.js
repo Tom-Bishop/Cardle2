@@ -1,3 +1,10 @@
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Content-Type': 'application/json'
+};
+
 export async function onRequestGet({ env }) {
   // Return leaderboard entries with mode-specific stats
   const { results } = await env.DB.prepare(`
@@ -22,5 +29,5 @@ export async function onRequestGet({ env }) {
     LIMIT 50
   `).all();
 
-  return Response.json({ ok: true, results });
+  return Response.json({ ok: true, results }, { headers: corsHeaders });
 }

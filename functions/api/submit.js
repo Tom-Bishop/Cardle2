@@ -1,10 +1,17 @@
 function isoNow() { return new Date().toISOString(); }
 function uuid() { return crypto.randomUUID(); }
 
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Content-Type': 'application/json'
+};
+
 export async function onRequestPost({ request, env }) {
   try {
     const body = await request.json().catch(() => null);
-    if (!body) return new Response("Bad JSON", { status: 400 });
+    if (!body) return new Response("Bad JSON", { status: 400, headers: corsHeaders });
 
     const username = String(body.username || "").trim();
     const won = !!body.won;
@@ -12,9 +19,9 @@ export async function onRequestPost({ request, env }) {
     const timeSeconds = Number(body.timeSeconds || 0);
     const mode = String(body.mode || '').trim(); // 'daily' or 'random'
 
-    if (!username || username.length > 24) return new Response("Bad username", { status: 400 });
-    if (!Number.isFinite(guesses) || guesses < 0 || guesses > 100) return new Response("Bad guesses", { status: 400 });
-    if (!Number.isFinite(timeSeconds) || timeSeconds < 0 || timeSeconds > 86400) return new Response("Bad timeSeconds", { status: 400 });
+    if (!username || username.length > 24) return new Response("Bad username", { status: 400, headers: corsHeaders });
+    if (!Number.isFinite(guesses) || guesses < 0 || guesses > 100) return new Response("Bad guesses", { status: 400, headers: corsHeaders });
+    if (!Number.isFinite(timeSeconds) || timeSeconds < 0 || timeSeconds > 86400) return new Response("Bad timeSeconds", { status: 400, headers: corsHeaders });
 
     const now = isoNow();
 
@@ -39,7 +46,7 @@ export async function onRequestPost({ request, env }) {
     if (mode === 'daily') {
       const existing = await env.DB.prepare(`SELECT last_daily_play, streak_days, max_streak, daily_streak, daily_max_streak FROM stats WHERE user_id = ?`).bind(userId).first();
       if (existing?.last_daily_play === today) {
-        return new Response(JSON.stringify({ ok: false, error: 'daily_played_today' }), { status: 409, headers: { 'Content-Type': 'application/json' } });
+        return new Response(JSON.stringify({ ok: false, error: 'daily_played_today' }), { status: 409, headers: corsHeaders });
       }
 
       // compute new streak (for both streak_days and daily_streak)
@@ -135,10 +142,10 @@ export async function onRequestPost({ request, env }) {
       WHERE u.id = ?
     `).bind(userId).first();
 
-    return Response.json({ ok: true, me });
+    return Response.json({ ok: true, me }, { headers: corsHeaders });
   } catch (err) {
     // Log error server-side, don't expose stack to client
     console.error('Submit error:', err instanceof Error ? err.stack : err);
-    return new Response(JSON.stringify({ ok: false, error: 'Internal error' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ ok: false, error: 'Internal error' }), { status: 500, headers: corsHeaders });
   }
 }

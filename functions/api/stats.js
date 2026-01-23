@@ -1,9 +1,16 @@
 function isoNow() { return new Date().toISOString(); }
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Content-Type': 'application/json'
+};
+
 export async function onRequestPost({ request, env }) {
   try {
     const body = await request.json().catch(() => null);
-    if (!body) return new Response("Bad JSON", { status: 400 });
+    if (!body) return new Response("Bad JSON", { status: 400, headers: corsHeaders });
 
     const username = String(body.username || "").trim();
     const mode = String(body.mode || "daily").trim(); // 'daily' or 'random'
