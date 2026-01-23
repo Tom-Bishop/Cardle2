@@ -1,18 +1,30 @@
 // GET /api/admin/guesses - Get most guessed cars statistics
 // Admin-only endpoint (Tom only)
 
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Content-Type': 'application/json'
+};
+
 export async function onRequest(context) {
     const { request, env } = context;
     const url = new URL(request.url);
 
+    // Handle CORS preflight
+    if (request.method === 'OPTIONS') {
+        return new Response(null, { status: 204, headers: corsHeaders });
+    }
+
     // Verify admin (must be Tom)
     const adminUsername = url.searchParams.get('username');
     if (adminUsername !== 'Tom') {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 403 });
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 403, headers: corsHeaders });
     }
 
     if (request.method !== 'GET') {
-        return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+        return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers: corsHeaders });
     }
 
     try {
@@ -76,7 +88,7 @@ export async function onRequest(context) {
                 data: results.results || []
             }), {
                 status: 200,
-                headers: { 'Content-Type': 'application/json' }
+                headers: corsHeaders
             });
         }
     } catch (err) {
@@ -86,7 +98,7 @@ export async function onRequest(context) {
             ok: false
         }), { 
             status: 500,
-            headers: { 'Content-Type': 'application/json' }
+            headers: corsHeaders
         });
     }
 }

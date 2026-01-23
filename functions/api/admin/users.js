@@ -1,18 +1,30 @@
 // This file handles GET /api/admin/users and GET /api/admin/users?targetUser=...
 // It was moved from admin.js to match Cloudflare Pages Functions routing.
 
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Content-Type': 'application/json'
+};
+
 export async function onRequest(context) {
     const { request, env } = context;
     const url = new URL(request.url);
 
+    // Handle CORS preflight
+    if (request.method === 'OPTIONS') {
+        return new Response(null, { status: 204, headers: corsHeaders });
+    }
+
     // Verify admin (must be Tom) - check query param
     const adminUsername = url.searchParams.get('username');
     if (adminUsername !== 'Tom') {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 403 });
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 403, headers: corsHeaders });
     }
 
     if (request.method !== 'GET') {
-        return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+        return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers: corsHeaders });
     }
 
     try {
@@ -60,10 +72,10 @@ export async function onRequest(context) {
         }
         const users = result.results || [];
         return new Response(JSON.stringify(users), { 
-            headers: { 'Content-Type': 'application/json' }
+            headers: corsHeaders
         });
     } catch (error) {
         console.error('Error fetching users:', error);
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+        return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: corsHeaders });
     }
 }
