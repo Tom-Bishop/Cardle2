@@ -1243,6 +1243,7 @@
                         <div style="text-align:left; padding:12px;">
                             <button class="btn btn--outline" id="changePasswordBtn">Change Password</button>
                             <button class="btn btn--outline" id="logoutBtn" style="margin-left:8px;">Logout</button>
+                            <button class="btn btn--outline" id="mostGuessedBtn" style="display:none; width:100%; margin-top:8px; text-align:center;">📊 Most Guessed Cars</button>
                         </div>
                     </div>
                 </div>
@@ -1468,6 +1469,20 @@
             </div>
             <div class="modal-actions">
                 <button class="btn btn--primary" onclick="closeModal('leaderboardModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Most Guessed Cars Modal (Admin Only) -->
+    <div class="modal" id="mostGuessedModal">
+        <div class="modal-content">
+            <div class="modal-title">📊 Most Guessed Cars</div>
+            <div class="modal-body" id="mostGuessedContainer" style="max-height: 500px; overflow-y: auto;">
+                <p>Loading...</p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn--outline" onclick="loadMostGuessedCars('global')">Refresh</button>
+                <button class="btn btn--primary" onclick="closeModal('mostGuessedModal')">Close</button>
             </div>
         </div>
     </div>
@@ -2143,6 +2158,19 @@
                     const accountMenu = document.getElementById('accountMenu');
                     const logoutBtn = document.getElementById('logoutBtn');
                     const changePasswordBtn = document.getElementById('changePasswordBtn');
+                    const mostGuessedBtn = document.getElementById('mostGuessedBtn');
+                    
+                    // Show Most Guessed button only for Tom (admin)
+                    const username = getUsername();
+                    if (username === 'Tom' && mostGuessedBtn) {
+                        mostGuessedBtn.style.display = 'block';
+                        mostGuessedBtn.addEventListener('click', () => {
+                            game.closeModal('accountMenu');
+                            loadMostGuessedCars('global');
+                            game.showModal('mostGuessedModal');
+                        });
+                    }
+                    
                     if (topAccountBtn) topAccountBtn.addEventListener('click', (e) => {
                         e.stopPropagation();
                         if (accountMenu.style.display === 'none') accountMenu.style.display = 'block'; else accountMenu.style.display = 'none';
@@ -2368,6 +2396,12 @@
             processGuess(guessedCar) {
                 const feedback = this.getFeedback(guessedCar, this.currentCar);
                 this.guesses.push({ car: guessedCar, feedback });
+                
+                // Record guess to database
+                const username = getUsername();
+                if (username && username !== 'guest') {
+                    recordGuess(username, guessedCar.id, guessedCar.make, guessedCar.model);
+                }
                 
                 // Save game state to localStorage
                 saveGameState(this.guesses, this.currentCar, this.currentGameMode);
@@ -2952,8 +2986,71 @@
             }
         }
 
-        // Global functions for modal interactions
-        function closeModal(modalId) {
+        async function recordGuess(username, carId, carMake, carModel) {
+            try {
+                const res = await fetch('/api/record-guess', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, carId, carMake, carModel })
+                });
+                if (!res.ok) console.warn('Failed to record guess:', res.status);
+            } catch (e) {
+                console.warn('Error recording guess:', e);
+            }
+        }
+
+        async function loadMostGuessedCars(mode = 'global', username = null) {
+            const container = document.getElementById('mostGuessedContainer');
+            container.innerHTML = '<p style="text-align:center; padding:20px;">Loading...</p>';
+            
+            try {
+                const adminUsername = getUsername();
+                let url = `/api/admin/guesses?username=${encodeURIComponent(adminUsername)}&mode=${mode}&limit=50`;
+                if (mode === 'user' && username) {
+                    url += `&user=${encodeURIComponent(username)}`;
+                }
+                
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                
+                const data = await res.json();
+                if (!data.ok || !data.data) throw new Error('Invalid response');
+                
+                let html = `<div class="help-section"><h3>${mode === 'global' ? 'Most Guessed Cars (All Users)' : `Most Guessed Cars - ${username}`}</h3>`;
+                html += '<table style="width:100%; border-collapse:collapse; font-size:14px;">';
+                html += '<tr style="background:#333; color:#fff;"><th style="padding:8px; text-align:left; border:1px solid #555;">Make & Model</th>';
+                
+                if (mode === 'global') {
+                    html += '<th style="padding:8px; text-align:center; border:1px solid #555;">Total Guesses</th><th style="padding:8px; text-align:center; border:1px solid #555;">Unique Users</th>';
+                } else {
+                    html += '<th style="padding:8px; text-align:center; border:1px solid #555;">Guess Count</th><th style="padding:8px; text-align:center; border:1px solid #555;">Last Guessed</th>';
+                }
+                
+                html += '</tr>';
+                
+                data.data.forEach((car, index) => {
+                    const bgColor = index % 2 === 0 ? '#1a1a1a' : '#222';
+                    const carName = `${car.car_make} ${car.car_model}`;
+                    const count = mode === 'global' ? car.total_guesses : car.guess_count;
+                    const secondary = mode === 'global' ? car.unique_guessers : (car.last_guessed ? new Date(car.last_guessed).toLocaleDateString() : '--');
+                    
+                    html += `<tr style="background:${bgColor}; border:1px solid #333;"><td style="padding:8px; border:1px solid #555;">${carName}</td>`;
+                    html += `<td style="padding:8px; text-align:center; border:1px solid #555;">${count}</td>`;
+                    html += `<td style="padding:8px; text-align:center; border:1px solid #555;">${secondary}</td></tr>`;
+                });
+                
+                html += '</table>';
+                html += `<p style="margin-top:12px; font-size:12px; color:#999;">Showing top ${Math.min(50, data.data.length)} entries</p>`;
+                html += '</div>';
+                
+                container.innerHTML = html;
+            } catch (e) {
+                container.innerHTML = `<div class="help-section"><p style="color:#f44;">Error loading data: ${e.message}</p></div>`;
+                console.error('Error loading most guessed cars:', e);
+            }
+        }
+
+        
             const modal = document.getElementById(modalId);
             modal.classList.remove('show');
         }
