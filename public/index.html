@@ -1380,6 +1380,11 @@
                         <line x1="15" y1="9" x2="15" y2="13"></line>
                     </svg>
                 </button>
+                <button class="btn btn--outline btn--sm" id="setTestCarBtn" title="Set Test Car" style="display:none; margin-left:8px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 13l2-2 4 4L21 5l2 2-14 14-6-6z"></path>
+                    </svg>
+                </button>
             </div>
 
         <!-- Left Navigation -->
@@ -1811,14 +1816,14 @@
     <script>
 
         // Optional global overrides can be defined at runtime, e.g.:
-        // window.CARDLE_IMAGE_OVERRIDES = { kia_xceed: '/media.jpg', nissan_note: '/goat.jpg' };
+        // window.CARDLE_IMAGE_OVERRIDES = { kia_xceed: '/media.jpg', nissan_note: '/goat.' };
         function getCarOverrideImage(make, model) {
             const mk = String(make || '').toLowerCase().trim();
             const md = String(model || '').toLowerCase().trim();
             // Built-in defaults (place files under public/images/overrides/)
             const defaults = {
-                kia_xceed: '/images/overrides/media.jpg',
-                nissan_note: '/images/overrides/goat.jpg'
+                kia_xceed: '/media.jpg',
+                nissan_note: '/goat.png'
             };
             const overrides = Object.assign({}, defaults, (window.CARDLE_IMAGE_OVERRIDES || {}));
             if (mk === 'kia' && md === 'xceed') return overrides.kia_xceed;
@@ -2200,6 +2205,7 @@
                 // Game settings
                 this.maxAttempts = 5;
                 this.currentGameMode = 'daily'; // 'daily' or 'random'
+                this.forcedRandomCarId = null; // test-only override for random mode
                 
                 // Game state
                 this.currentCar = null;
@@ -2300,6 +2306,18 @@
             saveGameMode() {
                 localStorage.setItem('cardleGameMode', this.currentGameMode);
             }
+            promptSetTestCar() {
+                const name = prompt('Enter Make and Model (exact):');
+                if (!name) return;
+                const car = this.findExactMatch(name);
+                if (!car) {
+                    showToast('No exact match. Try typing the full Make Model.', 'error');
+                    return;
+                }
+                this.forcedRandomCarId = car.id;
+                showToast(`Test car set: ${car.make} ${car.model}`, 'info');
+                this.resetGame();
+            }
 
             selectCar() {
                 if (this.currentGameMode === 'daily') {
@@ -2319,6 +2337,13 @@
             }
 
             getRandomCar() {
+                // If a forced random car is set (testing), use it
+                if (this.forcedRandomCarId) {
+                    const forced = this.carDatabase.find(c => c.id === this.forcedRandomCarId);
+                    if (forced) return forced;
+                    // Clear if not found
+                    this.forcedRandomCarId = null;
+                }
                 const randomIndex = Math.floor(Math.random() * this.carDatabase.length);
                 return this.carDatabase[randomIndex];
             }
@@ -2437,8 +2462,9 @@
                     const logoutBtn = document.getElementById('logoutBtn');
                     const changePasswordBtn = document.getElementById('changePasswordBtn');
                     const mostGuessedBtn = document.getElementById('mostGuessedBtn');
+                    const setTestCarBtn = document.getElementById('setTestCarBtn');
                     
-                    // Show Most Guessed button only for Tom (admin)
+                    // Show admin/test buttons only for Tom
                     const username = getUsername();
                     if (username === 'Tom' && mostGuessedBtn) {
                         mostGuessedBtn.style.display = 'inline-block';
@@ -2447,6 +2473,18 @@
                             mostGuessedUser = null;
                             setMostGuessedView('all');
                             game.showModal('mostGuessedModal');
+                        });
+                    }
+
+                    if (username === 'Tom' && setTestCarBtn) {
+                        // Only visible in Random mode (initial state will be corrected by updateModeIndicator)
+                        setTestCarBtn.style.display = 'inline-block';
+                        setTestCarBtn.addEventListener('click', () => {
+                            if (game && game.currentGameMode === 'random') {
+                                game.promptSetTestCar();
+                            } else {
+                                showToast('Test car only available in Random mode', 'warning');
+                            }
                         });
                     }
                     
@@ -2506,6 +2544,11 @@
                 this.currentGameMode = newMode;
                 this.saveGameMode();
                 
+                // Clear any forced test car when switching to Daily
+                if (this.currentGameMode === 'daily') {
+                    this.forcedRandomCarId = null;
+                }
+
                 // Reset game with new mode
                 this.resetGame();
             }
@@ -2514,6 +2557,7 @@
                 const indicator = document.getElementById('gameModeIndicator');
                 const toggleBtn = document.getElementById('modeToggleBtn');
                 const modeBadge = document.getElementById('modeBadge');
+                const setTestCarBtn = document.getElementById('setTestCarBtn');
                 
                 if (this.currentGameMode === 'daily') {
                     indicator.textContent = 'Daily Challenge';
@@ -2525,6 +2569,7 @@
                         </svg>
                         Random Mode
                     `;
+                    if (setTestCarBtn) setTestCarBtn.style.display = 'none';
                 } else {
                     indicator.textContent = 'Random Mode';
                     modeBadge.textContent = 'Random';
@@ -2535,6 +2580,9 @@
                         </svg>
                         Daily Mode
                     `;
+                    // Show Set Test Car only for Tom
+                    const username = getUsername();
+                    if (setTestCarBtn) setTestCarBtn.style.display = (username === 'Tom') ? 'inline-block' : 'none';
                 }
             }
 
