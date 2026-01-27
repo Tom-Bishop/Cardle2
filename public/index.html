@@ -2504,8 +2504,8 @@
                            !fullName.startsWith(normalizedQuery);
                 });
                 
-                // Return more suggestions: top 10 exact + top 10 partial (max 20)
-                return [...exactMatches.slice(0, 10), ...partialMatches.slice(0, 10)];
+                // Return all exact matches, plus top 10 partial (so users see every exact make/model match)
+                return [...exactMatches, ...partialMatches.slice(0, 10)];
             }
 
             submitGuess() {
