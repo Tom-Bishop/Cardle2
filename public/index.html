@@ -786,26 +786,21 @@
             background-color: var(--color-muted-surface);
         }
 
-        .car-image-container img {
-            width: 100%;
-            height: auto;
-            display: block;
-            object-fit: cover;
-            max-height: 300px;
+        .car-image-placeholder {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--color-text);
         }
 
-        .car-image-loading {
-            padding: 40px;
-            text-align: center;
-            color: var(--color-text-muted);
-            font-style: italic;
+        .car-image-placeholder a {
+            display: inline-block;
+            margin-top: 4px;
+            transition: all 0.2s ease;
         }
 
-        .car-image-error {
-            padding: 20px;
-            text-align: center;
-            color: var(--color-text-muted);
-            font-size: 0.85rem;
+        .car-image-placeholder a:hover {
+            color: var(--color-accent-light);
+            transform: translateX(4px);
         }
 
         /* Toast notifications */
@@ -1794,32 +1789,20 @@
             const container = document.getElementById(containerId);
             if (!container) return;
             
-            // Show loading state
-            container.innerHTML = '<div class="car-image-loading">Loading image...</div>';
+            // Show a search link instead (CORS-friendly alternative)
+            const searchQuery = encodeURIComponent(`${make} ${model}`);
+            const googleImagesUrl = `https://www.google.com/search?tbm=isch&q=${searchQuery}`;
             
-            // Construct search query for the car
-            const searchQuery = encodeURIComponent(`${make} ${model} car`);
-            
-            // Use Unsplash API (free, no API key needed for basic usage)
-            const unsplashUrl = `https://source.unsplash.com/600x400/?${searchQuery}`;
-            
-            // Create image element
-            const img = document.createElement('img');
-            img.alt = `${make} ${model}`;
-            
-            // Handle successful load
-            img.onload = function() {
-                container.innerHTML = '';
-                container.appendChild(img);
-            };
-            
-            // Handle error
-            img.onerror = function() {
-                container.innerHTML = `<div class="car-image-error">🚗 ${make} ${model}<br><small>Image not available</small></div>`;
-            };
-            
-            // Set image source (triggers load)
-            img.src = unsplashUrl;
+            container.innerHTML = `
+                <div class="car-image-placeholder">
+                    <div style="font-size: 3rem; margin-bottom: 10px;">🚗</div>
+                    <div style="font-weight: 600; margin-bottom: 8px;">${make} ${model}</div>
+                    <a href="${googleImagesUrl}" target="_blank" rel="noopener noreferrer" 
+                       style="color: var(--color-accent); text-decoration: underline; font-size: 0.9rem;">
+                        View images on Google →
+                    </a>
+                </div>
+            `;
         }
 
         // Toast notification system
