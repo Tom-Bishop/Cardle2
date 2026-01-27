@@ -1,6 +1,7 @@
 -- Migration 008: Add Market Segment column and populate all cars
 
-ALTER TABLE cars ADD COLUMN segment TEXT;
+-- Segment column already exists in production; this migration now only updates values
+-- ALTER TABLE cars ADD COLUMN segment TEXT; (skipped - already exists)
 
 -- Update all cars with their market segment
 UPDATE cars SET segment = 'Urban' WHERE make IN ('Fiat','Dacia','Mini','Smart','Suzuki','Hyundai','Kia') AND body IN ('Hatchback','Crossover') AND (model LIKE '%500%' OR model LIKE '%Panda%' OR model LIKE '%Sandero%' OR model LIKE '%Spring%' OR model LIKE '%Cooper%' OR model LIKE '%Picanto%' OR model LIKE '%i10%' OR model LIKE '%Fiesta%' OR model LIKE '%Corsa%' OR model LIKE '%Clio%');

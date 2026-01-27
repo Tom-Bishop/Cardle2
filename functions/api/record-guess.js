@@ -33,7 +33,7 @@ export async function onRequest(context) {
 
     try {
         const body = await request.json();
-        const { username, carId, carMake, carModel } = body;
+        const { username, carId, carMake, carModel, guessNumber } = body;
 
         const cookieUser = getCookie(request, 'cardleUsername');
         if (!cookieUser || cookieUser !== username) {
@@ -53,6 +53,14 @@ export async function onRequest(context) {
             return new Response(JSON.stringify({ error: 'Invalid car make or model' }), { status: 400, headers: corsHeaders });
         }
 
+        let guessNumValue = null;
+        if (guessNumber !== undefined) {
+            if (!Number.isInteger(guessNumber) || guessNumber < 1 || guessNumber > 5) {
+                return new Response(JSON.stringify({ error: 'Invalid guess number' }), { status: 400, headers: corsHeaders });
+            }
+            guessNumValue = guessNumber;
+        }
+
         const DB = env.DB;
         
         // Verify car exists in database
@@ -63,11 +71,11 @@ export async function onRequest(context) {
 
         // Insert the guess record
         const query = `
-            INSERT INTO guess_history (username, car_id, car_make, car_model)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO guess_history (username, car_id, car_make, car_model, guess_number)
+            VALUES (?, ?, ?, ?, ?)
         `;
 
-        const result = await DB.prepare(query).bind(username, carId, carMake, carModel).run();
+        const result = await DB.prepare(query).bind(username, carId, carMake, carModel, guessNumValue).run();
 
         return new Response(JSON.stringify({
             ok: true,

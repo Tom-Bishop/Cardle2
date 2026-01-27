@@ -29,13 +29,20 @@ export async function onRequest(context) {
 
     try {
         const DB = env.DB;
-        
+
         const mode = url.searchParams.get('mode') || 'global'; // 'global' or specific username
         const limit = parseInt(url.searchParams.get('limit') || '30');
+        const guessNumberParam = url.searchParams.get('guessNumber');
+        const guessNumber = guessNumberParam ? Number(guessNumberParam) : null;
+        if (guessNumber !== null) {
+            if (!Number.isInteger(guessNumber) || guessNumber < 1 || guessNumber > 5) {
+                return new Response(JSON.stringify({ error: 'Invalid guessNumber' }), { status: 400, headers: corsHeaders });
+            }
+        }
         
         if (mode === 'global') {
             // Get most guessed cars across all users
-            const query = `
+            let query = `
                 SELECT 
                     gh.car_id,
                     gh.car_make,
@@ -43,12 +50,22 @@ export async function onRequest(context) {
                     COUNT(*) as total_guesses,
                     COUNT(DISTINCT gh.username) as unique_guessers
                 FROM guess_history gh
+            `;
+
+            const binds = [];
+            if (guessNumber !== null) {
+                query += ` WHERE gh.guess_number = ?`;
+                binds.push(guessNumber);
+            }
+
+            query += `
                 GROUP BY gh.car_id, gh.car_make, gh.car_model
                 ORDER BY total_guesses DESC
                 LIMIT ?
             `;
-            
-            const results = await DB.prepare(query).bind(limit).all();
+
+            binds.push(limit);
+            const results = await DB.prepare(query).bind(...binds).all();
             
             return new Response(JSON.stringify({
                 ok: true,
@@ -56,7 +73,7 @@ export async function onRequest(context) {
                 data: results.results || []
             }), {
                 status: 200,
-                headers: { 'Content-Type': 'application/json' }
+                headers: corsHeaders
             });
         } else {
             // Get most guessed cars by a specific user
@@ -65,7 +82,7 @@ export async function onRequest(context) {
                 return new Response(JSON.stringify({ error: 'Missing user parameter' }), { status: 400 });
             }
             
-            const query = `
+            let query = `
                 SELECT 
                     gh.car_id,
                     gh.car_make,
@@ -74,12 +91,24 @@ export async function onRequest(context) {
                     MAX(gh.guessed_at) as last_guessed
                 FROM guess_history gh
                 WHERE gh.username = ?
+            `;
+
+            const binds = [username];
+
+            if (guessNumber !== null) {
+                query += ` AND gh.guess_number = ?`;
+                binds.push(guessNumber);
+            }
+
+            query += `
                 GROUP BY gh.car_id, gh.car_make, gh.car_model
                 ORDER BY guess_count DESC
                 LIMIT ?
             `;
+
+            binds.push(limit);
             
-            const results = await DB.prepare(query).bind(username, limit).all();
+            const results = await DB.prepare(query).bind(...binds).all();
             
             return new Response(JSON.stringify({
                 ok: true,
