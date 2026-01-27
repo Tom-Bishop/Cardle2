@@ -1822,8 +1822,8 @@
             const md = String(model || '').toLowerCase().trim();
             // Built-in defaults (place files under public/images/overrides/)
             const defaults = {
-                kia_xceed: '/media.jpg',
-                nissan_note: '/goat.png'
+                kia_xceed: '/public/media.jpg',
+                nissan_note: '/public/goat.png'
             };
             const overrides = Object.assign({}, defaults, (window.CARDLE_IMAGE_OVERRIDES || {}));
             if (mk === 'kia' && md === 'xceed') return overrides.kia_xceed;
