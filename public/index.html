@@ -786,6 +786,21 @@
             background-color: var(--color-muted-surface);
         }
 
+        .car-image-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: cover;
+            max-height: 350px;
+        }
+
+        .car-image-loading {
+            padding: 60px 20px;
+            text-align: center;
+            color: var(--color-text-muted);
+            font-style: italic;
+        }
+
         .car-image-placeholder {
             padding: 40px 20px;
             text-align: center;
@@ -1785,24 +1800,72 @@
     <script>
 
         // Load car image from internet search
-        function loadCarImage(containerId, make, model) {
+        async function loadCarImage(containerId, make, model) {
             const container = document.getElementById(containerId);
             if (!container) return;
             
-            // Show a search link instead (CORS-friendly alternative)
-            const searchQuery = encodeURIComponent(`${make} ${model}`);
-            const googleImagesUrl = `https://www.google.com/search?tbm=isch&q=${searchQuery}`;
+            // Show loading state
+            container.innerHTML = '<div class="car-image-loading">Loading image...</div>';
             
-            container.innerHTML = `
-                <div class="car-image-placeholder">
-                    <div style="font-size: 3rem; margin-bottom: 10px;">🚗</div>
-                    <div style="font-weight: 600; margin-bottom: 8px;">${make} ${model}</div>
-                    <a href="${googleImagesUrl}" target="_blank" rel="noopener noreferrer" 
-                       style="color: var(--color-accent); text-decoration: underline; font-size: 0.9rem;">
-                        View images on Google →
-                    </a>
-                </div>
-            `;
+            try {
+                // Try to fetch from Wikipedia API
+                const searchQuery = `${make} ${model}`;
+                const wikiUrl = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=pageimages&piprop=original&titles=${encodeURIComponent(searchQuery)}`;
+                
+                const response = await fetch(wikiUrl);
+                const data = await response.json();
+                
+                // Extract image URL from Wikipedia response
+                const pages = data.query.pages;
+                const pageId = Object.keys(pages)[0];
+                const imageUrl = pages[pageId]?.original?.source;
+                
+                if (imageUrl) {
+                    // Wikipedia image found
+                    const img = document.createElement('img');
+                    img.src = imageUrl;
+                    img.alt = `${make} ${model}`;
+                    img.onerror = () => showImageFallback(container, make, model);
+                    img.onload = () => {
+                        container.innerHTML = '';
+                        container.appendChild(img);
+                    };
+                } else {
+                    // No Wikipedia image, try fallback
+                    showImageFallback(container, make, model);
+                }
+            } catch (error) {
+                // Error fetching, show fallback
+                showImageFallback(container, make, model);
+            }
+        }
+        
+        function showImageFallback(container, make, model) {
+            // Use Lorem Picsum with seed based on car name for consistent random images
+            const seed = encodeURIComponent(`${make}${model}`.replace(/\s/g, ''));
+            const fallbackUrl = `https://picsum.photos/seed/${seed}/600/400`;
+            
+            const img = document.createElement('img');
+            img.src = fallbackUrl;
+            img.alt = `${make} ${model}`;
+            img.onerror = () => {
+                // Ultimate fallback
+                container.innerHTML = `
+                    <div class="car-image-placeholder">
+                        <div style="font-size: 3rem; margin-bottom: 10px;">🚗</div>
+                        <div style="font-weight: 600;">${make} ${model}</div>
+                    </div>
+                `;
+            };
+            img.onload = () => {
+                container.innerHTML = '';
+                container.appendChild(img);
+                // Add small attribution
+                const caption = document.createElement('div');
+                caption.style.cssText = 'padding: 8px; font-size: 0.75rem; color: var(--color-text-muted); text-align: center;';
+                caption.textContent = `${make} ${model}`;
+                container.appendChild(caption);
+            };
         }
 
         // Toast notification system
