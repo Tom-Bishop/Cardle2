@@ -775,6 +775,39 @@
             font-size: 0.95rem;
         }
 
+        /* Car image display */
+        .car-image-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 20px auto;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid var(--color-border);
+            background-color: var(--color-muted-surface);
+        }
+
+        .car-image-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: cover;
+            max-height: 300px;
+        }
+
+        .car-image-loading {
+            padding: 40px;
+            text-align: center;
+            color: var(--color-text-muted);
+            font-style: italic;
+        }
+
+        .car-image-error {
+            padding: 20px;
+            text-align: center;
+            color: var(--color-text-muted);
+            font-size: 0.85rem;
+        }
+
         /* Toast notifications */
         #toastContainer {
             position: fixed;
@@ -1498,6 +1531,9 @@
             <div class="modal-title">🎉 Congratulations!</div>
             <div class="modal-body">
                 <p>You guessed the car correctly!</p>
+                <div id="winCarImage" class="car-image-container">
+                    <!-- Car image will be loaded here -->
+                </div>
                 <div class="time-display" id="winTime">Time: 00:00</div>
                 <div id="winMessage">
                     <!-- Win message will be populated here -->
@@ -1515,6 +1551,9 @@
             <div class="modal-title">Better Luck Next Time!</div>
             <div class="modal-body">
                 <p>You've used all your guesses.</p>
+                <div id="lossCarImage" class="car-image-container">
+                    <!-- Car image will be loaded here -->
+                </div>
                 <div class="time-display" id="lossTime">Time: 00:00</div>
                 <div class="answer-display">
                     <h4>The correct answer was:</h4>
@@ -1749,6 +1788,39 @@
     </div>
 
     <script>
+
+        // Load car image from internet search
+        function loadCarImage(containerId, make, model) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            // Show loading state
+            container.innerHTML = '<div class="car-image-loading">Loading image...</div>';
+            
+            // Construct search query for the car
+            const searchQuery = encodeURIComponent(`${make} ${model} car`);
+            
+            // Use Unsplash API (free, no API key needed for basic usage)
+            const unsplashUrl = `https://source.unsplash.com/600x400/?${searchQuery}`;
+            
+            // Create image element
+            const img = document.createElement('img');
+            img.alt = `${make} ${model}`;
+            
+            // Handle successful load
+            img.onload = function() {
+                container.innerHTML = '';
+                container.appendChild(img);
+            };
+            
+            // Handle error
+            img.onerror = function() {
+                container.innerHTML = `<div class="car-image-error">🚗 ${make} ${model}<br><small>Image not available</small></div>`;
+            };
+            
+            // Set image source (triggers load)
+            img.src = unsplashUrl;
+        }
 
         // Toast notification system
         function showToast(message, type = 'info', duration = 3000) {
@@ -2779,6 +2851,9 @@
                 
                 winTime.textContent = `Time: ${this.getElapsedTime()}`;
                 
+                // Load car image
+                loadCarImage('winCarImage', this.currentCar.make, this.currentCar.model);
+                
                 // Check for streak milestones
                 const streakMilestones = [5, 10, 50, 100, 365];
                 fetch(`/api/me?username=${encodeURIComponent(getUsername())}`)
@@ -2818,6 +2893,9 @@
                 const correctAnswer = document.getElementById('correctAnswer');
                 
                 lossTime.textContent = `Time: ${this.getElapsedTime()}`;
+                
+                // Load car image
+                loadCarImage('lossCarImage', this.currentCar.make, this.currentCar.model);
                 
                 correctAnswer.innerHTML = `
                     <div class="answer-item">
