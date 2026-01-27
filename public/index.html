@@ -2504,8 +2504,8 @@
                            !fullName.startsWith(normalizedQuery);
                 });
                 
-                // Return top 5 exact + top 5 partial (max 10)
-                return [...exactMatches.slice(0, 5), ...partialMatches.slice(0, 5)];
+                // Return more suggestions: top 10 exact + top 10 partial (max 20)
+                return [...exactMatches.slice(0, 10), ...partialMatches.slice(0, 10)];
             }
 
             submitGuess() {
