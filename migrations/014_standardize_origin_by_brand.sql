@@ -43,5 +43,3 @@ UPDATE cars SET origin = 'POL' WHERE make IN ('FSO');
 -- India
 UPDATE cars SET origin = 'IND' WHERE make IN ('Tata','Mahindra','Maruti');
 
--- Thailand
-UPDATE cars SET origin = 'THA' WHERE make IN ('Isuzu','Mitsubishi','Nissan');
