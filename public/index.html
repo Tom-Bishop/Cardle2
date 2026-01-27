@@ -1810,7 +1810,23 @@
 
     <script>
 
-        // Load car image from internet search
+        // Optional global overrides can be defined at runtime, e.g.:
+        // window.CARDLE_IMAGE_OVERRIDES = { kia_xceed: '/images/overrides/media.jpg', nissan_note: '/images/overrides/goat.jpg' };
+        function getCarOverrideImage(make, model) {
+            const mk = String(make || '').toLowerCase().trim();
+            const md = String(model || '').toLowerCase().trim();
+            // Built-in defaults (place files under public/images/overrides/)
+            const defaults = {
+                kia_xceed: '/images/overrides/media.jpg',
+                nissan_note: '/images/overrides/goat.jpg'
+            };
+            const overrides = Object.assign({}, defaults, (window.CARDLE_IMAGE_OVERRIDES || {}));
+            if (mk === 'kia' && md === 'xceed') return overrides.kia_xceed;
+            if (mk === 'nissan' && md === 'note') return overrides.nissan_note;
+            return null;
+        }
+
+        // Load car image from internet search (with per-model overrides)
         async function loadCarImage(containerId, make, model) {
             const container = document.getElementById(containerId);
             if (!container) return;
@@ -1818,6 +1834,22 @@
             // Show loading state
             container.innerHTML = '<div class="car-image-loading">Loading image...</div>';
             
+            // 1) Check explicit overrides first
+            const overrideUrl = getCarOverrideImage(make, model);
+            if (overrideUrl) {
+                const img = document.createElement('img');
+                img.src = overrideUrl;
+                img.alt = `${make} ${model}`;
+                img.onload = () => { container.innerHTML = ''; container.appendChild(img); };
+                img.onerror = async () => { await tryAutoSources(container, make, model); };
+                return;
+            }
+
+            // 2) Otherwise, try automatic sources (Wikipedia → fallback)
+            await tryAutoSources(container, make, model);
+        }
+
+        async function tryAutoSources(container, make, model) {
             try {
                 // Try to fetch from Wikipedia API
                 const searchQuery = `${make} ${model}`;
