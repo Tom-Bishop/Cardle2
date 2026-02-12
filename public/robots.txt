@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://cardle2.pages.dev/sitemap.xml
+Sitemap: https://cardle.jogn.co.uk/sitemap.xml
