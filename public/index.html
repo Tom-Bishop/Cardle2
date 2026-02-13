@@ -1694,6 +1694,16 @@
                 <button class="btn btn--outline btn--sm" onclick="document.getElementById('adminModal').style.display='none'" style="float:right; margin-top:-5px;">✕</button>
             </div>
             <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <!-- Admin Authentication Section -->
+                <div class="admin-section" style="margin-bottom:20px; border-bottom:1px solid var(--color-border); padding-bottom:15px; background:var(--color-muted-surface); padding:15px; border-radius:4px;">
+                    <h3 style="margin:0 0 10px 0; color:var(--color-text); font-size:14px;">🔐 Admin Authentication</h3>
+                    <div style="margin-bottom:10px;">
+                        <label for="adminPassword" style="display:block; margin-bottom:6px; color:var(--color-text); font-size:12px;">Admin Password</label>
+                        <input type="password" id="adminPassword" class="form-control" placeholder="Enter admin password" style="width:100%; padding:8px; border:1px solid var(--color-border); border-radius:4px;">
+                        <p style="color:var(--color-text-muted); font-size:11px; margin:6px 0 0 0;">Required for all admin operations</p>
+                    </div>
+                </div>
+
                 <!-- User Management Section -->
                 <div class="admin-section" style="margin-bottom:20px; border-bottom:1px solid var(--color-border); padding-bottom:15px;">
                     <h3 style="margin:0 0 10px 0; color:var(--color-text);">Delete Users</h3>
@@ -1999,6 +2009,35 @@
                 u = `guest_${Math.floor(Math.random() * 10000)}`;
             }
             return u;
+        }
+
+        // Helper function for authenticated admin API requests
+        async function adminFetch(url, method = 'GET', body = null) {
+            const adminPassword = document.getElementById('adminPassword')?.value;
+            if (!adminPassword) {
+                throw new Error('Admin password required. Please enter your admin password in the authentication field.');
+            }
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': 'Basic ' + btoa(`${getUsername()}:${adminPassword}`)
+            };
+
+            const options = {
+                method,
+                headers
+            };
+
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+
+            const res = await fetch(url, options);
+            if (!res.ok) {
+                const error = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+                throw new Error(error.error || error.message || `HTTP ${res.status}`);
+            }
+            return res.json();
         }
 
         async function submitResult(result) {
@@ -3413,8 +3452,7 @@
             container.innerHTML = '<p style="text-align:center; padding:20px;">Loading...</p>';
             
             try {
-                const adminUsername = getUsername();
-                let url = `/api/admin/guesses?username=${encodeURIComponent(adminUsername)}&mode=${mode}&limit=10`;
+                let url = `/api/admin/guesses?mode=${mode}&limit=10`;
                 if (mode === 'user' && username) {
                     url += `&user=${encodeURIComponent(username)}`;
                 }
@@ -3422,11 +3460,10 @@
                     url += `&guessNumber=${guessNumber}`;
                 }
                 
-                const res = await fetch(url);
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const res = await adminFetch(url);
+                if (!res.ok || !res.data) throw new Error('Invalid response');
                 
-                const data = await res.json();
-                if (!data.ok || !data.data) throw new Error('Invalid response');
+                const data = res;
                 
                 const headingSuffix = guessNumber === 1 ? ' - First Guess Only' : '';
                 let html = `<div class="help-section"><h3>${mode === 'global' ? 'Most Guessed Cars (All Users)' : `Most Guessed Cars - ${username}`}${headingSuffix}</h3>`;
@@ -3467,19 +3504,9 @@
         async function loadAdminUsers() {
             const usersList = document.getElementById('usersList');
             try {
-                const url = `/api/admin/users?username=${encodeURIComponent(getUsername())}`;
+                const url = `/api/admin/users`;
                 console.log('Fetching admin users from:', url);
-                const res = await fetch(url);
-                
-                const text = await res.text();
-                console.log('Response status:', res.status);
-                console.log('Response text:', text);
-                
-                if (!res.ok) {
-                    throw new Error(`HTTP ${res.status}: ${text}`);
-                }
-                
-                const users = JSON.parse(text);
+                const users = await adminFetch(url);
                 
                 if (!Array.isArray(users) || users.length === 0) {
                     usersList.innerHTML = '<p style="color:var(--color-text-dim); text-align:center; padding:20px 0;">No users found</p>';
@@ -3514,16 +3541,12 @@
         async function deleteAdminUser(username) {
             if (!confirm(`Delete user "${username}" and all their stats?`)) return;
             try {
-                const res = await fetch('/api/admin/delete-user', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, adminUsername: getUsername() })
-                });
+                const res = await adminFetch('/api/admin/delete-user', 'POST', { username });
                 if (res.ok) {
                     alert(`User "${username}" deleted successfully`);
                     loadAdminUsers();
                 } else {
-                    alert('Error deleting user: ' + (await res.text()));
+                    alert('Error deleting user: ' + (res.error || res.message));
                 }
             } catch (e) {
                 alert('Error: ' + e.message);
@@ -3539,16 +3562,12 @@
             }
             
             try {
-                const res = await fetch(`/api/admin/reset-password?username=${encodeURIComponent(getUsername())}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, newPassword })
-                });
+                const res = await adminFetch('/api/admin/reset-password', 'POST', { username, newPassword });
                 if (res.ok) {
                     alert(`Password reset for "${username}"`);
                     loadAdminUsers();
                 } else {
-                    alert('Error resetting password: ' + (await res.text()));
+                    alert('Error resetting password: ' + (res.error || res.message));
                 }
             } catch (e) {
                 alert('Error: ' + e.message);
@@ -3557,8 +3576,8 @@
 
         async function loadUserStatsForEdit(selectedUsername) {
             try {
-                const res = await fetch(`/api/admin/users?username=${encodeURIComponent(getUsername())}&targetUser=${encodeURIComponent(selectedUsername)}`);
-                const data = await res.json();
+                const url = `/api/admin/users?targetUser=${encodeURIComponent(selectedUsername)}`;
+                const data = await adminFetch(url);
                 const user = Array.isArray(data) ? data[0] : data;
 
                 if (!user) {
@@ -3625,11 +3644,7 @@
                     total_losses: parseInt(document.getElementById('stat_total_losses').value) || 0
                 };
 
-                const res = await fetch('/api/admin/update-user-stats', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, stats, adminUsername: getUsername() })
-                });
+                const res = await adminFetch('/api/admin/update-user-stats', 'POST', { username, stats });
 
                 if (res.ok) {
                     statsMessage.style.color = 'var(--color-success)';
@@ -3638,7 +3653,7 @@
                     loadAdminUsers();
                 } else {
                     statsMessage.style.color = 'var(--color-danger)';
-                    statsMessage.textContent = 'Error saving stats: ' + (await res.text());
+                    statsMessage.textContent = 'Error saving stats: ' + (res.error || res.message);
                 }
             } catch (e) {
                 statsMessage.style.color = 'var(--color-danger)';
@@ -3773,18 +3788,14 @@
                 if (wipeConfirmBtn) {
                     wipeConfirmBtn.addEventListener('click', async () => {
                         try {
-                            const res = await fetch('/api/admin/wipe-data', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ username })
-                            });
+                            const res = await adminFetch('/api/admin/wipe-data', 'POST', {});
                             if (res.ok) {
                                 alert('All user data has been wiped successfully!');
                                 wipeConfirmMsg.style.display = 'none';
                                 wipeDataBtn.style.display = 'block';
                                 loadAdminUsers();
                             } else {
-                                alert('Error wiping data: ' + (await res.text()));
+                                alert('Error wiping data: ' + (res.error || res.message));
                             }
                         } catch (e) {
                             alert('Error: ' + e.message);
