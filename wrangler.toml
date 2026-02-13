@@ -1,0 +1,10 @@
+name = "cardle2"
+type = "javascript"
+account_id = "285bb24d461f3d08a7e3d50bfb00e0d0"
+workers_dev = true
+compatibility_date = "2024-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "Cardle2"
+database_id = "2a8d3138-72a0-4784-aee8-72db576c178b"
