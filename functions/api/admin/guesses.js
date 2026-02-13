@@ -1,7 +1,7 @@
 // GET /api/admin/guesses - Get most guessed cars statistics
-// Admin-only endpoint
+// Public endpoint - no authentication required
 
-import { verifyAdminAuth, getSecureCorsHeaders } from '../_admin-auth.js';
+import { getSecureCorsHeaders } from '../_admin-auth.js';
 
 export async function onRequest(context) {
     const { request, env } = context;
@@ -10,15 +10,6 @@ export async function onRequest(context) {
     // Handle CORS preflight
     if (request.method === 'OPTIONS') {
         return new Response(null, { status: 204, headers: getSecureCorsHeaders() });
-    }
-
-    // Verify admin authentication
-    const authResult = await verifyAdminAuth(request, env);
-    if (!authResult.authorized) {
-        return new Response(
-            JSON.stringify({ error: authResult.error }), 
-            { status: authResult.status, headers: getSecureCorsHeaders() }
-        );
     }
 
     if (request.method !== 'GET') {

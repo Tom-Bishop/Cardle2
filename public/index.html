@@ -3460,10 +3460,11 @@
                     url += `&guessNumber=${guessNumber}`;
                 }
                 
-                const res = await adminFetch(url);
-                if (!res.ok || !res.data) throw new Error('Invalid response');
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 
-                const data = res;
+                const data = await res.json();
+                if (!data.ok || !data.data) throw new Error('Invalid response');
                 
                 const headingSuffix = guessNumber === 1 ? ' - First Guess Only' : '';
                 let html = `<div class="help-section"><h3>${mode === 'global' ? 'Most Guessed Cars (All Users)' : `Most Guessed Cars - ${username}`}${headingSuffix}</h3>`;
