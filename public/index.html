@@ -2434,33 +2434,42 @@
                 return Math.floor((endTime - this.startTime) / 1000);
             }
 
-            // Daily play tracking helpers
-            getTodayKey() {
-                const d = new Date();
-                return 'cardleDailyPlayed:' + d.toISOString().split('T')[0];
-            }
-
-            hasPlayedToday() {
+            async hasPlayedToday() {
                 try {
-                    return !!localStorage.getItem(this.getTodayKey());
+                    const username = getUsername();
+                    if (!username || username.startsWith('guest_')) return false;
+                    const res = await fetch(`/api/me?username=${encodeURIComponent(username)}`);
+                    if (!res.ok) return false;
+                    const body = await res.json();
+                    if (!body?.me) return false;
+                    const today = new Date().toISOString().split('T')[0];
+                    return body.me.last_daily_play === today;
                 } catch (e) {
                     return false;
                 }
             }
 
-            markDailyPlayed(won) {
-                try {
-                    const payload = { won: !!won, guesses: this.guesses.length, timeSeconds: this.getElapsedSeconds() };
-                    localStorage.setItem(this.getTodayKey(), JSON.stringify(payload));
-                } catch (e) {
-                    // ignore
-                }
+            async markDailyPlayed(won) {
+                // Already saved via saveGameStats() -> /api/stats API call
+                // This method is no longer needed for localStorage
+                // The database is updated by the /api/stats endpoint
             }
 
-            getDailyResult() {
+            async getDailyResult() {
                 try {
-                    const raw = localStorage.getItem(this.getTodayKey());
-                    return raw ? JSON.parse(raw) : null;
+                    const username = getUsername();
+                    if (!username || username.startsWith('guest_')) return null;
+                    const res = await fetch(`/api/me?username=${encodeURIComponent(username)}`);
+                    if (!res.ok) return null;
+                    const body = await res.json();
+                    if (!body?.me) return null;
+                    const today = new Date().toISOString().split('T')[0];
+                    if (body.me.last_daily_play !== today) return null;
+                    return {
+                        won: body.me.daily_won > 0,
+                        guesses: body.me.daily_guesses || 0,
+                        timeSeconds: body.me.daily_time || 0
+                    };
                 } catch (e) {
                     return null;
                 }
@@ -3167,9 +3176,9 @@
             }
 
             getStats() {
-                // Placeholder for local stats (deprecated - use fetchStatsFromServer instead)
-                const savedStats = localStorage.getItem('cardleStats');
-                return savedStats ? JSON.parse(savedStats) : {};
+                // Deprecated - all stats come from the server via fetchMyStatsAndUpdateUI()
+                // Local localStorage stats are no longer used
+                return {};
             }
 
             async fetchStatsFromServer() {
