@@ -2997,9 +2997,10 @@
                 this.gameWon = won;
                 this.endTime = Date.now();
                 
-                this.saveGameStats();
+                this.saveGameStats(); // deprecated - kept for compatibility
                 
-                // Submit result to leaderboard (both wins and losses)
+                // Submit result to database (both wins and losses)
+                // Single source of truth: /api/submit endpoint
                 const timeSeconds = this.getElapsedSeconds();
                 submitResult({ won: won, guesses: this.guesses.length, timeSeconds, mode: this.currentGameMode })
                   .catch(console.warn)
@@ -3158,21 +3159,8 @@
             }
 
             saveGameStats() {
-                // Send stats to server instead of localStorage
-                const username = getUsername();
-                const payload = {
-                    username: username,
-                    mode: this.currentGameMode,
-                    won: this.gameWon,
-                    guesses: this.guesses.length,
-                    timeSeconds: this.getElapsedSeconds()
-                };
-                
-                fetch('/api/stats', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                }).catch(err => console.warn('Failed to save stats to server:', err));
+                // Stats are now saved via submitResult() -> /api/submit
+                // This method is deprecated
             }
 
             getStats() {
