@@ -2501,7 +2501,7 @@
                     
                     // Show admin/test buttons only for Tom
                     const username = getUsername();
-                    if (username === 'Tom' && mostGuessedBtn) {
+                    if (username && username.toLowerCase() === 'tom' && mostGuessedBtn) {
                         mostGuessedBtn.style.display = 'inline-block';
                         mostGuessedBtn.addEventListener('click', () => {
                             mostGuessedMode = 'global';
@@ -2511,7 +2511,7 @@
                         });
                     }
 
-                    if (username === 'Tom' && setTestCarBtn) {
+                    if (username && username.toLowerCase() === 'tom' && setTestCarBtn) {
                         // Only visible in Random mode (initial state will be corrected by updateModeIndicator)
                         setTestCarBtn.style.display = 'inline-block';
                         setTestCarBtn.addEventListener('click', () => {
@@ -2617,7 +2617,7 @@
                     `;
                     // Show Set Test Car only for Tom
                     const username = getUsername();
-                    if (setTestCarBtn) setTestCarBtn.style.display = (username === 'Tom') ? 'inline-block' : 'none';
+                    if (setTestCarBtn) setTestCarBtn.style.display = (username && username.toLowerCase() === 'tom') ? 'inline-block' : 'none';
                 }
             }
 
@@ -3756,8 +3756,8 @@
             if (confirmChangePwdBtn) confirmChangePwdBtn.addEventListener('click', () => handleChangePassword());
 
             // ===== ADMIN SETUP =====
-            // Initialize admin panel if user is Tom
-            if (username === 'Tom') {
+            // Initialize admin panel if user is Tom (case-insensitive)
+            if (username && username.toLowerCase() === 'tom') {
                 const topAdminWrapper = document.getElementById('topAdminWrapper');
                 if (topAdminWrapper) topAdminWrapper.classList.remove('hidden');
 
