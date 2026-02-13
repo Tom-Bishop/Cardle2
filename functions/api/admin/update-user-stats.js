@@ -1,30 +1,49 @@
 // POST /api/admin/update-user-stats - Update a user's stats
 
+import { verifyAdminAuth, getSecureCorsHeaders } from '../_admin-auth.js';
+
 export async function onRequest(context) {
     const { request, env } = context;
 
+    // Handle CORS preflight
+    if (request.method === 'OPTIONS') {
+        return new Response(null, { status: 204, headers: getSecureCorsHeaders() });
+    }
+
     if (request.method !== 'POST') {
-        return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+        return new Response(
+            JSON.stringify({ error: 'Method not allowed' }), 
+            { status: 405, headers: getSecureCorsHeaders() }
+        );
+    }
+
+    // Verify admin authentication
+    const authResult = await verifyAdminAuth(request, env);
+    if (!authResult.authorized) {
+        return new Response(
+            JSON.stringify({ error: authResult.error }), 
+            { status: authResult.status, headers: getSecureCorsHeaders() }
+        );
     }
 
     let body = {};
     try {
         body = await request.json();
     } catch (e) {
-        return new Response(JSON.stringify({ error: 'Invalid JSON' }), { status: 400 });
-    }
-
-    // Verify admin (must be Tom)
-    const adminUsername = body.adminUsername;
-    if (adminUsername !== 'Tom') {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 403 });
+        return new Response(
+            JSON.stringify({ error: 'Invalid JSON' }), 
+            { status: 400, headers: getSecureCorsHeaders() }
+        );
     }
 
     try {
         const { username, stats } = body;
         
         if (!username || !stats) {
-            return new Response(JSON.stringify({ error: 'Username and stats required' }), { status: 400 });
+            return new Response(
+                JSON.stringify({ error: 'Username and stats required' }), 
+                { status: 400, headers: getSecureCorsHeaders() }
+            );
         }
 
         // Get user ID
@@ -33,7 +52,10 @@ export async function onRequest(context) {
         ).bind(username).first();
 
         if (!userResult) {
-            return new Response(JSON.stringify({ error: 'User not found' }), { status: 404 });
+            return new Response(
+                JSON.stringify({ error: 'User not found' }), 
+                { status: 404, headers: getSecureCorsHeaders() }
+            );
         }
 
         const userId = userResult.id;
@@ -76,11 +98,15 @@ export async function onRequest(context) {
         const query = `UPDATE stats SET ${updateFields.join(', ')} WHERE user_id = ?`;
         await env.DB.prepare(query).bind(...values).run();
 
-        return new Response(JSON.stringify({ success: true, message: 'Stats updated' }), { 
-            headers: { 'Content-Type': 'application/json' }
-        });
+        return new Response(
+            JSON.stringify({ success: true, message: 'Stats updated' }), 
+            { headers: getSecureCorsHeaders() }
+        );
     } catch (error) {
         console.error('Error updating stats:', error);
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+        return new Response(
+            JSON.stringify({ error: error.message }), 
+            { status: 500, headers: getSecureCorsHeaders() }
+        );
     }
 }

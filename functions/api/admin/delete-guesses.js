@@ -1,30 +1,30 @@
 // DELETE /api/admin/delete-guesses - Delete all guess history data
-// Admin-only endpoint (Tom only)
+// Admin-only endpoint
 
-const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json'
-};
+import { verifyAdminAuth, getSecureCorsHeaders } from '../_admin-auth.js';
 
 export async function onRequest(context) {
     const { request, env } = context;
-    const url = new URL(request.url);
 
     // Handle CORS preflight
     if (request.method === 'OPTIONS') {
-        return new Response(null, { status: 204, headers: corsHeaders });
+        return new Response(null, { status: 204, headers: getSecureCorsHeaders() });
     }
 
-    // Verify admin (must be Tom)
-    const adminUsername = url.searchParams.get('username');
-    if (adminUsername !== 'Tom') {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 403, headers: corsHeaders });
+    // Verify admin authentication
+    const authResult = await verifyAdminAuth(request, env);
+    if (!authResult.authorized) {
+        return new Response(
+            JSON.stringify({ error: authResult.error }), 
+            { status: authResult.status, headers: getSecureCorsHeaders() }
+        );
     }
 
     if (request.method !== 'DELETE') {
-        return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers: corsHeaders });
+        return new Response(
+            JSON.stringify({ error: 'Method not allowed' }), 
+            { status: 405, headers: getSecureCorsHeaders() }
+        );
     }
 
     try {
@@ -43,7 +43,7 @@ export async function onRequest(context) {
             deletedCount 
         }), { 
             status: 200, 
-            headers: corsHeaders 
+            headers: getSecureCorsHeaders() 
         });
 
     } catch (error) {
@@ -53,7 +53,7 @@ export async function onRequest(context) {
             details: error.message 
         }), { 
             status: 500, 
-            headers: corsHeaders 
+            headers: getSecureCorsHeaders() 
         });
     }
 }

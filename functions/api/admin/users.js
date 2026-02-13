@@ -1,12 +1,7 @@
 // This file handles GET /api/admin/users and GET /api/admin/users?targetUser=...
 // It was moved from admin.js to match Cloudflare Pages Functions routing.
 
-const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json'
-};
+import { verifyAdminAuth, getSecureCorsHeaders } from '../_admin-auth.js';
 
 export async function onRequest(context) {
     const { request, env } = context;
@@ -14,17 +9,23 @@ export async function onRequest(context) {
 
     // Handle CORS preflight
     if (request.method === 'OPTIONS') {
-        return new Response(null, { status: 204, headers: corsHeaders });
+        return new Response(null, { status: 204, headers: getSecureCorsHeaders() });
     }
 
-    // Verify admin (must be Tom) - check query param
-    const adminUsername = url.searchParams.get('username');
-    if (adminUsername !== 'Tom') {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 403, headers: corsHeaders });
+    // Verify admin authentication
+    const authResult = await verifyAdminAuth(request, env);
+    if (!authResult.authorized) {
+        return new Response(
+            JSON.stringify({ error: authResult.error }), 
+            { status: authResult.status, headers: getSecureCorsHeaders() }
+        );
     }
 
     if (request.method !== 'GET') {
-        return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers: corsHeaders });
+        return new Response(
+            JSON.stringify({ error: 'Method not allowed' }), 
+            { status: 405, headers: getSecureCorsHeaders() }
+        );
     }
 
     try {
@@ -72,10 +73,13 @@ export async function onRequest(context) {
         }
         const users = result.results || [];
         return new Response(JSON.stringify(users), { 
-            headers: corsHeaders
+            headers: getSecureCorsHeaders()
         });
     } catch (error) {
         console.error('Error fetching users:', error);
-        return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: corsHeaders });
+        return new Response(
+            JSON.stringify({ error: error.message }), 
+            { status: 500, headers: getSecureCorsHeaders() }
+        );
     }
 }

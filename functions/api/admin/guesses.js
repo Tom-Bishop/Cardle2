@@ -1,12 +1,7 @@
 // GET /api/admin/guesses - Get most guessed cars statistics
-// Admin-only endpoint (Tom only)
+// Admin-only endpoint
 
-const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json'
-};
+import { verifyAdminAuth, getSecureCorsHeaders } from '../_admin-auth.js';
 
 export async function onRequest(context) {
     const { request, env } = context;
@@ -14,17 +9,23 @@ export async function onRequest(context) {
 
     // Handle CORS preflight
     if (request.method === 'OPTIONS') {
-        return new Response(null, { status: 204, headers: corsHeaders });
+        return new Response(null, { status: 204, headers: getSecureCorsHeaders() });
     }
 
-    // Verify admin (must be Tom)
-    const adminUsername = url.searchParams.get('username');
-    if (adminUsername !== 'Tom') {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 403, headers: corsHeaders });
+    // Verify admin authentication
+    const authResult = await verifyAdminAuth(request, env);
+    if (!authResult.authorized) {
+        return new Response(
+            JSON.stringify({ error: authResult.error }), 
+            { status: authResult.status, headers: getSecureCorsHeaders() }
+        );
     }
 
     if (request.method !== 'GET') {
-        return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers: corsHeaders });
+        return new Response(
+            JSON.stringify({ error: 'Method not allowed' }), 
+            { status: 405, headers: getSecureCorsHeaders() }
+        );
     }
 
     try {
@@ -36,7 +37,10 @@ export async function onRequest(context) {
         const guessNumber = guessNumberParam ? Number(guessNumberParam) : null;
         if (guessNumber !== null) {
             if (!Number.isInteger(guessNumber) || guessNumber < 1 || guessNumber > 5) {
-                return new Response(JSON.stringify({ error: 'Invalid guessNumber' }), { status: 400, headers: corsHeaders });
+                return new Response(
+                    JSON.stringify({ error: 'Invalid guessNumber' }), 
+                    { status: 400, headers: getSecureCorsHeaders() }
+                );
             }
         }
         
@@ -73,13 +77,16 @@ export async function onRequest(context) {
                 data: results.results || []
             }), {
                 status: 200,
-                headers: corsHeaders
+                headers: getSecureCorsHeaders()
             });
         } else {
             // Get most guessed cars by a specific user
             const username = url.searchParams.get('user');
             if (!username) {
-                return new Response(JSON.stringify({ error: 'Missing user parameter' }), { status: 400 });
+                return new Response(
+                    JSON.stringify({ error: 'Missing user parameter' }), 
+                    { status: 400, headers: getSecureCorsHeaders() }
+                );
             }
             
             let query = `
@@ -117,7 +124,7 @@ export async function onRequest(context) {
                 data: results.results || []
             }), {
                 status: 200,
-                headers: corsHeaders
+                headers: getSecureCorsHeaders()
             });
         }
     } catch (err) {
@@ -127,7 +134,7 @@ export async function onRequest(context) {
             ok: false
         }), { 
             status: 500,
-            headers: corsHeaders
+            headers: getSecureCorsHeaders()
         });
     }
 }

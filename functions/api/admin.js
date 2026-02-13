@@ -1,21 +1,34 @@
+import { verifyAdminAuth, getSecureCorsHeaders } from './_admin-auth.js';
+
 export async function onRequest(context) {
     const { request, env } = context;
     const url = new URL(request.url);
     
+    // Handle CORS preflight
+    if (request.method === 'OPTIONS') {
+        return new Response(null, { status: 204, headers: getSecureCorsHeaders() });
+    }
+    
+    // Verify admin authentication
+    const authResult = await verifyAdminAuth(request, env);
+    if (!authResult.authorized) {
+        return new Response(
+            JSON.stringify({ error: authResult.error }), 
+            { status: authResult.status, headers: getSecureCorsHeaders() }
+        );
+    }
+
     // Parse request body
     let body = {};
     if (request.method !== 'GET') {
         try {
             body = await request.json();
         } catch (e) {
-            return new Response(JSON.stringify({ error: 'Invalid JSON' }), { status: 400 });
+            return new Response(
+                JSON.stringify({ error: 'Invalid JSON' }), 
+                { status: 400, headers: getSecureCorsHeaders() }
+            );
         }
-    }
-
-    // Verify admin (must be Tom) - check both body and query params
-    const adminUsername = body.adminUsername || body.username || url.searchParams.get('username');
-    if (adminUsername !== 'Tom') {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 403 });
     }
 
     // Route by method
@@ -31,11 +44,11 @@ export async function onRequest(context) {
         } else if (action === 'update-user-stats') {
             return handleUpdateUserStats(env, body);
         } else {
-            return new Response(JSON.stringify({ error: 'Unknown action' }), { status: 400 });
+            return new Response(JSON.stringify({ error: 'Unknown action' }), { status: 400, headers: getSecureCorsHeaders() });
         }
     }
 
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers: getSecureCorsHeaders() });
 }
 
 // GET /api/admin/users - List all users with stats
@@ -75,11 +88,14 @@ async function handleGetUsers(env, url) {
         
         const users = result.results || [];
         return new Response(JSON.stringify(users), { 
-            headers: { 'Content-Type': 'application/json' }
+            headers: getSecureCorsHeaders()
         });
     } catch (error) {
         console.error('Error fetching users:', error);
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+        return new Response(
+            JSON.stringify({ error: error.message }), 
+            { status: 500, headers: getSecureCorsHeaders() }
+        );
     }
 }
 
@@ -89,7 +105,10 @@ async function handleDeleteUser(env, body) {
         const { username } = body;
         
         if (!username) {
-            return new Response(JSON.stringify({ error: 'Username required' }), { status: 400 });
+            return new Response(
+                JSON.stringify({ error: 'Username required' }), 
+                { status: 400, headers: getSecureCorsHeaders() }
+            );
         }
 
         // Get user ID first
@@ -98,7 +117,10 @@ async function handleDeleteUser(env, body) {
         ).bind(username).first();
 
         if (!userResult) {
-            return new Response(JSON.stringify({ error: 'User not found' }), { status: 404 });
+            return new Response(
+                JSON.stringify({ error: 'User not found' }), 
+                { status: 404, headers: getSecureCorsHeaders() }
+            );
         }
 
         // Delete stats
@@ -111,12 +133,16 @@ async function handleDeleteUser(env, body) {
             'DELETE FROM users WHERE id = ?'
         ).bind(userResult.id).run();
 
-        return new Response(JSON.stringify({ success: true, message: `User "${username}" deleted` }), { 
-            headers: { 'Content-Type': 'application/json' }
-        });
+        return new Response(
+            JSON.stringify({ success: true, message: `User "${username}" deleted` }), 
+            { headers: getSecureCorsHeaders() }
+        );
     } catch (error) {
         console.error('Error deleting user:', error);
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+        return new Response(
+            JSON.stringify({ error: error.message }), 
+            { status: 500, headers: getSecureCorsHeaders() }
+        );
     }
 }
 
@@ -129,12 +155,16 @@ async function handleWipeData(env) {
         // Delete all users
         await env.DB.prepare('DELETE FROM users').run();
 
-        return new Response(JSON.stringify({ success: true, message: 'All data wiped' }), { 
-            headers: { 'Content-Type': 'application/json' }
-        });
+        return new Response(
+            JSON.stringify({ success: true, message: 'All data wiped' }), 
+            { headers: getSecureCorsHeaders() }
+        );
     } catch (error) {
         console.error('Error wiping data:', error);
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+        return new Response(
+            JSON.stringify({ error: error.message }), 
+            { status: 500, headers: getSecureCorsHeaders() }
+        );
     }
 }
 
@@ -144,7 +174,10 @@ async function handleUpdateUserStats(env, body) {
         const { username, stats } = body;
         
         if (!username || !stats) {
-            return new Response(JSON.stringify({ error: 'Username and stats required' }), { status: 400 });
+            return new Response(
+                JSON.stringify({ error: 'Username and stats required' }), 
+                { status: 400, headers: getSecureCorsHeaders() }
+            );
         }
 
         // Get user ID
@@ -153,7 +186,10 @@ async function handleUpdateUserStats(env, body) {
         ).bind(username).first();
 
         if (!userResult) {
-            return new Response(JSON.stringify({ error: 'User not found' }), { status: 404 });
+            return new Response(
+                JSON.stringify({ error: 'User not found' }), 
+                { status: 404, headers: getSecureCorsHeaders() }
+            );
         }
 
         const userId = userResult.id;
@@ -183,11 +219,15 @@ async function handleUpdateUserStats(env, body) {
         const query = `UPDATE stats SET ${updateFields.join(', ')} WHERE user_id = ?`;
         await env.DB.prepare(query).bind(...values).run();
 
-        return new Response(JSON.stringify({ success: true, message: 'Stats updated' }), { 
-            headers: { 'Content-Type': 'application/json' }
-        });
+        return new Response(
+            JSON.stringify({ success: true, message: 'Stats updated' }), 
+            { headers: getSecureCorsHeaders() }
+        );
     } catch (error) {
         console.error('Error updating stats:', error);
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+        return new Response(
+            JSON.stringify({ error: error.message }), 
+            { status: 500, headers: getSecureCorsHeaders() }
+        );
     }
 }
