@@ -76,8 +76,6 @@ export async function onRequestPost({ request, env }) {
       );
     }
   }
-    }
-  }
 
   if (!username || username.length > 24) {
     return new Response(JSON.stringify({ ok: false, error: 'bad_username' }), { status: 400, headers });
