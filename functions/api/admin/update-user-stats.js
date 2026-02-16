@@ -68,12 +68,8 @@ export async function onRequest(context) {
         if (stats.games_played !== undefined) { updateFields.push('games_played = ?'); values.push(stats.games_played); }
         if (stats.total_guesses !== undefined) { updateFields.push('total_guesses = ?'); values.push(stats.total_guesses); }
         if (stats.total_time_seconds !== undefined) { updateFields.push('total_time_seconds = ?'); values.push(stats.total_time_seconds); }
-        if (stats.daily_won !== undefined) { updateFields.push('daily_won = ?'); values.push(stats.daily_won); }
-        if (stats.daily_played !== undefined) { updateFields.push('daily_played = ?'); values.push(stats.daily_played); }
         if (stats.daily_streak !== undefined) { updateFields.push('daily_streak = ?'); values.push(stats.daily_streak); }
         if (stats.daily_max_streak !== undefined) { updateFields.push('daily_max_streak = ?'); values.push(stats.daily_max_streak); }
-        if (stats.random_won !== undefined) { updateFields.push('random_won = ?'); values.push(stats.random_won); }
-        if (stats.random_played !== undefined) { updateFields.push('random_played = ?'); values.push(stats.random_played); }
         if (stats.random_streak !== undefined) { updateFields.push('random_streak = ?'); values.push(stats.random_streak); }
         if (stats.random_max_streak !== undefined) { updateFields.push('random_max_streak = ?'); values.push(stats.random_max_streak); }
         if (stats.streak_days !== undefined) { updateFields.push('streak_days = ?'); values.push(stats.streak_days); }

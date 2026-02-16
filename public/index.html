@@ -504,6 +504,28 @@
         .form-control::placeholder {
             color: var(--color-text-muted);
         }
+        
+        .input-field {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1.5px solid var(--color-border);
+            border-radius: 8px;
+            background-color: var(--color-surface);
+            color: var(--color-text);
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 3px rgba(14, 165, 164, 0.1);
+        }
+        
+        .input-field:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
 
         .autocomplete-dropdown {
             position: absolute;
@@ -554,7 +576,7 @@
 
         .board-headers {
             display: grid;
-            grid-template-columns: repeat(6, 1fr);
+            grid-template-columns: repeat(6, 1fr) 40px;
             gap: 12px;
             margin-bottom: 24px;
             padding: 0 4px;
@@ -587,7 +609,7 @@
 
         .guess-row {
             display: grid;
-            grid-template-columns: repeat(6, 1fr);
+            grid-template-columns: repeat(6, 1fr) 40px;
             gap: 12px;
         }
 
@@ -610,6 +632,273 @@
             word-wrap: break-word;
             white-space: normal;
             line-height: 1.1;
+        }
+        
+        .flag-btn {
+            background: transparent;
+            border: 1.5px solid var(--color-border);
+            border-radius: 8px;
+            padding: 8px;
+            cursor: pointer;
+            color: var(--color-text-muted);
+            transition: all 0.2s;
+            opacity: 0;
+            pointer-events: none;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .guess-row.has-guess .flag-btn {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .flag-btn:hover {
+            border-color: var(--color-warning);
+            color: var(--color-warning);
+            transform: scale(1.05);
+        }
+        
+        .heatmap-scope-btn {
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-size: 0.75rem;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            background: var(--color-muted-surface);
+            border: 1.5px solid var(--color-accent);
+            color: var(--color-accent);
+            box-shadow: 0 6px 14px rgba(14, 165, 164, 0.12);
+        }
+
+        .heatmap-scope-btn.btn--outline {
+            background: transparent;
+            border-color: var(--color-border);
+            color: var(--color-text-muted);
+            box-shadow: none;
+        }
+
+        .heatmap-scope-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .heatmap-scope-btn.btn--outline:hover {
+            border-color: var(--color-accent);
+            color: var(--color-accent);
+            background: var(--color-muted-surface);
+        }
+
+        .heatmap-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: transform 0.2s;
+        }
+        
+        .heatmap-bar:hover {
+            transform: translateX(4px);
+        }
+        
+        .heatmap-label {
+            font-weight: 600;
+            min-width: 120px;
+            color: var(--color-text);
+        }
+        
+        .heatmap-bar-fill {
+            height: 24px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: width 0.5s ease-out;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .heatmap-count {
+            margin-left: auto;
+            font-size: 0.9rem;
+            color: var(--color-text-muted);
+            font-weight: 600;
+        }
+
+        /* Release Notes Popup */
+        .release-notes {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            width: 380px;
+            max-height: 700px;
+            background: var(--color-surface);
+            border: 2px solid var(--color-accent);
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(14, 165, 164, 0.25);
+            z-index: 1000;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .release-notes.minimized {
+            width: auto;
+            max-height: none;
+            right: 0;
+            top: 150px;
+            transform: none;
+            border-radius: 12px 0 0 12px;
+            border-right: none;
+        }
+
+        .release-notes.minimized .release-notes-header,
+        .release-notes.minimized .release-notes-content {
+            display: none;
+        }
+
+        .release-notes.minimized .release-notes-tab {
+            display: flex;
+        }
+
+        .release-notes-tab {
+            display: none;
+            writing-mode: vertical-rl;
+            padding: 20px 12px;
+            background: linear-gradient(135deg, var(--color-accent), var(--color-accent-600));
+            color: white;
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+        }
+
+        .release-notes-tab:hover {
+            transform: translateX(-5px);
+            box-shadow: -4px 0 12px rgba(14, 165, 164, 0.3);
+        }
+
+        .release-notes-tab-icon {
+            font-size: 1.2rem;
+            writing-mode: horizontal-tb;
+        }
+
+        .release-notes-header {
+            background: linear-gradient(135deg, var(--color-accent), var(--color-accent-600));
+            color: white;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .release-notes-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .release-notes-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.2s;
+        }
+
+        .release-notes-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .release-notes-content {
+            padding: 20px;
+            max-height: 520px;
+            overflow-y: auto;
+        }
+
+        .release-version {
+            font-size: 0.9rem;
+            color: var(--color-accent);
+            font-weight: 700;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--color-accent);
+        }
+
+        .release-section {
+            margin-bottom: 20px;
+        }
+
+        .release-section h4 {
+            font-size: 0.85rem;
+            color: var(--color-text);
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .release-section ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .release-section li {
+            padding: 6px 0 6px 20px;
+            position: relative;
+            font-size: 0.9rem;
+            color: var(--color-text);
+            line-height: 1.5;
+        }
+
+        .release-section li:before {
+            content: "•";
+            position: absolute;
+            left: 8px;
+            color: var(--color-accent);
+            font-weight: 700;
+        }
+
+        .release-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-left: 6px;
+        }
+
+        .release-badge.new {
+            background: var(--color-success);
+            color: white;
+        }
+
+        .release-badge.improved {
+            background: var(--color-warning);
+            color: var(--color-black);
+        }
+
+        .release-badge.fixed {
+            background: var(--color-danger);
+            color: white;
         }
 
         .guess-cell.correct {
@@ -1129,10 +1418,12 @@
 
             .board-headers {
                 gap: 10px;
+                grid-template-columns: repeat(6, 1fr) 36px;
             }
 
             .guess-row {
                 gap: 10px;
+                grid-template-columns: repeat(6, 1fr) 36px;
             }
         }
 
@@ -1239,6 +1530,7 @@
                 gap: 6px;
                 font-size: 0.7rem;
                 padding: 0 2px;
+                grid-template-columns: repeat(6, 1fr) 32px;
             }
 
             .header-cell {
@@ -1248,6 +1540,7 @@
 
             .guess-row {
                 gap: 6px;
+                grid-template-columns: repeat(6, 1fr) 32px;
             }
 
             .game-grid {
@@ -1333,6 +1626,21 @@
     </style>
 </head>
 <body>
+    <!-- Release Notes Popup -->
+    <div class="release-notes" id="releaseNotes">
+        <div class="release-notes-tab" id="releaseNotesTab">
+            <span class="release-notes-tab-icon">🎉</span>
+            <span>WHAT'S NEW</span>
+        </div>
+        <div class="release-notes-header">
+            <div class="release-notes-title">🎉 What's New</div>
+            <button class="release-notes-close" id="releaseNotesClose" aria-label="Minimize">−</button>
+        </div>
+        <div class="release-notes-content" id="releaseNotesContent">
+            <div class="release-version" id="releaseNotesLoading">Loading release notes...</div>
+        </div>
+    </div>
+
     <div class="app" id="app">
         <!-- Timer -->
             <div class="timer" id="gameTimer">00:00</div>
@@ -1421,6 +1729,22 @@
                 </svg>
                 Stats
             </button>
+            <button class="btn btn--outline btn--sm" id="heatmapBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                </svg>
+                Heatmap
+            </button>
+            <button class="btn btn--outline btn--sm" id="historyBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                History
+            </button>
         </div>
 
         <!-- Header -->
@@ -1488,6 +1812,7 @@
                 <div class="header-cell" data-help="origin">Origin</div>
                 <div class="header-cell" data-help="power">Power</div>
                 <div class="header-cell" data-help="segment">Segment</div>
+                <div class="header-cell"></div>
             </div>
             <div class="game-grid" id="gameGrid">
                 <!-- Game rows will be populated here -->
@@ -1551,6 +1876,145 @@
             </div>
             <div class="modal-actions">
                 <button class="btn btn--primary" onclick="closeModal('statsModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div class="modal" id="historyModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-title">Past 7 Days - Daily Challenge</div>
+            <div class="modal-body" id="historyContent" style="max-height: 70vh; overflow-y: auto;">
+                <!-- History will be populated here -->
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn--primary" onclick="game.closeModal('historyModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flag Data Correction Modal -->
+    <div class="modal" id="flagModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-title">🚩 Report Incorrect Data</div>
+            <div class="modal-body">
+                <p style="margin-bottom: 20px;">Help us improve by reporting incorrect car data.</p>
+                <div style="background: var(--color-muted-surface); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 12px;">Current Data:</h4>
+                    <div id="flagCurrentData" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 0.9rem;">
+                        <!-- Current car data will be populated here -->
+                    </div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 4px; font-weight: 600;">Make</label>
+                        <input type="text" id="flagMake" class="input-field" placeholder="Correct make">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 4px; font-weight: 600;">Model</label>
+                        <input type="text" id="flagModel" class="input-field" placeholder="Correct model">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 4px; font-weight: 600;">Body Type</label>
+                        <select id="flagBody" class="input-field">
+                            <option value="">-- Select Body Type --</option>
+                            <option value="Sedan">Sedan</option>
+                            <option value="Hatchback">Hatchback</option>
+                            <option value="SUV">SUV</option>
+                            <option value="SUV-Coupe">SUV-Coupe</option>
+                            <option value="Coupe">Coupe</option>
+                            <option value="Convertible">Convertible</option>
+                            <option value="Wagon">Wagon</option>
+                            <option value="Van">Van</option>
+                            <option value="Truck">Truck</option>
+                            <option value="Supercar">Supercar</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 4px; font-weight: 600;">Origin</label>
+                        <select id="flagOrigin" class="input-field">
+                            <option value="">-- Select Origin --</option>
+                            <option value="USA">USA</option>
+                            <option value="GER">Germany</option>
+                            <option value="JPN">Japan</option>
+                            <option value="KOR">South Korea</option>
+                            <option value="GBR">Great Britain</option>
+                            <option value="ITA">Italy</option>
+                            <option value="FRA">France</option>
+                            <option value="SWE">Sweden</option>
+                            <option value="CHN">China</option>
+                            <option value="ESP">Spain</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 4px; font-weight: 600;">Power Type</label>
+                        <select id="flagPower" class="input-field">
+                            <option value="">-- Select Power Type --</option>
+                            <option value="ICE">ICE (Gas/Diesel)</option>
+                            <option value="Hybrid">Hybrid/PHEV</option>
+                            <option value="Electric">Electric</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 4px; font-weight: 600;">Market Segment</label>
+                        <select id="flagSegment" class="input-field">
+                            <option value="">-- Select Segment --</option>
+                            <option value="Economy">Economy</option>
+                            <option value="Urban">Urban</option>
+                            <option value="Family">Family</option>
+                            <option value="Executive">Executive</option>
+                            <option value="Luxury">Luxury</option>
+                            <option value="Performance">Performance</option>
+                            <option value="Green">Green</option>
+                            <option value="Adventure">Adventure</option>
+                            <option value="Utility">Utility</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 4px; font-weight: 600;">Additional Notes (Optional)</label>
+                        <textarea id="flagNotes" class="input-field" rows="3" placeholder="Add any additional context or information"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn--primary" onclick="game.submitFlag()">Submit Report</button>
+                <button class="btn btn--outline" onclick="game.closeModal('flagModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Guess Pattern Heatmap Modal -->
+    <div class="modal" id="heatmapModal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-title">🔥 Guess Pattern Heatmap</div>
+            <div class="modal-body">
+                <p style="margin-bottom: 20px; color: var(--color-text-muted);">See what cars and attributes are most commonly guessed by players.</p>
+                
+                <!-- Heatmap scope selector -->
+                <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
+                    <button class="btn btn--sm btn--outline heatmap-scope-btn" id="heatmapScopeAll" onclick="game.switchHeatmapScope('all')">All Users</button>
+                    <button class="btn btn--sm heatmap-scope-btn" id="heatmapScopeMine" onclick="game.switchHeatmapScope('mine')">My Stats</button>
+                </div>
+
+                <!-- Heatmap type selector -->
+                <div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <button class="btn btn--sm" id="heatmapTypeMake" onclick="game.switchHeatmapType('make')">Make</button>
+                    <button class="btn btn--sm btn--outline" id="heatmapTypeBody" onclick="game.switchHeatmapType('body')">Body Type</button>
+                    <button class="btn btn--sm btn--outline" id="heatmapTypeOrigin" onclick="game.switchHeatmapType('origin')">Origin</button>
+                    <button class="btn btn--sm btn--outline" id="heatmapTypePower" onclick="game.switchHeatmapType('power')">Power</button>
+                    <button class="btn btn--sm btn--outline" id="heatmapTypeSegment" onclick="game.switchHeatmapType('segment')">Segment</button>
+                </div>
+                
+                <div id="heatmapContent" style="max-height: 60vh; overflow-y: auto;">
+                    <p>Loading heatmap data...</p>
+                </div>
+                
+                <div id="heatmapStats" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--color-border);">
+                    <!-- Stats will be populated here -->
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn--primary" onclick="game.closeModal('heatmapModal')">Close</button>
             </div>
         </div>
     </div>
@@ -1712,6 +2176,19 @@
                     </div>
                 </div>
 
+                <!-- Delete Guess History for Car -->
+                <div class="admin-section" style="margin-bottom:20px; border-bottom:1px solid var(--color-border); padding-bottom:15px;">
+                    <h3 style="margin:0 0 10px 0; color:var(--color-text);">Delete Guess History (By Car ID)</h3>
+                    <div style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
+                        <div style="flex:1; min-width:220px;">
+                            <label for="adminCarId" style="display:block; margin-bottom:6px; color:var(--color-text);">Car ID</label>
+                            <input type="number" id="adminCarId" class="form-control" min="1" placeholder="e.g. 42">
+                        </div>
+                        <button class="btn btn--danger" id="deleteCarGuessesBtn" style="height:38px;">Delete History</button>
+                    </div>
+                    <div id="deleteCarGuessesMessage" style="color:var(--color-text-muted); margin-top:8px; min-height:18px;"></div>
+                </div>
+
                 <!-- Edit User Stats Section -->
                 <div class="admin-section">
                     <h3 style="margin:0 0 10px 0; color:var(--color-text);">Edit User Stats</h3>
@@ -1740,20 +2217,12 @@
                                 <input type="number" id="stat_time" class="form-control" min="0">
                             </div>
                             <div class="stat-input-group">
-                                <label for="stat_daily_wins">Daily Wins</label>
-                                <input type="number" id="stat_daily_wins" class="form-control" min="0">
-                            </div>
-                            <div class="stat-input-group">
                                 <label for="stat_daily_streak">Daily Streak</label>
                                 <input type="number" id="stat_daily_streak" class="form-control" min="0">
                             </div>
                             <div class="stat-input-group">
                                 <label for="stat_daily_max">Daily Max Streak</label>
                                 <input type="number" id="stat_daily_max" class="form-control" min="0">
-                            </div>
-                            <div class="stat-input-group">
-                                <label for="stat_random_wins">Random Wins</label>
-                                <input type="number" id="stat_random_wins" class="form-control" min="0">
                             </div>
                             <div class="stat-input-group">
                                 <label for="stat_random_streak">Random Streak</label>
@@ -1764,12 +2233,12 @@
                                 <input type="number" id="stat_random_max" class="form-control" min="0">
                             </div>
                             <div class="stat-input-group">
-                                <label for="stat_daily_plays">Daily Plays (new)</label>
+                                <label for="stat_daily_plays">Daily Plays</label>
                                 <input type="number" id="stat_daily_plays" class="form-control" min="0">
                             </div>
                             <div class="stat-input-group">
-                                <label for="stat_daily_wins_new">Daily Wins (new)</label>
-                                <input type="number" id="stat_daily_wins_new" class="form-control" min="0">
+                                <label for="stat_daily_wins">Daily Wins</label>
+                                <input type="number" id="stat_daily_wins" class="form-control" min="0">
                             </div>
                             <div class="stat-input-group">
                                 <label for="stat_daily_losses">Daily Losses</label>
@@ -1784,12 +2253,12 @@
                                 <input type="number" id="stat_daily_time" class="form-control" min="0">
                             </div>
                             <div class="stat-input-group">
-                                <label for="stat_random_plays">Random Plays (new)</label>
+                                <label for="stat_random_plays">Random Plays</label>
                                 <input type="number" id="stat_random_plays" class="form-control" min="0">
                             </div>
                             <div class="stat-input-group">
-                                <label for="stat_random_wins_new">Random Wins (new)</label>
-                                <input type="number" id="stat_random_wins_new" class="form-control" min="0">
+                                <label for="stat_random_wins">Random Wins</label>
+                                <input type="number" id="stat_random_wins" class="form-control" min="0">
                             </div>
                             <div class="stat-input-group">
                                 <label for="stat_random_losses">Random Losses</label>
@@ -2317,8 +2786,8 @@
                         
                         // Show message
                         const statsContent = document.getElementById('statsContent');
-                        const wins = me.daily_won || 0;
-                        const dailyPlayed = me.daily_played || 0;
+                        const wins = me.daily_wins || 0;
+                        const dailyPlayed = me.daily_plays || 0;
                         const dailyResult = wins > 0 ? 'Win' : 'Loss';
                         if (statsContent) {
                             statsContent.innerHTML = `<div class="help-section"><h3>Daily Challenge Complete</h3><p>You've already played today's Daily Challenge.</p><p>Today's Record: <strong>${dailyResult}</strong> (${wins}/${dailyPlayed})</p><p>Come back tomorrow for a new challenge, or try Random Mode!</p></div>`;
@@ -2466,7 +2935,7 @@
                     const today = new Date().toISOString().split('T')[0];
                     if (body.me.last_daily_play !== today) return null;
                     return {
-                        won: body.me.daily_won > 0,
+                        won: body.me.daily_wins > 0,
                         guesses: body.me.daily_guesses || 0,
                         timeSeconds: body.me.daily_time || 0
                     };
@@ -2487,6 +2956,7 @@
                 const modeToggleBtn = document.getElementById('modeToggleBtn');
                 const helpBtn = document.getElementById('helpBtn');
                 const statsBtn = document.getElementById('statsBtn');
+                const historyBtn = document.getElementById('historyBtn');
                 const leaderboardBtn = document.getElementById('leaderboardBtn');
 
                 // Input and autocomplete
@@ -2500,6 +2970,10 @@
                 // Modal buttons
                 helpBtn.addEventListener('click', () => this.showModal('helpModal'));
                     statsBtn.addEventListener('click', () => this.showStats());
+                    historyBtn.addEventListener('click', () => this.showHistory());
+                    
+                const heatmapBtn = document.getElementById('heatmapBtn');
+                if (heatmapBtn) heatmapBtn.addEventListener('click', () => this.showHeatmap());
                     // top account button handlers
                     const topAccountBtn = document.getElementById('topAccountBtn');
                     const accountMenu = document.getElementById('accountMenu');
@@ -2957,6 +3431,12 @@
                         <div class="guess-cell" data-col="origin"></div>
                         <div class="guess-cell" data-col="power"></div>
                         <div class="guess-cell" data-col="segment"></div>
+                        <button class="flag-btn" title="Report incorrect data">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+                                <line x1="4" y1="22" x2="4" y2="15"></line>
+                            </svg>
+                        </button>
                     `;
                     gameGrid.appendChild(row);
                 }
@@ -2990,6 +3470,15 @@
                         }, 600);
                     }, index * 100);
                 });
+                
+                // Enable flag button and add event listener
+                setTimeout(() => {
+                    row.classList.add('has-guess');
+                    const flagBtn = row.querySelector('.flag-btn');
+                    if (flagBtn) {
+                        flagBtn.onclick = () => this.openFlagModal(car);
+                    }
+                }, cells.length * 100 + 100);
             }
 
             endGame(won) {
@@ -3178,17 +3667,17 @@
                     if (!body || !body.me) return null;
                     
                     const me = body.me;
-                    // Parse stats from server response (support both old and new shapes)
+                    // Parse stats from server response using the new deduplicated columns
                     return {
                         daily: {
-                            played: me.daily_played || me.games_played || 0,
-                            won: me.daily_won || me.wins || 0,
-                            streak: (me.daily_streak !== undefined ? me.daily_streak : (me.streak_days !== undefined ? me.streak_days : (me.streak || 0))),
-                            maxStreak: (me.daily_max_streak !== undefined ? me.daily_max_streak : (me.max_streak_days !== undefined ? me.max_streak_days : (me.max_streak || 0)))
+                            played: me.daily_plays || 0,
+                            won: me.daily_wins || 0,
+                            streak: me.daily_streak || 0,
+                            maxStreak: me.daily_max_streak || 0
                         },
                         random: {
-                            played: me.random_played || 0,
-                            won: me.random_won || 0,
+                            played: me.random_plays || 0,
+                            won: me.random_wins || 0,
                             streak: me.random_streak || 0,
                             maxStreak: me.random_max_streak || 0
                         }
@@ -3196,6 +3685,218 @@
                 } catch (err) {
                     console.warn('Failed to fetch stats from server:', err);
                     return null;
+                }
+            }
+
+            showHistory() {
+                const historyContent = document.getElementById('historyContent');
+                
+                // Show loading state
+                historyContent.innerHTML = '<div class="help-section"><p>Loading history...</p></div>';
+                
+                // Get past 7 days of daily cars
+                const history = this.getPast7DaysCars();
+                
+                let html = '<div style="display: flex; flex-direction: column; gap: 16px;">';
+                
+                history.forEach(entry => {
+                    const dateObj = new Date(entry.date);
+                    const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+                    const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    const isToday = entry.date === new Date().toISOString().split('T')[0];
+                    
+                    html += `
+                        <div class="history-entry" style="border: 2px solid ${isToday ? 'var(--color-accent)' : 'var(--color-border)'}; border-radius: 12px; padding: 16px; background: var(--color-surface);">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                                <div>
+                                    <div style="font-weight: 700; font-size: 1.1rem; color: var(--color-text);">${dayName}${isToday ? ' (Today)' : ''}</div>
+                                    <div style="color: var(--color-muted); font-size: 0.9rem;">${dateStr}</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 16px;">
+                                <div id="historyCarImage${entry.date}" style="width: 150px; height: 100px; border-radius: 8px; overflow: hidden; background: var(--color-muted-surface); flex-shrink: 0;">
+                                    <!-- Car image will be loaded here -->
+                                </div>
+                                <div style="flex: 1;">
+                                    <div style="font-size: 1.2rem; font-weight: 700; color: var(--color-accent); margin-bottom: 8px;">${entry.car.make} ${entry.car.model}</div>
+                                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 0.85rem;">
+                                        <div><strong>Body:</strong> ${entry.car.body}</div>
+                                        <div><strong>Origin:</strong> ${entry.car.origin}</div>
+                                        <div><strong>Power:</strong> ${entry.car.power}</div>
+                                        <div><strong>Segment:</strong> ${entry.car.segment}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                historyContent.innerHTML = html;
+                
+                // Load car images
+                history.forEach(entry => {
+                    loadCarImage(`historyCarImage${entry.date}`, entry.car.make, entry.car.model);
+                });
+                
+                this.showModal('historyModal');
+            }
+
+            getPast7DaysCars() {
+                const history = [];
+                const today = new Date();
+                
+                // Get past 7 days including today
+                for (let i = 0; i < 7; i++) {
+                    const date = new Date(today);
+                    date.setDate(date.getDate() - i);
+                    const dateString = date.toISOString().split('T')[0];
+                    
+                    // Use same algorithm as getDailyCar but with specific date
+                    const seed = this.hashCode(dateString);
+                    const index = Math.abs(seed) % this.carDatabase.length;
+                    const car = this.carDatabase[index];
+                    
+                    history.push({
+                        date: dateString,
+                        car: car
+                    });
+                }
+                
+                return history;
+            }
+
+            async showHeatmap() {
+                this.currentHeatmapType = this.currentHeatmapType || 'make';
+                this.currentHeatmapScope = this.currentHeatmapScope || 'mine';
+                this.updateHeatmapScopeButtons();
+                await this.loadHeatmapData(this.currentHeatmapType, this.currentHeatmapScope);
+                this.showModal('heatmapModal');
+            }
+
+            async switchHeatmapType(type) {
+                this.currentHeatmapType = type;
+                
+                // Update button styles
+                ['make', 'body', 'origin', 'power', 'segment'].forEach(t => {
+                    const btn = document.getElementById(`heatmapType${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                    if (btn) {
+                        if (t === type) {
+                            btn.classList.remove('btn--outline');
+                        } else {
+                            btn.classList.add('btn--outline');
+                        }
+                    }
+                });
+                
+                await this.loadHeatmapData(type, this.currentHeatmapScope || 'all');
+            }
+
+            async switchHeatmapScope(scope) {
+                this.currentHeatmapScope = scope;
+                this.updateHeatmapScopeButtons();
+                await this.loadHeatmapData(this.currentHeatmapType || 'make', scope);
+            }
+
+            updateHeatmapScopeButtons() {
+                const allBtn = document.getElementById('heatmapScopeAll');
+                const mineBtn = document.getElementById('heatmapScopeMine');
+                if (!allBtn || !mineBtn) return;
+
+                if ((this.currentHeatmapScope || 'all') === 'mine') {
+                    allBtn.classList.add('btn--outline');
+                    mineBtn.classList.remove('btn--outline');
+                } else {
+                    allBtn.classList.remove('btn--outline');
+                    mineBtn.classList.add('btn--outline');
+                }
+            }
+
+            async loadHeatmapData(type, scope = 'all') {
+                const heatmapContent = document.getElementById('heatmapContent');
+                const heatmapStats = document.getElementById('heatmapStats');
+                
+                heatmapContent.innerHTML = '<p>Loading heatmap data...</p>';
+                
+                try {
+                    const username = getUsername();
+                    let url = `/api/guess-heatmap?type=${type}`;
+                    if (scope === 'mine') {
+                        if (!username || username.startsWith('guest_')) {
+                            heatmapContent.innerHTML = '<p>Please log in to view your personal heatmap.</p>';
+                            heatmapStats.innerHTML = '';
+                            return;
+                        }
+                        url += `&username=${encodeURIComponent(username)}`;
+                    }
+                    const res = await fetch(url);
+                    
+                    if (!res.ok) {
+                        throw new Error('Failed to load heatmap data');
+                    }
+                    
+                    const data = await res.json();
+                    
+                    if (!data.ok || !data.data || data.data.length === 0) {
+                        heatmapContent.innerHTML = '<p>No guess data available yet. Start playing to see patterns!</p>';
+                        heatmapStats.innerHTML = '';
+                        return;
+                    }
+                    
+                    // Generate color based on intensity
+                    const getColor = (intensity) => {
+                        // Gradient from cool (blue) to hot (red)
+                        const r = Math.floor(intensity * 255);
+                        const g = Math.floor((1 - intensity) * 150);
+                        const b = Math.floor((1 - intensity) * 255);
+                        return `rgb(${r}, ${g}, ${b})`;
+                    };
+                    
+                    // Render heatmap bars
+                    let html = '<div>';
+                    data.data.forEach(item => {
+                        const color = getColor(item.intensity);
+                        const width = Math.max(item.intensity * 100, 5); // Min 5% visibility
+                        
+                        html += `
+                            <div class="heatmap-bar">
+                                <div class="heatmap-label">${item.value}</div>
+                                <div style="flex: 1; position: relative;">
+                                    <div class="heatmap-bar-fill" style="width: ${width}%; background-color: ${color};">
+                                        ${item.count}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    
+                    heatmapContent.innerHTML = html;
+                    
+                    // Show most common car combinations
+                    if (data.combinations && data.combinations.length > 0) {
+                        let statsHtml = '<h4 style="margin-bottom: 12px;">Most Guessed Cars:</h4>';
+                        statsHtml += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px;">';
+                        
+                        data.combinations.slice(0, 10).forEach((combo, index) => {
+                            statsHtml += `
+                                <div style="padding: 8px; background: var(--color-muted-surface); border-radius: 6px; font-size: 0.9rem;">
+                                    <div style="font-weight: 600; color: var(--color-accent);">#${index + 1}</div>
+                                    <div>${combo.car}</div>
+                                    <div style="color: var(--color-text-muted); font-size: 0.85rem;">${combo.count} guesses</div>
+                                </div>
+                            `;
+                        });
+                        
+                        statsHtml += '</div>';
+                        statsHtml += `<p style="margin-top: 16px; color: var(--color-text-muted); font-size: 0.9rem;">Total guesses analyzed: ${data.totalGuesses.toLocaleString()}</p>`;
+                        heatmapStats.innerHTML = statsHtml;
+                    }
+                    
+                } catch (err) {
+                    console.error('Error loading heatmap:', err);
+                    heatmapContent.innerHTML = '<p style="color: var(--color-danger);">Failed to load heatmap data. Please try again.</p>';
+                    heatmapStats.innerHTML = '';
                 }
             }
 
@@ -3387,6 +4088,75 @@
                 this.closeModal('leaderboardModal');
             }
 
+            openFlagModal(car) {
+                this.flaggedCar = car;
+                
+                // Populate current data
+                const currentDataDiv = document.getElementById('flagCurrentData');
+                currentDataDiv.innerHTML = `
+                    <div><strong>Make:</strong> ${car.make}</div>
+                    <div><strong>Model:</strong> ${car.model}</div>
+                    <div><strong>Body:</strong> ${car.body}</div>
+                    <div><strong>Origin:</strong> ${car.origin}</div>
+                    <div><strong>Power:</strong> ${car.power}</div>
+                    <div><strong>Segment:</strong> ${car.segment}</div>
+                `;
+                
+                // Pre-fill form with current values
+                document.getElementById('flagMake').value = car.make;
+                document.getElementById('flagModel').value = car.model;
+                document.getElementById('flagBody').value = car.body;
+                document.getElementById('flagOrigin').value = car.origin;
+                document.getElementById('flagPower').value = car.power;
+                document.getElementById('flagSegment').value = car.segment;
+                document.getElementById('flagNotes').value = '';
+                
+                this.showModal('flagModal');
+            }
+
+            async submitFlag() {
+                const car = this.flaggedCar;
+                if (!car) return;
+                
+                const suggestedData = {
+                    carId: car.id,
+                    currentMake: car.make,
+                    currentModel: car.model,
+                    currentBody: car.body,
+                    currentOrigin: car.origin,
+                    currentPower: car.power,
+                    currentSegment: car.segment,
+                    suggestedMake: document.getElementById('flagMake').value.trim(),
+                    suggestedModel: document.getElementById('flagModel').value.trim(),
+                    suggestedBody: document.getElementById('flagBody').value,
+                    suggestedOrigin: document.getElementById('flagOrigin').value,
+                    suggestedPower: document.getElementById('flagPower').value,
+                    suggestedSegment: document.getElementById('flagSegment').value,
+                    notes: document.getElementById('flagNotes').value.trim(),
+                    username: getUsername(),
+                    timestamp: new Date().toISOString(),
+                    gameMode: this.currentGameMode
+                };
+                
+                try {
+                    const res = await fetch('/api/flag-data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(suggestedData)
+                    });
+                    
+                    if (res.ok) {
+                        showToast('Thank you! Your report has been submitted.', 'success');
+                        this.closeModal('flagModal');
+                    } else {
+                        showToast('Failed to submit report. Please try again.', 'error');
+                    }
+                } catch (err) {
+                    console.error('Error submitting flag:', err);
+                    showToast('Failed to submit report. Please try again.', 'error');
+                }
+            }
+
             showModal(modalId) {
                 const modal = document.getElementById(modalId);
                 modal.classList.add('show');
@@ -3499,6 +4269,38 @@
         }
 
         // ===== ADMIN HELPER FUNCTIONS (global scope) =====
+        async function deleteCarGuessHistory() {
+            const carIdInput = document.getElementById('adminCarId');
+            const msg = document.getElementById('deleteCarGuessesMessage');
+            if (!carIdInput || !msg) return;
+
+            const carId = Number(carIdInput.value || 0);
+            if (!Number.isInteger(carId) || carId <= 0) {
+                msg.style.color = 'var(--color-danger)';
+                msg.textContent = 'Enter a valid car ID.';
+                return;
+            }
+
+            if (!confirm(`Delete all guess history for car ID ${carId}? This cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                const res = await adminFetch('/api/admin/delete-car-guesses', 'POST', { carId });
+                if (res.ok) {
+                    msg.style.color = 'var(--color-success)';
+                    msg.textContent = `Deleted ${res.deleted || 0} guesses for car ID ${carId}.`;
+                    carIdInput.value = '';
+                } else {
+                    msg.style.color = 'var(--color-danger)';
+                    msg.textContent = res.error || 'Failed to delete guess history.';
+                }
+            } catch (e) {
+                msg.style.color = 'var(--color-danger)';
+                msg.textContent = 'Error: ' + e.message;
+            }
+        }
+
         async function loadAdminUsers() {
             const usersList = document.getElementById('usersList');
             try {
@@ -3587,19 +4389,17 @@
                 document.getElementById('stat_games').value = user.games_played || 0;
                 document.getElementById('stat_guesses').value = user.total_guesses || 0;
                 document.getElementById('stat_time').value = user.total_time_seconds || 0;
-                document.getElementById('stat_daily_wins').value = user.daily_won || 0;
+                document.getElementById('stat_daily_wins').value = user.daily_wins || 0;
                 document.getElementById('stat_daily_streak').value = user.daily_streak || 0;
                 document.getElementById('stat_daily_max').value = user.daily_max_streak || 0;
-                document.getElementById('stat_random_wins').value = user.random_won || 0;
+                document.getElementById('stat_random_wins').value = user.random_wins || 0;
                 document.getElementById('stat_random_streak').value = user.random_streak || 0;
                 document.getElementById('stat_random_max').value = user.random_max_streak || 0;
                 document.getElementById('stat_daily_plays').value = user.daily_plays || 0;
-                document.getElementById('stat_daily_wins_new').value = user.daily_wins || 0;
                 document.getElementById('stat_daily_losses').value = user.daily_losses || 0;
                 document.getElementById('stat_daily_guesses').value = user.daily_guesses || 0;
                 document.getElementById('stat_daily_time').value = user.daily_time || 0;
                 document.getElementById('stat_random_plays').value = user.random_plays || 0;
-                document.getElementById('stat_random_wins_new').value = user.random_wins || 0;
                 document.getElementById('stat_random_losses').value = user.random_losses || 0;
                 document.getElementById('stat_random_guesses').value = user.random_guesses || 0;
                 document.getElementById('stat_random_time').value = user.random_time || 0;
@@ -3621,19 +4421,17 @@
                     games_played: parseInt(document.getElementById('stat_games').value) || 0,
                     total_guesses: parseInt(document.getElementById('stat_guesses').value) || 0,
                     total_time_seconds: parseInt(document.getElementById('stat_time').value) || 0,
-                    daily_won: parseInt(document.getElementById('stat_daily_wins').value) || 0,
+                    daily_wins: parseInt(document.getElementById('stat_daily_wins').value) || 0,
                     daily_streak: parseInt(document.getElementById('stat_daily_streak').value) || 0,
                     daily_max_streak: parseInt(document.getElementById('stat_daily_max').value) || 0,
-                    random_won: parseInt(document.getElementById('stat_random_wins').value) || 0,
+                    random_wins: parseInt(document.getElementById('stat_random_wins').value) || 0,
                     random_streak: parseInt(document.getElementById('stat_random_streak').value) || 0,
                     random_max_streak: parseInt(document.getElementById('stat_random_max').value) || 0,
                     daily_plays: parseInt(document.getElementById('stat_daily_plays').value) || 0,
-                    daily_wins: parseInt(document.getElementById('stat_daily_wins_new').value) || 0,
                     daily_losses: parseInt(document.getElementById('stat_daily_losses').value) || 0,
                     daily_guesses: parseInt(document.getElementById('stat_daily_guesses').value) || 0,
                     daily_time: parseInt(document.getElementById('stat_daily_time').value) || 0,
                     random_plays: parseInt(document.getElementById('stat_random_plays').value) || 0,
-                    random_wins: parseInt(document.getElementById('stat_random_wins_new').value) || 0,
                     random_losses: parseInt(document.getElementById('stat_random_losses').value) || 0,
                     random_guesses: parseInt(document.getElementById('stat_random_guesses').value) || 0,
                     random_time: parseInt(document.getElementById('stat_random_time').value) || 0,
@@ -3665,6 +4463,81 @@
             // Skip initialization for verification files
             if (window.location.pathname.includes('google')) {
                 return;
+            }
+            
+            // Release Notes functionality
+            const releaseNotes = document.getElementById('releaseNotes');
+            const releaseNotesClose = document.getElementById('releaseNotesClose');
+            const releaseNotesTab = document.getElementById('releaseNotesTab');
+            let releaseNotesVersion = null; // Will be loaded from JSON
+            
+            async function loadReleaseNotes() {
+                try {
+                    const response = await fetch('/release-notes.json');
+                    if (!response.ok) throw new Error('Failed to load release notes');
+                    
+                    const data = await response.json();
+                    releaseNotesVersion = data.version;
+                    
+                    const content = document.getElementById('releaseNotesContent');
+                    let html = `<div class="release-version">Version ${data.version} - ${data.date}</div>`;
+                    
+                    data.sections.forEach(section => {
+                        html += `
+                            <div class="release-section">
+                                <h4>${section.title}</h4>
+                                <ul>`;
+                        
+                        section.items.forEach(item => {
+                            let badgeHtml = '';
+                            if (item.badge) {
+                                const badgeClass = item.badge.toLowerCase();
+                                badgeHtml = ` <span class="release-badge ${badgeClass}">${item.badge}</span>`;
+                            }
+                            html += `<li>${item.text}${badgeHtml}</li>`;
+                        });
+                        
+                        html += `
+                                </ul>
+                            </div>`;
+                    });
+                    
+                    content.innerHTML = html;
+                } catch (error) {
+                    console.error('Error loading release notes:', error);
+                    document.getElementById('releaseNotesContent').innerHTML = '<div class="release-version">Failed to load release notes</div>';
+                }
+            }
+            
+            function minimizeReleaseNotes() {
+                if (releaseNotes) {
+                    releaseNotes.classList.add('minimized');
+                    localStorage.setItem('releaseNotesMinimized', 'true');
+                }
+            }
+            
+            function openReleaseNotes() {
+                if (releaseNotes) {
+                    releaseNotes.classList.remove('minimized');
+                    localStorage.setItem('releaseNotesMinimized', 'false');
+                }
+            }
+            
+            // Load release notes
+            loadReleaseNotes();
+            
+            // Check if user has minimized it before
+            const isMinimized = localStorage.getItem('releaseNotesMinimized');
+            if (isMinimized === 'true' && releaseNotes) {
+                releaseNotes.classList.add('minimized');
+            }
+            
+            if (releaseNotesClose) {
+                releaseNotesClose.addEventListener('click', minimizeReleaseNotes);
+            }
+            
+            if (releaseNotesTab) {
+                releaseNotesTab.addEventListener('click', openReleaseNotes);
             }
             
             // Dark mode toggle
@@ -3768,6 +4641,11 @@
                         adminModal.style.display = 'block';
                         loadAdminUsers();
                     });
+                }
+
+                const deleteCarGuessesBtn = document.getElementById('deleteCarGuessesBtn');
+                if (deleteCarGuessesBtn) {
+                    deleteCarGuessesBtn.addEventListener('click', deleteCarGuessHistory);
                 }
 
                 // Wipe Data functionality

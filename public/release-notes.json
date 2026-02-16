@@ -1,0 +1,57 @@
+{
+  "version": "2.1.0",
+  "date": "February 2026",
+  "sections": [
+    {
+      "title": "✨ New Features",
+      "items": [
+        {
+          "text": "🔥 Guess Pattern Heatmap - see which cars you guess most often",
+          "badge": "NEW"
+        },
+        {
+          "text": "📊 Personal vs. Global Stats - compare your patterns with all players",
+          "badge": null
+        },
+        {
+          "text": "📅 7-Day History - review past daily challenges",
+          "badge": "NEW"
+        },
+        {
+          "text": "🏆 Separate Leaderboards for Daily and Random modes",
+          "badge": null
+        },
+        {
+          "text": "🚩 Report incorrect car data",
+          "badge": "NEW"
+        }
+      ]
+    },
+    {
+      "title": "🎮 Gameplay Improvements",
+      "items": [
+        {
+          "text": "Parent company hints (e.g., get closer when guessing Audi for Volkswagen)",
+          "badge": "IMPROVED"
+        }
+      ]
+    },
+    {
+      "title": "🎨 Polish",
+      "items": [
+        {
+          "text": "Confetti celebration when you win 🎊",
+          "badge": null
+        },
+        {
+          "text": "Car images in results",
+          "badge": null
+        },
+        {
+          "text": "Smoother animations",
+          "badge": null
+        }
+      ]
+    }
+  ]
+}
