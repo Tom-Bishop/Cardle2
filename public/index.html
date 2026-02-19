@@ -2784,7 +2784,7 @@
                         const dailyPlayed = me.daily_plays || 0;
                         const dailyResult = wins > 0 ? 'Win' : 'Loss';
                         if (statsContent) {
-                            statsContent.innerHTML = `<div class="help-section"><h3>Daily Challenge Complete</h3><p>You've already played today's Daily Challenge.</p><p>Today's Record: <strong>${dailyResult}</strong> (${wins}/${dailyPlayed})</p><p>Come back tomorrow for a new challenge, or try Random Mode!</p></div>`;
+                            statsContent.innerHTML = `<div class="help-section"><h3>🎉 Daily Challenge Complete!</h3><p>Nice work! You've completed today's challenge.</p><p style="font-size: 1.1rem; margin: 12px 0;"><strong>Today's Result:</strong> <span style="color: ${dailyResult === 'Win' ? 'var(--color-success, #4ade80)' : 'var(--color-danger, #f87171)'}; font-size: 1.3rem;">${dailyResult}</span></p><p style="color: var(--color-muted); font-size: 0.9rem;">Stats: ${wins}W / ${dailyPlayed}P</p><p style="margin-top: 16px;">Want more? Try <strong>Random Mode</strong> for unlimited challenges, or check back tomorrow! 🚗</p></div>`;
                             this.showModal('statsModal');
                         }
                         this.gameOver = true;
