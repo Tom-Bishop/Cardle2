@@ -2330,6 +2330,7 @@
                 const img = document.createElement('img');
                 img.src = overrideUrl;
                 img.alt = `${make} ${model}`;
+                img.style.cssText = 'width: 100%; height: 100%; object-fit: contain;';
                 img.onload = () => {
                     container.innerHTML = '';
                     container.appendChild(img);
@@ -2363,6 +2364,7 @@
                         const img = document.createElement('img');
                         img.src = photo.urls.regular;
                         img.alt = `${make} ${model}`;
+                        img.style.cssText = 'width: 100%; height: 100%; object-fit: contain;';
                         img.onerror = () => showImageFallback(container, make, model);
                         img.onload = () => {
                             container.innerHTML = '';
@@ -3715,7 +3717,7 @@
                             </div>
                             ${isToday ? `<div style="color: var(--color-muted); font-style: italic; padding: 16px; text-align: center;">Come back tomorrow to see today's car!</div>` : `
                             <div style="display: flex; align-items: center; gap: 16px;">
-                                <div id="historyCarImage${entry.date}" style="width: 150px; height: 100px; border-radius: 8px; overflow: hidden; background: var(--color-muted-surface); flex-shrink: 0;">
+                                <div id="historyCarImage${entry.date}" style="width: 150px; height: 100px; border-radius: 8px; overflow: hidden; background: var(--color-muted-surface); flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
                                     <!-- Car image will be loaded here -->
                                 </div>
                                 <div style="flex: 1;">
