@@ -2780,11 +2780,22 @@
                         
                         // Show message
                         const statsContent = document.getElementById('statsContent');
-                        const wins = me.daily_wins || 0;
-                        const dailyPlayed = me.daily_plays || 0;
-                        const dailyResult = wins > 0 ? 'Win' : 'Loss';
+                        const dailyResult = me.daily_wins > 0 ? 'Win' : 'Loss';
                         if (statsContent) {
-                            statsContent.innerHTML = `<div class="help-section"><h3>🎉 Daily Challenge Complete!</h3><p>Nice work! You've completed today's challenge.</p><p style="font-size: 1.1rem; margin: 12px 0;"><strong>Today's Result:</strong> <span style="color: ${dailyResult === 'Win' ? 'var(--color-success, #4ade80)' : 'var(--color-danger, #f87171)'}; font-size: 1.3rem;">${dailyResult}</span></p><p style="color: var(--color-muted); font-size: 0.9rem;">Stats: ${wins}W / ${dailyPlayed}P</p><p style="margin-top: 16px;">Want more? Try <strong>Random Mode</strong> for unlimited challenges, or check back tomorrow! 🚗</p></div>`;
+                            statsContent.innerHTML = `
+                                <div class="help-section">
+                                    <h3>🎉 Daily Challenge Complete!</h3>
+                                    <p style="font-size: 1.2rem; margin: 20px 0;">
+                                        <strong>Today's Result:</strong><br>
+                                        <span style="color: ${dailyResult === 'Win' ? 'var(--color-success, #4ade80)' : 'var(--color-danger, #f87171)'}; font-size: 1.8rem; font-weight: 700;">${dailyResult}</span>
+                                    </p>
+                                    <p style="margin: 20px 0; display: flex; flex-direction: column; gap: 10px;">
+                                        <button onclick="game.showLeaderboard()" style="padding: 10px 16px; background: var(--color-accent); color: var(--color-text); border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">📊 View Leaderboard</button>
+                                        <button onclick="game.showHeatmap()" style="padding: 10px 16px; background: var(--color-accent); color: var(--color-text); border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">🔥 View Heatmap</button>
+                                        <button onclick="game.switchGameMode('random'); game.closeModal('statsModal'); game.initGame();" style="padding: 10px 16px; background: var(--color-accent); color: var(--color-text); border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">🎲 Try Random Mode</button>
+                                    </p>
+                                </div>
+                            `;
                             this.showModal('statsModal');
                         }
                         this.gameOver = true;
