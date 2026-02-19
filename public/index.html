@@ -4677,34 +4677,12 @@
                                 loadAdminUsers();
                             } else {
                                 alert('Error wiping data: ' + (res.error || res.message));
- += '</div>';
-                    
-                    heatmapContent.innerHTML = html;
-                    
-                    // Show most common car combinations
-                    if (data.combinations && data.combinations.length > 0) {
-                        let statsHtml = '<h4 style="margin-bottom: 12px;">Most Guessed Cars:</h4>';
-                        statsHtml += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px;">';
-                        
-                        data.combinations.slice(0, 10).forEach((combo, index) => {
-                            statsHtml += `
-                                <div style="padding: 8px; background: var(--color-muted-surface); border-radius: 6px; font-size: 0.9rem;">
-                                    <div style="font-weight: 600; color: var(--color-accent);">#${index + 1}</div>
-                                    <div>${combo.car}</div>
-                                    <div style="color: var(--color-text-muted); font-size: 0.85rem;">${combo.count} guesses</div>
-                                </div>
-                            `;
-                        });
-                        
-                        statsHtml += '</div>';
-                        statsHtml += `<p style="margin-top: 16px; color: var(--color-text-muted); font-size: 0.9rem;">Total guesses analyzed: ${data.totalGuesses.toLocaleString()}</p>`;
-                        heatmapStats.innerHTML = statsHtml;
-                    }
-                    
-                } catch (err) {
-                    console.error('Error loading heatmap:', err);
-                    heatmapContent.innerHTML = '<p style="color: var(--color-danger);">Failed to load heatmap data. Please try again.</p>';
-                    heatmapStats.innerHTML = '';
+                            }
+                        } catch (err) {
+                            console.error('Error wiping data:', err);
+                            alert('Error: ' + err.message);
+                        }
+                    });
                 }
             }
 
