@@ -2330,14 +2330,10 @@
                 const img = document.createElement('img');
                 img.src = overrideUrl;
                 img.alt = `${make} ${model}`;
-                img.style.cssText = 'width: 100%; height: 100%; object-fit: contain;';
+                img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
                 img.onload = () => {
                     container.innerHTML = '';
                     container.appendChild(img);
-                    const caption = document.createElement('div');
-                    caption.style.cssText = 'padding: 8px; font-size: 0.75rem; color: var(--color-text-muted); text-align: center;';
-                    caption.textContent = `${make} ${model}`;
-                    container.appendChild(caption);
                 };
                 img.onerror = () => showImageFallback(container, make, model);
                 return;
@@ -2364,15 +2360,11 @@
                         const img = document.createElement('img');
                         img.src = photo.urls.regular;
                         img.alt = `${make} ${model}`;
-                        img.style.cssText = 'width: 100%; height: 100%; object-fit: contain;';
+                        img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
                         img.onerror = () => showImageFallback(container, make, model);
                         img.onload = () => {
                             container.innerHTML = '';
                             container.appendChild(img);
-                            const caption = document.createElement('div');
-                            caption.style.cssText = 'padding: 8px; font-size: 0.75rem; color: var(--color-text-muted); text-align: center;';
-                            caption.textContent = `${make} ${model}`;
-                            container.appendChild(caption);
                         };
                         return;
                     }
