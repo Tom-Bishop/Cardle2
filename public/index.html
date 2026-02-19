@@ -3713,6 +3713,7 @@
                                     <div style="color: var(--color-muted); font-size: 0.9rem;">${dateStr}</div>
                                 </div>
                             </div>
+                            ${isToday ? `<div style="color: var(--color-muted); font-style: italic; padding: 16px; text-align: center;">Come back tomorrow to see today's car!</div>` : `
                             <div style="display: flex; align-items: center; gap: 16px;">
                                 <div id="historyCarImage${entry.date}" style="width: 150px; height: 100px; border-radius: 8px; overflow: hidden; background: var(--color-muted-surface); flex-shrink: 0;">
                                     <!-- Car image will be loaded here -->
@@ -3727,6 +3728,7 @@
                                     </div>
                                 </div>
                             </div>
+                            `}
                         </div>
                     `;
                 });
@@ -3736,7 +3738,10 @@
                 
                 // Load car images
                 history.forEach(entry => {
-                    loadCarImage(`historyCarImage${entry.date}`, entry.car.make, entry.car.model);
+                    const isToday = entry.date === new Date().toISOString().split('T')[0];
+                    if (!isToday) {
+                        loadCarImage(`historyCarImage${entry.date}`, entry.car.make, entry.car.model);
+                    }
                 });
                 
                 this.showModal('historyModal');
@@ -3870,6 +3875,809 @@
                         `;
                     });
                     html += '</div>';
+                    
+                    heatmapContent.innerHTML = html;
+                    
+                    // Show most common car combinations
+                    if (data.combinations && data.combinations.length > 0) {
+                        let statsHtml = '<h4 style="margin-bottom: 12px;">Most Guessed Cars:</h4>';
+                        statsHtml += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px;">';
+                        
+                        data.combinations.slice(0, 10).forEach((combo, index) => {
+                            statsHtml += `
+                                <div style="padding: 8px; background: var(--color-muted-surface); border-radius: 6px; font-size: 0.9rem;">
+                                    <div style="font-weight: 600; color: var(--color-accent);">#${index + 1}</div>
+                                    <div>${combo.car}</div>
+                                    <div style="color: var(--color-text-muted); font-size: 0.85rem;">${combo.count} guesses</div>
+                                </div>
+                            `;
+                        });
+                        
+                        statsHtml += '</div>';
+                        statsHtml += `<p style="margin-top: 16px; color: var(--color-text-muted); font-size: 0.9rem;">Total guesses analyzed: ${data.totalGuesses.toLocaleString()}</p>`;
+                        heatmapStats.innerHTML = statsHtml;
+                    }
+                    
+                } catch (err) {
+                    console.error('Error loading heatmap:', err);
+                    heatmapContent.innerHTML = '<p style="color: var(--color-danger);">Failed to load heatmap data. Please try again.</p>';
+                    heatmapStats.innerHTML = '';
+                }
+            }
+
+            showStats() {
+                const statsContent = document.getElementById('statsContent');
+                
+                // Show loading state
+                statsContent.innerHTML = '<div class="help-section"><p>Loading statistics...</p></div>';
+                
+                // Fetch stats from server
+                this.fetchStatsFromServer().then(stats => {
+                    if (!stats) {
+                        statsContent.innerHTML = '<div class="help-section"><p>Unable to load statistics. Please try again.</p></div>';
+                        return;
+                    }
+                    
+                    const dailyStats = stats.daily || { played: 0, won: 0, streak: 0, maxStreak: 0 };
+                    const randomStats = stats.random || { played: 0, won: 0, streak: 0, maxStreak: 0 };
+                    
+                    const dailyWinRate = dailyStats.played > 0 ? Math.round((dailyStats.won / dailyStats.played) * 100) : 0;
+                    const randomWinRate = randomStats.played > 0 ? Math.round((randomStats.won / randomStats.played) * 100) : 0;
+                    
+                    const totalPlayed = dailyStats.played + randomStats.played;
+                    const totalWon = dailyStats.won + randomStats.won;
+                    const totalWinRate = totalPlayed > 0 ? Math.round((totalWon / totalPlayed) * 100) : 0;
+                    
+                    statsContent.innerHTML = `
+                        <div class="help-section">
+                            <h3>Overall</h3>
+                            <p>Total Games Played: ${totalPlayed}</p>
+                            <p>Total Wins: ${totalWon}</p>
+                            <p>Overall Win Rate: ${totalWinRate}%</p>
+                        </div>
+                        <div class="help-section">
+                            <h3>Daily Challenge</h3>
+                            <p>Games Played: ${dailyStats.played}</p>
+                            <p>Wins: ${dailyStats.won}</p>
+                            <p>Win Rate: ${dailyWinRate}%</p>
+                            <p>Current Streak: ${dailyStats.streak}</p>
+                            <p>Max Streak: ${dailyStats.maxStreak}</p>
+                        </div>
+                        <div class="help-section">
+                            <h3>Random Mode</h3>
+                            <p>Games Played: ${randomStats.played}</p>
+                            <p>Wins: ${randomStats.won}</p>
+                            <p>Win Rate: ${randomWinRate}%</p>
+                            <p>Current Streak: ${randomStats.streak}</p>
+                            <p>Max Streak: ${randomStats.maxStreak}</p>
+                        </div>
+                    `;
+                });
+                
+                this.showModal('statsModal');
+            }
+
+            async showLeaderboard() {
+                this.leaderboardMode = 'daily'; // Default to daily
+                this.showModal('leaderboardModal');
+                await this.updateLeaderboardDisplay();
+                
+                // Refresh leaderboard every 10 seconds
+                if (this.leaderboardRefreshInterval) {
+                    clearInterval(this.leaderboardRefreshInterval);
+                }
+                this.leaderboardRefreshInterval = setInterval(() => this.updateLeaderboardDisplay(), 10000);
+            }
+
+            switchLeaderboardMode(mode) {
+                this.leaderboardMode = mode;
+                const dailyBtn = document.getElementById('leaderboardTabDaily');
+                const randomBtn = document.getElementById('leaderboardTabRandom');
+                
+                if (mode === 'daily') {
+                    dailyBtn.classList.add('active');
+                    randomBtn.classList.remove('active');
+                } else {
+                    dailyBtn.classList.remove('active');
+                    randomBtn.classList.add('active');
+                }
+                
+                this.updateLeaderboardDisplay();
+            }
+
+            async updateLeaderboardDisplay() {
+                const container = document.getElementById('leaderboardContainer');
+                const leaderboardData = await fetchLeaderboard();
+                
+                if (!leaderboardData || leaderboardData.length === 0) {
+                    container.innerHTML = '<div class="leaderboard-loading">No leaderboard data available</div>';
+                    return;
+                }
+                
+                const mode = this.leaderboardMode || 'daily';
+                const currentUsername = getUsername();
+
+                // Get field prefix based on mode
+                const prefix = mode === 'daily' ? 'daily' : 'random';
+                const playsField = `${prefix}_plays`;
+                const winsField = `${prefix}_wins`;
+                const guessesField = `${prefix}_guesses`;
+                const timeField = `${prefix}_time`;
+
+                // Transform data to use mode-specific fields
+                const modeData = leaderboardData.map(entry => {
+                    const plays = entry[playsField] || 0;
+                    const wins = entry[winsField] || 0;
+                    const totalGuesses = entry[guessesField] || 0;
+                    const totalTime = entry[timeField] || 0;
+                    const avgGuesses = plays > 0 ? totalGuesses / plays : 0;
+                    const avgTime = plays > 0 ? totalTime / plays : 0;
+                    
+                    return {
+                        username: entry.username,
+                        plays,
+                        wins,
+                        avgGuesses,
+                        avgTime
+                    };
+                }).filter(entry => entry.plays > 0); // Only include users with plays
+
+                // Sort by wins desc, then avgTime asc
+                const sorted = modeData.sort((a, b) => {
+                    if (b.wins !== a.wins) return b.wins - a.wins;
+                    return a.avgTime - b.avgTime;
+                });
+
+                if (sorted.length === 0) {
+                    container.innerHTML = '<div class="leaderboard-loading">No results for this mode</div>';
+                    return;
+                }
+
+                let html = `
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th class="leaderboard-rank">Rank</th>
+                                <th class="leaderboard-username">Player</th>
+                                <th>Wins</th>
+                                <th>Plays</th>
+                                <th>WinRate</th>
+                                <th>Avg Guesses</th>
+                                <th>Avg Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                const formatTime = (s) => {
+                    if (!s && s !== 0) return '--:--';
+                    const m = Math.floor(s / 60).toString().padStart(2, '0');
+                    const sec = Math.floor(s % 60).toString().padStart(2, '0');
+                    return `${m}:${sec}`;
+                };
+
+                sorted.forEach((entry, index) => {
+                    const isCurrentUser = entry.username === currentUsername;
+                    const rowClass = isCurrentUser ? 'leaderboard-user-entry' : '';
+                    const wins = entry.wins;
+                    const plays = entry.plays;
+                    const winRate = plays > 0 ? Math.round((wins / plays) * 100) + '%' : '0%';
+                    const avgG = entry.avgGuesses.toFixed(2);
+                    const avgT = formatTime(entry.avgTime);
+
+                    html += `
+                        <tr class="${rowClass}">
+                            <td class="leaderboard-rank">#${index + 1}</td>
+                            <td class="leaderboard-username">${entry.username}</td>
+                            <td>${wins}</td>
+                            <td>${plays}</td>
+                            <td>${winRate}</td>
+                            <td>${avgG}</td>
+                            <td>${avgT}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                        </tbody>
+                    </table>
+                `;
+
+                container.innerHTML = html;
+            }
+
+            closeLeaderboard() {
+                if (this.leaderboardRefreshInterval) {
+                    clearInterval(this.leaderboardRefreshInterval);
+                }
+                this.closeModal('leaderboardModal');
+            }
+
+            openFlagModal(car) {
+                this.flaggedCar = car;
+                
+                // Populate current data
+                const currentDataDiv = document.getElementById('flagCurrentData');
+                currentDataDiv.innerHTML = `
+                    <div><strong>Make:</strong> ${car.make}</div>
+                    <div><strong>Model:</strong> ${car.model}</div>
+                    <div><strong>Body:</strong> ${car.body}</div>
+                    <div><strong>Origin:</strong> ${car.origin}</div>
+                    <div><strong>Power:</strong> ${car.power}</div>
+                    <div><strong>Segment:</strong> ${car.segment}</div>
+                `;
+                
+                // Pre-fill form with current values
+                document.getElementById('flagMake').value = car.make;
+                document.getElementById('flagModel').value = car.model;
+                document.getElementById('flagBody').value = car.body;
+                document.getElementById('flagOrigin').value = car.origin;
+                document.getElementById('flagPower').value = car.power;
+                document.getElementById('flagSegment').value = car.segment;
+                document.getElementById('flagNotes').value = '';
+                
+                this.showModal('flagModal');
+            }
+
+            async submitFlag() {
+                const car = this.flaggedCar;
+                if (!car) return;
+                
+                const suggestedData = {
+                    carId: car.id,
+                    currentMake: car.make,
+                    currentModel: car.model,
+                    currentBody: car.body,
+                    currentOrigin: car.origin,
+                    currentPower: car.power,
+                    currentSegment: car.segment,
+                    suggestedMake: document.getElementById('flagMake').value.trim(),
+                    suggestedModel: document.getElementById('flagModel').value.trim(),
+                    suggestedBody: document.getElementById('flagBody').value,
+                    suggestedOrigin: document.getElementById('flagOrigin').value,
+                    suggestedPower: document.getElementById('flagPower').value,
+                    suggestedSegment: document.getElementById('flagSegment').value,
+                    notes: document.getElementById('flagNotes').value.trim(),
+                    username: getUsername(),
+                    timestamp: new Date().toISOString(),
+                    gameMode: this.currentGameMode
+                };
+                
+                try {
+                    const res = await fetch('/api/flag-data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(suggestedData)
+                    });
+                    
+                    if (res.ok) {
+                        showToast('Thank you! Your report has been submitted.', 'success');
+                        this.closeModal('flagModal');
+                    } else {
+                        showToast('Failed to submit report. Please try again.', 'error');
+                    }
+                } catch (err) {
+                    console.error('Error submitting flag:', err);
+                    showToast('Failed to submit report. Please try again.', 'error');
+                }
+            }
+
+            showModal(modalId) {
+                const modal = document.getElementById(modalId);
+                modal.classList.add('show');
+            }
+
+            closeModal(modalId) {
+                if (modalId === 'leaderboardModal') {
+                    this.closeLeaderboard();
+                } else {
+                    const modal = document.getElementById(modalId);
+                    modal.classList.remove('show');
+                }
+            }
+        }
+
+        // Global functions for modal interactions
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) modal.classList.remove('show');
+        }
+
+        async function recordGuess(username, carId, carMake, carModel, guessNumber = null) {
+            try {
+                const res = await fetch('/api/record-guess', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, carId, carMake, carModel, guessNumber })
+                });
+                if (!res.ok) console.warn('Failed to record guess:', res.status);
+            } catch (e) {
+                console.warn('Error recording guess:', e);
+            }
+        }
+
+        let mostGuessedMode = 'global';
+        let mostGuessedUser = null;
+        let mostGuessedGuessNumber = null;
+
+        function setMostGuessedView(view) {
+            mostGuessedGuessNumber = view === 'first' ? 1 : null;
+            const allBtn = document.getElementById('mostGuessedTabAll');
+            const firstBtn = document.getElementById('mostGuessedTabFirst');
+            if (allBtn && firstBtn) {
+                if (view === 'first') {
+                    allBtn.classList.remove('active');
+                    firstBtn.classList.add('active');
+                } else {
+                    allBtn.classList.add('active');
+                    firstBtn.classList.remove('active');
+                }
+            }
+            loadMostGuessedCars();
+        }
+
+        async function loadMostGuessedCars(mode = mostGuessedMode, username = mostGuessedUser, guessNumber = mostGuessedGuessNumber) {
+            mostGuessedMode = mode;
+            mostGuessedUser = username;
+            mostGuessedGuessNumber = guessNumber;
+            const container = document.getElementById('mostGuessedContainer');
+            container.innerHTML = '<p style="text-align:center; padding:20px;">Loading...</p>';
+            
+            try {
+                let url = `/api/admin/guesses?mode=${mode}&limit=10`;
+                if (mode === 'user' && username) {
+                    url += `&user=${encodeURIComponent(username)}`;
+                }
+                if (guessNumber) {
+                    url += `&guessNumber=${guessNumber}`;
+                }
+                
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                
+                const data = await res.json();
+                if (!data.ok || !data.data) throw new Error('Invalid response');
+                
+                const headingSuffix = guessNumber === 1 ? ' - First Guess Only' : '';
+                let html = `<div class="help-section"><h3>${mode === 'global' ? 'Most Guessed Cars (All Users)' : `Most Guessed Cars - ${username}`}${headingSuffix}</h3>`;
+                html += '<table style="width:100%; border-collapse:collapse; font-size:14px;">';
+                html += '<tr style="background:#333; color:#fff;"><th style="padding:8px; text-align:left; border:1px solid #555;">Make & Model</th>';
+                
+                if (mode === 'global') {
+                    html += '<th style="padding:8px; text-align:center; border:1px solid #555;">Total Guesses</th><th style="padding:8px; text-align:center; border:1px solid #555;">Unique Users</th>';
+                } else {
+                    html += '<th style="padding:8px; text-align:center; border:1px solid #555;">Guess Count</th><th style="padding:8px; text-align:center; border:1px solid #555;">Last Guessed</th>';
+                }
+                
+                html += '</tr>';
+                
+                data.data.forEach((car, index) => {
+                    const bgColor = index % 2 === 0 ? '#1a1a1a' : '#222';
+                    const carName = `${car.car_make} ${car.car_model}`;
+                    const count = mode === 'global' ? car.total_guesses : car.guess_count;
+                    const secondary = mode === 'global' ? car.unique_guessers : (car.last_guessed ? new Date(car.last_guessed).toLocaleDateString() : '--');
+                    
+                    html += `<tr style="background:${bgColor}; border:1px solid #333;"><td style="padding:8px; border:1px solid #555;">${carName}</td>`;
+                    html += `<td style="padding:8px; text-align:center; border:1px solid #555;">${count}</td>`;
+                    html += `<td style="padding:8px; text-align:center; border:1px solid #555;">${secondary}</td></tr>`;
+                });
+                
+                html += '</table>';
+                html += `<p style="margin-top:12px; font-size:12px; color:#999;">Showing top ${Math.min(10, data.data.length)} entries</p>`;
+                html += '</div>';
+                
+                container.innerHTML = html;
+            } catch (e) {
+                container.innerHTML = `<div class="help-section"><p style="color:#f44;">Error loading data: ${e.message}</p></div>`;
+                console.error('Error loading most guessed cars:', e);
+            }
+        }
+
+        // ===== ADMIN HELPER FUNCTIONS (global scope) =====
+        async function deleteCarGuessHistory() {
+            const carIdInput = document.getElementById('adminCarId');
+            const msg = document.getElementById('deleteCarGuessesMessage');
+            if (!carIdInput || !msg) return;
+
+            const carId = Number(carIdInput.value || 0);
+            if (!Number.isInteger(carId) || carId <= 0) {
+                msg.style.color = 'var(--color-danger)';
+                msg.textContent = 'Enter a valid car ID.';
+                return;
+            }
+
+            if (!confirm(`Delete all guess history for car ID ${carId}? This cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                const res = await adminFetch('/api/admin/delete-car-guesses', 'POST', { carId });
+                if (res.ok) {
+                    msg.style.color = 'var(--color-success)';
+                    msg.textContent = `Deleted ${res.deleted || 0} guesses for car ID ${carId}.`;
+                    carIdInput.value = '';
+                } else {
+                    msg.style.color = 'var(--color-danger)';
+                    msg.textContent = res.error || 'Failed to delete guess history.';
+                }
+            } catch (e) {
+                msg.style.color = 'var(--color-danger)';
+                msg.textContent = 'Error: ' + e.message;
+            }
+        }
+
+        async function loadAdminUsers() {
+            const usersList = document.getElementById('usersList');
+            try {
+                const url = `/api/admin/users`;
+                console.log('Fetching admin users from:', url);
+                const users = await adminFetch(url);
+                
+                if (!Array.isArray(users) || users.length === 0) {
+                    usersList.innerHTML = '<p style="color:var(--color-text-dim); text-align:center; padding:20px 0;">No users found</p>';
+                    return;
+                }
+
+                usersList.innerHTML = users.map(user => `
+                    <div class="user-item" style="padding:10px; border-bottom:1px solid var(--color-border); display:flex; justify-content:space-between; align-items:center;">
+                        <div class="user-info">
+                            <div class="user-name" style="font-weight:600; color:var(--color-text);">${user.username}</div>
+                            <div class="user-stats" style="font-size:0.85rem; color:var(--color-text-dim); margin-top:2px;">
+                                ${user.wins || 0} wins / ${user.games_played || 0} games
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:6px;">
+                            <button class="btn btn--outline btn--sm" onclick="resetUserPassword('${user.username.replace(/'/g, "\\'")}')" title="Reset password">🔑</button>
+                            <button class="btn btn--danger btn--sm" onclick="deleteAdminUser('${user.username.replace(/'/g, "\\'")}')" >Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Also populate user select dropdown
+                const adminUserSelect = document.getElementById('adminUserSelect');
+                adminUserSelect.innerHTML = '<option value="">-- Choose a user --</option>' + 
+                    users.map(u => `<option value="${u.username}">${u.username}</option>`).join('');
+            } catch (e) {
+                console.error('Admin users error:', e);
+                usersList.innerHTML = `<p style="color:var(--color-danger); text-align:center; padding:20px 0;">Error: ${e.message}</p>`;
+            }
+        }
+
+        async function deleteAdminUser(username) {
+            if (!confirm(`Delete user "${username}" and all their stats?`)) return;
+            try {
+                const res = await adminFetch('/api/admin/delete-user', 'POST', { username });
+                if (res.ok) {
+                    alert(`User "${username}" deleted successfully`);
+                    loadAdminUsers();
+                } else {
+                    alert('Error deleting user: ' + (res.error || res.message));
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        async function resetUserPassword(username) {
+            const newPassword = prompt(`Enter new password for "${username}":`, '');
+            if (!newPassword) return;
+            if (newPassword.length < 4) {
+                alert('Password must be at least 4 characters');
+                return;
+            }
+            
+            try {
+                const res = await adminFetch('/api/admin/reset-password', 'POST', { username, newPassword });
+                if (res.ok) {
+                    alert(`Password reset for "${username}"`);
+                    loadAdminUsers();
+                } else {
+                    alert('Error resetting password: ' + (res.error || res.message));
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        async function loadUserStatsForEdit(selectedUsername) {
+            try {
+                const url = `/api/admin/users?targetUser=${encodeURIComponent(selectedUsername)}`;
+                const data = await adminFetch(url);
+                const user = Array.isArray(data) ? data[0] : data;
+
+                if (!user) {
+                    alert('User not found');
+                    return;
+                }
+
+                document.getElementById('stat_wins').value = user.wins || 0;
+                document.getElementById('stat_games').value = user.games_played || 0;
+                document.getElementById('stat_guesses').value = user.total_guesses || 0;
+                document.getElementById('stat_time').value = user.total_time_seconds || 0;
+                document.getElementById('stat_daily_wins').value = user.daily_wins || 0;
+                document.getElementById('stat_daily_streak').value = user.daily_streak || 0;
+                document.getElementById('stat_daily_max').value = user.daily_max_streak || 0;
+                document.getElementById('stat_random_wins').value = user.random_wins || 0;
+                document.getElementById('stat_random_streak').value = user.random_streak || 0;
+                document.getElementById('stat_random_max').value = user.random_max_streak || 0;
+                document.getElementById('stat_daily_plays').value = user.daily_plays || 0;
+                document.getElementById('stat_daily_losses').value = user.daily_losses || 0;
+                document.getElementById('stat_daily_guesses').value = user.daily_guesses || 0;
+                document.getElementById('stat_daily_time').value = user.daily_time || 0;
+                document.getElementById('stat_random_plays').value = user.random_plays || 0;
+                document.getElementById('stat_random_losses').value = user.random_losses || 0;
+                document.getElementById('stat_random_guesses').value = user.random_guesses || 0;
+                document.getElementById('stat_random_time').value = user.random_time || 0;
+                document.getElementById('stat_total_plays').value = user.total_plays || 0;
+                document.getElementById('stat_total_wins').value = user.total_wins || 0;
+                document.getElementById('stat_total_losses').value = user.total_losses || 0;
+            } catch (e) {
+                alert('Error loading user stats: ' + e.message);
+            }
+        }
+
+        async function saveUserStats() {
+            const username = document.getElementById('adminUserSelect').value;
+            const statsMessage = document.getElementById('statsMessage');
+            
+            try {
+                const stats = {
+                    wins: parseInt(document.getElementById('stat_wins').value) || 0,
+                    games_played: parseInt(document.getElementById('stat_games').value) || 0,
+                    total_guesses: parseInt(document.getElementById('stat_guesses').value) || 0,
+                    total_time_seconds: parseInt(document.getElementById('stat_time').value) || 0,
+                    daily_wins: parseInt(document.getElementById('stat_daily_wins').value) || 0,
+                    daily_streak: parseInt(document.getElementById('stat_daily_streak').value) || 0,
+                    daily_max_streak: parseInt(document.getElementById('stat_daily_max').value) || 0,
+                    random_wins: parseInt(document.getElementById('stat_random_wins').value) || 0,
+                    random_streak: parseInt(document.getElementById('stat_random_streak').value) || 0,
+                    random_max_streak: parseInt(document.getElementById('stat_random_max').value) || 0,
+                    daily_plays: parseInt(document.getElementById('stat_daily_plays').value) || 0,
+                    daily_losses: parseInt(document.getElementById('stat_daily_losses').value) || 0,
+                    daily_guesses: parseInt(document.getElementById('stat_daily_guesses').value) || 0,
+                    daily_time: parseInt(document.getElementById('stat_daily_time').value) || 0,
+                    random_plays: parseInt(document.getElementById('stat_random_plays').value) || 0,
+                    random_losses: parseInt(document.getElementById('stat_random_losses').value) || 0,
+                    random_guesses: parseInt(document.getElementById('stat_random_guesses').value) || 0,
+                    random_time: parseInt(document.getElementById('stat_random_time').value) || 0,
+                    total_plays: parseInt(document.getElementById('stat_total_plays').value) || 0,
+                    total_wins: parseInt(document.getElementById('stat_total_wins').value) || 0,
+                    total_losses: parseInt(document.getElementById('stat_total_losses').value) || 0
+                };
+
+                const res = await adminFetch('/api/admin/update-user-stats', 'POST', { username, stats });
+
+                if (res.ok) {
+                    statsMessage.style.color = 'var(--color-success)';
+                    statsMessage.textContent = 'Stats saved successfully!';
+                    setTimeout(() => { statsMessage.textContent = ''; }, 3000);
+                    loadAdminUsers();
+                } else {
+                    statsMessage.style.color = 'var(--color-danger)';
+                    statsMessage.textContent = 'Error saving stats: ' + (res.error || res.message);
+                }
+            } catch (e) {
+                statsMessage.style.color = 'var(--color-danger)';
+                statsMessage.textContent = 'Error: ' + e.message;
+            }
+        }
+
+        // Initialize game when page loads
+        let game;
+        document.addEventListener('DOMContentLoaded', () => {
+            // Skip initialization for verification files
+            if (window.location.pathname.includes('google')) {
+                return;
+            }
+            
+            // Release Notes functionality
+            const releaseNotes = document.getElementById('releaseNotes');
+            const releaseNotesClose = document.getElementById('releaseNotesClose');
+            const releaseNotesTab = document.getElementById('releaseNotesTab');
+            let releaseNotesVersion = null; // Will be loaded from JSON
+            
+            async function loadReleaseNotes() {
+                try {
+                    const response = await fetch('/release-notes.json');
+                    if (!response.ok) throw new Error('Failed to load release notes');
+                    
+                    const data = await response.json();
+                    releaseNotesVersion = data.version;
+                    
+                    const content = document.getElementById('releaseNotesContent');
+                    let html = `<div class="release-version">Version ${data.version} - ${data.date}</div>`;
+                    
+                    data.sections.forEach(section => {
+                        html += `
+                            <div class="release-section">
+                                <h4>${section.title}</h4>
+                                <ul>`;
+                        
+                        section.items.forEach(item => {
+                            let badgeHtml = '';
+                            if (item.badge) {
+                                const badgeClass = item.badge.toLowerCase();
+                                badgeHtml = ` <span class="release-badge ${badgeClass}">${item.badge}</span>`;
+                            }
+                            html += `<li>${item.text}${badgeHtml}</li>`;
+                        });
+                        
+                        html += `
+                                </ul>
+                            </div>`;
+                    });
+                    
+                    content.innerHTML = html;
+                } catch (error) {
+                    console.error('Error loading release notes:', error);
+                    document.getElementById('releaseNotesContent').innerHTML = '<div class="release-version">Failed to load release notes</div>';
+                }
+            }
+            
+            function minimizeReleaseNotes() {
+                if (releaseNotes) {
+                    releaseNotes.classList.add('minimized');
+                    localStorage.setItem('releaseNotesMinimized', 'true');
+                }
+            }
+            
+            function openReleaseNotes() {
+                if (releaseNotes) {
+                    releaseNotes.classList.remove('minimized');
+                    localStorage.setItem('releaseNotesMinimized', 'false');
+                }
+            }
+            
+            // Load release notes
+            loadReleaseNotes();
+            
+            // Check if user has minimized it before
+            const isMinimized = localStorage.getItem('releaseNotesMinimized');
+            if (isMinimized === 'true' && releaseNotes) {
+                releaseNotes.classList.add('minimized');
+            }
+            
+            if (releaseNotesClose) {
+                releaseNotesClose.addEventListener('click', minimizeReleaseNotes);
+            }
+            
+            if (releaseNotesTab) {
+                releaseNotesTab.addEventListener('click', openReleaseNotes);
+            }
+            
+            // Dark mode toggle
+            const darkModeToggleBtn = document.getElementById('darkModeToggleBtn');
+            const isDarkMode = localStorage.getItem('darkMode') === 'true';
+            if (isDarkMode) {
+                document.documentElement.classList.add('dark-mode');
+            }
+            
+            if (darkModeToggleBtn) {
+                darkModeToggleBtn.addEventListener('click', () => {
+                    const isDark = document.documentElement.classList.toggle('dark-mode');
+                    localStorage.setItem('darkMode', isDark);
+                });
+            }
+
+            // Hamburger menu toggle for mobile
+            const burgerMenu = document.getElementById('burgerMenu');
+            const leftNav = document.querySelector('.left-nav');
+            
+            if (burgerMenu && leftNav) {
+                burgerMenu.addEventListener('click', () => {
+                    burgerMenu.classList.toggle('active');
+                    leftNav.classList.toggle('active');
+                });
+
+                // Close menu when clicking a nav button
+                const navButtons = leftNav.querySelectorAll('.btn');
+                navButtons.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        burgerMenu.classList.remove('active');
+                        leftNav.classList.remove('active');
+                    });
+                });
+
+                // Close menu when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!leftNav.contains(e.target) && !burgerMenu.contains(e.target)) {
+                        burgerMenu.classList.remove('active');
+                        leftNav.classList.remove('active');
+                    }
+                });
+            }
+
+            // Check if already authenticated (has username cookie)
+            const username = getCookie('cardleUsername');
+            if (username) {
+                // User is authenticated, unlock the app
+                const appDiv = document.getElementById('app');
+                if (appDiv) appDiv.classList.add('authenticated');
+                // populate last-play info
+                fetchMyStatsAndUpdateUI();
+                game = new Cardle();
+            } else {
+                // No authentication, show auth modal
+                showAuthModal();
+            }
+            
+            // auth modal buttons
+            const registerBtn = document.getElementById('registerBtn');
+            const loginBtn = document.getElementById('loginBtn');
+            const authUsername = document.getElementById('authUsername');
+            const authPassword = document.getElementById('authPassword');
+            
+            if (registerBtn) registerBtn.addEventListener('click', () => handleAuth('register'));
+            if (loginBtn) loginBtn.addEventListener('click', () => handleAuth('login'));
+            
+            // Enter key on auth modal inputs defaults to login
+            if (authUsername) {
+                authUsername.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAuth('login');
+                    }
+                });
+            }
+            if (authPassword) {
+                authPassword.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAuth('login');
+                    }
+                });
+            }
+            
+            const confirmChangePwdBtn = document.getElementById('confirmChangePwdBtn');
+            if (confirmChangePwdBtn) confirmChangePwdBtn.addEventListener('click', () => handleChangePassword());
+
+            // ===== ADMIN SETUP =====
+            // Initialize admin panel if user is Tom (case-insensitive)
+            if (username && username.toLowerCase() === 'tom') {
+                const topAdminWrapper = document.getElementById('topAdminWrapper');
+                if (topAdminWrapper) topAdminWrapper.classList.remove('hidden');
+
+                const adminBtn = document.getElementById('adminBtn');
+                const adminModal = document.getElementById('adminModal');
+                
+                if (adminBtn) {
+                    adminBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        adminModal.style.display = 'block';
+                        loadAdminUsers();
+                    });
+                }
+
+                const deleteCarGuessesBtn = document.getElementById('deleteCarGuessesBtn');
+                if (deleteCarGuessesBtn) {
+                    deleteCarGuessesBtn.addEventListener('click', deleteCarGuessHistory);
+                }
+
+                // Wipe Data functionality
+                const wipeDataBtn = document.getElementById('wipeDataBtn');
+                const wipeConfirmMsg = document.getElementById('wipeConfirmMsg');
+                const wipeConfirmBtn = document.getElementById('wipeConfirmBtn');
+                const wipeCancelBtn = document.getElementById('wipeCancelBtn');
+
+                if (wipeDataBtn) {
+                    wipeDataBtn.addEventListener('click', () => {
+                        wipeConfirmMsg.style.display = 'block';
+                        wipeDataBtn.style.display = 'none';
+                    });
+                }
+
+                if (wipeConfirmBtn) {
+                    wipeConfirmBtn.addEventListener('click', async () => {
+                        try {
+                            const res = await adminFetch('/api/admin/wipe-data', 'POST', {});
+                            if (res.ok) {
+                                alert('All user data has been wiped successfully!');
+                                wipeConfirmMsg.style.display = 'none';
+                                wipeDataBtn.style.display = 'block';
+                                loadAdminUsers();
+                            } else {
+                                alert('Error wiping data: ' + (res.error || res.message));
+ += '</div>';
                     
                     heatmapContent.innerHTML = html;
                     
