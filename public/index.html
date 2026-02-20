@@ -2189,6 +2189,24 @@
                     <div id="deleteCarGuessesMessage" style="color:var(--color-text-muted); margin-top:8px; min-height:18px;"></div>
                 </div>
 
+                <!-- Flagged Data Review Section -->
+                <div class="admin-section" style="margin-bottom:20px; border-bottom:1px solid var(--color-border); padding-bottom:15px;">
+                    <h3 style="margin:0 0 10px 0; color:var(--color-text);">Flagged Car Data</h3>
+                    <div style="margin-bottom:10px;">
+                        <label for="flagStatusFilter" style="display:block; margin-bottom:6px; color:var(--color-text);">Status Filter</label>
+                        <select id="flagStatusFilter" class="form-control" style="width:100%; padding:8px; border:1px solid var(--color-border); border-radius:4px; background:var(--color-bg); color:var(--color-text);">
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                    <button class="btn btn--primary btn--sm" id="loadFlagsBtn">Load Flags</button>
+                    <div id="flagsList" style="margin-top:15px; max-height:400px; overflow-y:auto;">
+                        <p style="color:var(--color-text-muted); text-align:center; padding:20px 0;">Click "Load Flags" to view reports</p>
+                    </div>
+                </div>
+
                 <!-- Edit User Stats Section -->
                 <div class="admin-section">
                     <h3 style="margin:0 0 10px 0; color:var(--color-text);">Edit User Stats</h3>
@@ -4470,6 +4488,107 @@
             }
         }
 
+        // Flagged Data Management Functions
+        async function loadFlaggedData() {
+            const status = document.getElementById('flagStatusFilter').value;
+            const flagsList = document.getElementById('flagsList');
+            
+            try {
+                flagsList.innerHTML = '<p style="color:var(--color-text-muted); text-align:center; padding:20px 0;">Loading...</p>';
+                
+                const data = await adminFetch(`/api/admin/flagged-data?status=${status}`);
+                
+                if (!data.ok || !data.flags || data.flags.length === 0) {
+                    flagsList.innerHTML = '<p style="color:var(--color-text-muted); text-align:center; padding:20px 0;">No flagged data found</p>';
+                    return;
+                }
+                
+                let html = '';
+                data.flags.forEach(flag => {
+                    const statusColor = flag.status === 'pending' ? 'var(--color-warning)' : 
+                                       flag.status === 'approved' ? 'var(--color-success)' : 'var(--color-danger)';
+                    
+                    html += `
+                        <div style="border:1px solid var(--color-border); border-radius:8px; padding:12px; margin-bottom:12px; background:var(--color-surface);">
+                            <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:10px;">
+                                <div>
+                                    <strong style="color:var(--color-text);">Car #${flag.car_id}: ${flag.car_make || flag.current_make} ${flag.car_model || flag.current_model}</strong>
+                                    <div style="font-size:0.85rem; color:var(--color-text-muted); margin-top:4px;">
+                                        Reported by: ${flag.username || 'Unknown'} | 
+                                        ${new Date(flag.created_at).toLocaleString()}
+                                    </div>
+                                </div>
+                                <span style="padding:4px 8px; border-radius:4px; font-size:0.8rem; font-weight:600; background:${statusColor}; color:white;">${flag.status.toUpperCase()}</span>
+                            </div>
+                            
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:0.85rem; margin-bottom:10px;">
+                                ${flag.suggested_make ? `
+                                    <div><strong>Make:</strong> ${flag.current_make} → <span style="color:var(--color-accent);">${flag.suggested_make}</span></div>
+                                ` : ''}
+                                ${flag.suggested_model ? `
+                                    <div><strong>Model:</strong> ${flag.current_model} → <span style="color:var(--color-accent);">${flag.suggested_model}</span></div>
+                                ` : ''}
+                                ${flag.suggested_body ? `
+                                    <div><strong>Body:</strong> ${flag.current_body} → <span style="color:var(--color-accent);">${flag.suggested_body}</span></div>
+                                ` : ''}
+                                ${flag.suggested_origin ? `
+                                    <div><strong>Origin:</strong> ${flag.current_origin} → <span style="color:var(--color-accent);">${flag.suggested_origin}</span></div>
+                                ` : ''}
+                                ${flag.suggested_power ? `
+                                    <div><strong>Power:</strong> ${flag.current_power} → <span style="color:var(--color-accent);">${flag.suggested_power}</span></div>
+                                ` : ''}
+                                ${flag.suggested_segment ? `
+                                    <div><strong>Segment:</strong> ${flag.current_segment} → <span style="color:var(--color-accent);">${flag.suggested_segment}</span></div>
+                                ` : ''}
+                            </div>
+                            
+                            ${flag.notes ? `
+                                <div style="background:var(--color-muted-surface); padding:8px; border-radius:4px; margin-bottom:10px; font-size:0.85rem;">
+                                    <strong>Notes:</strong> ${flag.notes}
+                                </div>
+                            ` : ''}
+                            
+                            ${flag.status === 'pending' ? `
+                                <div style="display:flex; gap:8px;">
+                                    <button class="btn btn--sm btn--success" onclick="reviewFlag('${flag.id}', 'approved', true)" title="Approve and apply changes">✓ Approve & Apply</button>
+                                    <button class="btn btn--sm btn--outline" onclick="reviewFlag('${flag.id}', 'approved', false)" title="Approve without applying">✓ Approve Only</button>
+                                    <button class="btn btn--sm btn--danger" onclick="reviewFlag('${flag.id}', 'rejected', false)" title="Reject">✗ Reject</button>
+                                </div>
+                            ` : flag.reviewed_by ? `
+                                <div style="font-size:0.8rem; color:var(--color-text-muted); margin-top:8px;">
+                                    Reviewed by ${flag.reviewed_by} on ${new Date(flag.reviewed_at).toLocaleString()}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                
+                flagsList.innerHTML = html;
+                
+            } catch (e) {
+                flagsList.innerHTML = `<p style="color:var(--color-danger); text-align:center; padding:20px 0;">Error: ${e.message}</p>`;
+            }
+        }
+
+        async function reviewFlag(flagId, status, applyChanges) {
+            try {
+                const res = await adminFetch('/api/admin/flagged-data', 'PATCH', { 
+                    flagId, 
+                    status, 
+                    applyChanges 
+                });
+                
+                if (res.ok) {
+                    alert(`Flag ${status} successfully${applyChanges ? ' and changes applied' : ''}`);
+                    loadFlaggedData(); // Reload the list
+                } else {
+                    alert('Error: ' + (res.error || res.message));
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
         // Initialize game when page loads
         let game;
         document.addEventListener('DOMContentLoaded', () => {
@@ -4659,6 +4778,12 @@
                 const deleteCarGuessesBtn = document.getElementById('deleteCarGuessesBtn');
                 if (deleteCarGuessesBtn) {
                     deleteCarGuessesBtn.addEventListener('click', deleteCarGuessHistory);
+                }
+
+                // Flagged data button
+                const loadFlagsBtn = document.getElementById('loadFlagsBtn');
+                if (loadFlagsBtn) {
+                    loadFlagsBtn.addEventListener('click', loadFlaggedData);
                 }
 
                 // Wipe Data functionality
