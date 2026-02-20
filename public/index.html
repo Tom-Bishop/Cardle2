@@ -2128,6 +2128,7 @@
             <div class="modal-actions">
                 <button class="btn btn--primary" id="registerBtn">Register</button>
                 <button class="btn btn--outline" id="loginBtn">Login</button>
+                <button class="btn btn--outline" id="guestBtn">Play as Guest</button>
                 <button class="btn btn--outline" onclick="closeModal('authModal')">Close</button>
             </div>
         </div>
@@ -2715,6 +2716,27 @@
             } catch (e) {
                 if (msg) msg.textContent = 'Network error';
             }
+        }
+
+        function handleGuestLogin() {
+            // Generate a random guest username
+            const guestId = Math.random().toString(36).substring(2, 10).toUpperCase();
+            const guestUsername = `Guest_${guestId}`;
+            
+            // Set the guest username in cookie
+            setCookie('cardleUsername', guestUsername, 1); // 1 day expiry for guests
+            
+            // Unlock the app
+            const appDiv = document.getElementById('app') || document.querySelector('.app');
+            if (appDiv) appDiv.classList.add('authenticated');
+            
+            // Initialize the game
+            if (!game) {
+                game = new Cardle();
+            }
+            
+            // Close modal
+            closeModal('authModal');
         }
 
         // Enhanced Cardle Game Logic with Timer and Dual Game Modes
@@ -4739,11 +4761,13 @@
             // auth modal buttons
             const registerBtn = document.getElementById('registerBtn');
             const loginBtn = document.getElementById('loginBtn');
+            const guestBtn = document.getElementById('guestBtn');
             const authUsername = document.getElementById('authUsername');
             const authPassword = document.getElementById('authPassword');
             
             if (registerBtn) registerBtn.addEventListener('click', () => handleAuth('register'));
             if (loginBtn) loginBtn.addEventListener('click', () => handleAuth('login'));
+            if (guestBtn) guestBtn.addEventListener('click', handleGuestLogin);
             
             // Enter key on auth modal inputs defaults to login
             if (authUsername) {
