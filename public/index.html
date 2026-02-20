@@ -4059,6 +4059,10 @@
                     return;
                 }
 
+                // Limit to top 10 for non-admin users
+                const isAdmin = currentUsername && currentUsername.toLowerCase() === 'tom';
+                const displayData = isAdmin ? sorted : sorted.slice(0, 10);
+
                 let html = `
                     <table class="leaderboard-table">
                         <thead>
@@ -4082,7 +4086,7 @@
                     return `${m}:${sec}`;
                 };
 
-                sorted.forEach((entry, index) => {
+                displayData.forEach((entry, index) => {
                     const isCurrentUser = entry.username === currentUsername;
                     const rowClass = isCurrentUser ? 'leaderboard-user-entry' : '';
                     const wins = entry.wins;
