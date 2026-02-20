@@ -3011,6 +3011,13 @@
                 const historyBtn = document.getElementById('historyBtn');
                 const leaderboardBtn = document.getElementById('leaderboardBtn');
 
+                // Hide stats button for guests
+                const username = getUsername();
+                const isGuest = username && username.startsWith('Guest_');
+                if (statsBtn) {
+                    statsBtn.style.display = isGuest ? 'none' : 'inline-block';
+                }
+
                 // Input and autocomplete
                 carInput.addEventListener('input', (e) => this.handleInput(e));
                 carInput.addEventListener('keydown', (e) => this.handleKeyDown(e));
@@ -3021,7 +3028,7 @@
 
                 // Modal buttons
                 helpBtn.addEventListener('click', () => this.showModal('helpModal'));
-                    statsBtn.addEventListener('click', () => this.showStats());
+                    if (statsBtn) statsBtn.addEventListener('click', () => this.showStats());
                     historyBtn.addEventListener('click', () => this.showHistory());
                     
                 const heatmapBtn = document.getElementById('heatmapBtn');
@@ -3029,13 +3036,16 @@
                     // top account button handlers
                     const topAccountBtn = document.getElementById('topAccountBtn');
                     const accountMenu = document.getElementById('accountMenu');
+                    const topAccountWrapper = document.getElementById('topAccountWrapper');
                     const logoutBtn = document.getElementById('logoutBtn');
                     const changePasswordBtn = document.getElementById('changePasswordBtn');
                     const mostGuessedBtn = document.getElementById('mostGuessedBtn');
                     const setTestCarBtn = document.getElementById('setTestCarBtn');
                     
-                    // Show admin/test buttons only for Tom
-                    const username = getUsername();
+                    // Hide account menu for guest users
+                    if (topAccountWrapper) {
+                        topAccountWrapper.style.display = isGuest ? 'none' : 'block';
+                    }
                     if (username && username.toLowerCase() === 'tom' && mostGuessedBtn) {
                         mostGuessedBtn.style.display = 'inline-block';
                         mostGuessedBtn.addEventListener('click', () => {
@@ -3824,8 +3834,15 @@
             }
 
             async showHeatmap() {
+                const username = getUsername();
+                const isGuest = username && username.startsWith('Guest_');
                 this.currentHeatmapType = this.currentHeatmapType || 'make';
-                this.currentHeatmapScope = this.currentHeatmapScope || 'mine';
+                this.currentHeatmapScope = this.currentHeatmapScope || 'all';
+                // Hide 'My Stats' button for guests
+                const mineBtn = document.getElementById('heatmapScopeMine');
+                if (mineBtn) {
+                    mineBtn.style.display = isGuest ? 'none' : 'inline-block';
+                }
                 this.updateHeatmapScopeButtons();
                 await this.loadHeatmapData(this.currentHeatmapType, this.currentHeatmapScope);
                 this.showModal('heatmapModal');
