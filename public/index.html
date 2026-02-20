@@ -3171,20 +3171,61 @@
 
             toggleGameMode() {
                 const newMode = this.currentGameMode === 'daily' ? 'random' : 'daily';
-                this.currentGameMode = newMode;
-                this.saveGameMode();
                 
-                // Clear any forced test car when switching to Daily
-                if (this.currentGameMode === 'daily') {
-                    this.forcedRandomCarId = null;
-                    // Check if daily is already played before resetting
-                    this.checkDailyPlayStatus();
+                // If trying to switch to daily, check if it's already been played
+                if (newMode === 'daily') {
+                    this.checkAndShowDailyStatus();
                 } else {
-                    // When switching to random mode, clear the stored random car session
-                    // This ensures a new random car is selected
+                    // Switching to random mode
+                    this.currentGameMode = newMode;
+                    this.saveGameMode();
                     localStorage.removeItem('cardleRandomCarSession');
-                    // Reset game with new mode
                     this.resetGame();
+                }
+            }
+
+            async checkAndShowDailyStatus() {
+                try {
+                    const username = getUsername();
+                    const res = await fetch(`/api/me?username=${encodeURIComponent(username)}`);
+                    if (!res.ok) return;
+                    const body = await res.json();
+                    if (!body || !body.me) return;
+                    const me = body.me;
+                    
+                    const today = new Date().toISOString().split('T')[0];
+                    if (me.last_daily_play === today) {
+                        // Already played today — show popup but don't switch mode
+                        const statsContent = document.getElementById('statsContent');
+                        if (statsContent) {
+                            statsContent.innerHTML = `
+                                <div style="text-align: center; padding: 20px;">
+                                    <div style="font-size: 3rem; margin-bottom: 12px;">🎉</div>
+                                    <h3 style="margin-bottom: 24px; color: var(--color-accent);">Daily Challenge Complete!</h3>
+                                    
+                                    <div style="padding: 24px; background: var(--color-muted-surface); border-radius: 12px; margin-bottom: 24px; border: 1px solid var(--color-border);">
+                                        <p style="font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 8px;">TODAY'S CARDLE</p>
+                                        <p style="font-size: 1.3rem; color: var(--color-text); margin: 0;">Already attempted today. Come back tomorrow for a new challenge!</p>
+                                    </div>
+                                    
+                                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                                        <button class="btn btn--primary" onclick="game.showLeaderboard()" style="width: 100%;">📊 View Leaderboard</button>
+                                        <button class="btn btn--primary" onclick="game.showHeatmap()" style="width: 100%;">🔥 View Heatmap</button>
+                                        <button class="btn btn--primary" onclick="game.closeModal('statsModal');" style="width: 100%;">✕ Close</button>
+                                    </div>
+                                </div>
+                            `;
+                            this.showModal('statsModal');
+                        }
+                    } else {
+                        // Daily not yet played — switch to daily mode and start game
+                        this.currentGameMode = 'daily';
+                        this.saveGameMode();
+                        this.forcedRandomCarId = null;
+                        this.resetGame();
+                    }
+                } catch (err) {
+                    console.warn('Failed to check daily play status:', err);
                 }
             }
 
