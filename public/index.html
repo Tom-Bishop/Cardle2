@@ -2773,6 +2773,9 @@
                 // Autocomplete state
                 this.selectedIndex = -1;
                 
+                // Clear random car session on page load to ensure fresh random car
+                localStorage.removeItem('cardleRandomCarSession');
+                
                 // Load cars from database, then initialize
                 this.loadCars().then(() => {
                     this.initializeGame();
@@ -2933,7 +2936,26 @@
             }
 
             startTimer() {
-                this.startTime = Date.now();
+                // For daily mode, check if we have a saved start time from today
+                if (this.currentGameMode === 'daily') {
+                    const savedTimerData = JSON.parse(localStorage.getItem('cardleDailyTimer') || 'null');
+                    const today = new Date().toISOString().split('T')[0];
+                    
+                    if (savedTimerData && savedTimerData.date === today) {
+                        // Restore the saved start time from today
+                        this.startTime = savedTimerData.startTime;
+                    } else {
+                        // First time playing today, save the current time
+                        this.startTime = Date.now();
+                        localStorage.setItem('cardleDailyTimer', JSON.stringify({
+                            startTime: this.startTime,
+                            date: today
+                        }));
+                    }
+                } else {
+                    // Random mode always starts fresh
+                    this.startTime = Date.now();
+                }
                 this.updateTimerDisplay();
             }
 
@@ -3139,6 +3161,10 @@
                 // Clear any forced test car when switching to Daily
                 if (this.currentGameMode === 'daily') {
                     this.forcedRandomCarId = null;
+                } else {
+                    // When switching to random mode, clear the stored random car session
+                    // This ensures a new random car is selected
+                    localStorage.removeItem('cardleRandomCarSession');
                 }
 
                 // Reset game with new mode
