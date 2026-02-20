@@ -699,6 +699,7 @@
             border-radius: 8px;
             margin-bottom: 8px;
             transition: transform 0.2s;
+            min-width: 0;
         }
         
         .heatmap-bar:hover {
@@ -709,6 +710,7 @@
             font-weight: 600;
             min-width: 120px;
             color: var(--color-text);
+            flex-shrink: 0;
         }
         
         .heatmap-bar-fill {
@@ -722,12 +724,15 @@
             font-weight: 600;
             transition: width 0.5s ease-out;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-width: 400px;
+            flex-grow: 1;
         }
         
         .heatmap-count {
             margin-left: auto;
             font-size: 0.9rem;
             color: var(--color-text-muted);
+            flex-shrink: 0;
             font-weight: 600;
         }
 
@@ -2005,7 +2010,7 @@
                     <button class="btn btn--sm btn--outline" id="heatmapTypeSegment" onclick="game.switchHeatmapType('segment')">Segment</button>
                 </div>
                 
-                <div id="heatmapContent" style="max-height: 60vh; overflow-y: auto;">
+                <div id="heatmapContent" style="max-height: 60vh; overflow-y: auto; overflow-x: hidden;">
                     <p>Loading heatmap data...</p>
                 </div>
                 
