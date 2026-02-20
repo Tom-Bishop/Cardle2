@@ -2768,6 +2768,7 @@
                 this.gameWon = false;
                 this.startTime = null;
                 this.endTime = null;
+                this.dailyAlreadyPlayed = false; // Flag to indicate if today's daily has been played
                 
                 // Autocomplete state
                 this.selectedIndex = -1;
@@ -2832,6 +2833,7 @@
                     const today = new Date().toISOString().split('T')[0];
                     if (me.last_daily_play === today) {
                         // Already played today — disable game
+                        this.dailyAlreadyPlayed = true;
                         const input = document.getElementById('carInput');
                         const submitBtn = document.getElementById('submitGuessBtn');
                         if (input) input.disabled = true;
@@ -2860,9 +2862,17 @@
                             this.showModal('statsModal');
                         }
                         this.gameOver = true;
+                    } else {
+                        // Daily not yet played today
+                        this.dailyAlreadyPlayed = false;
+                        // If we were switching modes, reset the game to start fresh
+                        if (this.guesses.length === 0 && !this.currentCar) {
+                            this.resetGame();
+                        }
                     }
                 } catch (err) {
                     console.warn('Failed to check daily play status:', err);
+                    this.dailyAlreadyPlayed = false;
                 }
             }
 
@@ -2939,6 +2949,13 @@
                 if (this.currentGameMode === 'daily') {
                     const savedTimerData = JSON.parse(localStorage.getItem('cardleDailyTimer') || 'null');
                     const today = new Date().toISOString().split('T')[0];
+                    
+                    // Check if daily is already played (this flag is set by checkDailyPlayStatus)
+                    if (this.dailyAlreadyPlayed) {
+                        // Don't start timer if daily is already completed
+                        this.startTime = null;
+                        return;
+                    }
                     
                     if (savedTimerData && savedTimerData.date === today) {
                         // Restore the saved start time from today
@@ -3160,14 +3177,15 @@
                 // Clear any forced test car when switching to Daily
                 if (this.currentGameMode === 'daily') {
                     this.forcedRandomCarId = null;
+                    // Check if daily is already played before resetting
+                    this.checkDailyPlayStatus();
                 } else {
                     // When switching to random mode, clear the stored random car session
                     // This ensures a new random car is selected
                     localStorage.removeItem('cardleRandomCarSession');
+                    // Reset game with new mode
+                    this.resetGame();
                 }
-
-                // Reset game with new mode
-                this.resetGame();
             }
 
             updateModeIndicator() {
@@ -3730,6 +3748,7 @@
                 this.gameWon = false;
                 this.startTime = null;
                 this.endTime = null;
+                this.dailyAlreadyPlayed = false; // Reset flag when starting new game
                 
                 // Clear saved game state for new game
                 clearGameState();
