@@ -3075,7 +3075,7 @@
             setupEventListeners() {
                 const carInput = document.getElementById('carInput');
                 const submitBtn = document.getElementById('submitGuessBtn');
-                const modeToggleBtn = document.getElementById('modeToggleBtn');
+                const modeToggleBtns = document.querySelectorAll('#modeToggleBtn');
                 const helpBtn = document.getElementById('helpBtn');
                 const statsBtn = document.getElementById('statsBtn');
                 const historyBtn = document.getElementById('historyBtn');
@@ -3093,8 +3093,10 @@
                 carInput.addEventListener('keydown', (e) => this.handleKeyDown(e));
                 submitBtn.addEventListener('click', () => this.submitGuess());
 
-                // Mode toggle
-                modeToggleBtn.addEventListener('click', () => this.toggleGameMode());
+                // Mode toggle - attach listener to all mode toggle buttons
+                modeToggleBtns.forEach(btn => {
+                    btn.addEventListener('click', () => this.toggleGameMode());
+                });
 
                 // Modal buttons
                 helpBtn.addEventListener('click', () => this.showModal('helpModal'));
