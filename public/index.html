@@ -1686,6 +1686,7 @@
                         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                     </svg>
                 </button>
+                <button class="btn btn--outline btn--sm" id="createAccountBtn" title="Create Account" style="display: none;">Create Account</button>
                 <div class="top-account" id="topAccountWrapper">
                     <button class="btn btn--outline btn--sm" id="topAccountBtn" title="Account">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2730,12 +2731,31 @@
         }
 
         function handleGuestLogin() {
-            // Generate a random guest username
+            // Check if a guest account already exists in cookies
+            let existingGuest = getCookie('cardleUsername');
+            
+            // If there's already a guest account, reuse it
+            if (existingGuest && existingGuest.startsWith('Guest_')) {
+                // Unlock the app with existing guest account
+                const appDiv = document.getElementById('app') || document.querySelector('.app');
+                if (appDiv) appDiv.classList.add('authenticated');
+                
+                // Initialize the game
+                if (!game) {
+                    game = new Cardle();
+                }
+                
+                // Close modal
+                closeModal('authModal');
+                return;
+            }
+            
+            // Generate a new guest username only if one doesn't exist
             const guestId = Math.random().toString(36).substring(2, 10).toUpperCase();
             const guestUsername = `Guest_${guestId}`;
             
-            // Set the guest username in cookie
-            setCookie('cardleUsername', guestUsername, 1); // 1 day expiry for guests
+            // Set the guest username in cookie with longer expiry to prevent multiple accounts
+            setCookie('cardleUsername', guestUsername, 365); // 1 year expiry for guests to prevent multiple accounts
             
             // Unlock the app
             const appDiv = document.getElementById('app') || document.querySelector('.app');
@@ -3087,14 +3107,19 @@
                     const topAccountBtn = document.getElementById('topAccountBtn');
                     const accountMenu = document.getElementById('accountMenu');
                     const topAccountWrapper = document.getElementById('topAccountWrapper');
+                    const createAccountBtn = document.getElementById('createAccountBtn');
                     const logoutBtn = document.getElementById('logoutBtn');
                     const changePasswordBtn = document.getElementById('changePasswordBtn');
                     const mostGuessedBtn = document.getElementById('mostGuessedBtn');
                     const setTestCarBtn = document.getElementById('setTestCarBtn');
                     
-                    // Hide account menu for guest users
+                    // Show create account for guests, hide account menu for guests
                     if (topAccountWrapper) {
                         topAccountWrapper.style.display = isGuest ? 'none' : 'block';
+                    }
+                    if (createAccountBtn) {
+                        createAccountBtn.style.display = isGuest ? 'inline-block' : 'none';
+                        createAccountBtn.addEventListener('click', () => showAuthModal());
                     }
                     if (username && username.toLowerCase() === 'tom' && mostGuessedBtn) {
                         mostGuessedBtn.style.display = 'inline-block';
