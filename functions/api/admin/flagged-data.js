@@ -77,7 +77,7 @@ export async function onRequest(context) {
             }
 
             const { flagId, status, applyChanges } = body;
-            const reviewedBy = authResult.adminUsername;
+            const reviewedBy = authResult.username;
             const reviewedAt = new Date().toISOString();
 
             // Update flag status
